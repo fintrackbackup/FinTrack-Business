@@ -296,7 +296,7 @@
     .modal::after { content: var(--ft-veil-name, 'FinTrack Business'); position: absolute; top: calc(50% + 118px); left: 50%; transform: translateX(-50%); font-size: 1.1rem; font-weight: 900; letter-spacing: .4px; color: #0B1E2D; opacity: .5; pointer-events: none; white-space: nowrap; }
     .modal-card { position: relative; z-index: 1; }
     body.ft-modal-open { overflow: hidden !important; }
-    #bizRegisterModal::before, #bizRegisterModal::after, #paLoginModal::before, #paLoginModal::after, #paSetupModal::before, #paSetupModal::after, #paForgotModal::before, #paForgotModal::after, #forgotPasswordModal::before, #forgotPasswordModal::after, #adminResetLinkModal::before, #adminResetLinkModal::after { content: none !important; }
+    #loginModal::before, #loginModal::after, #bizRegisterModal::before, #bizRegisterModal::after, #paLoginModal::before, #paLoginModal::after, #paSetupModal::before, #paSetupModal::after, #paForgotModal::before, #paForgotModal::after, #forgotPasswordModal::before, #forgotPasswordModal::after, #adminResetLinkModal::before, #adminResetLinkModal::after { content: none !important; }
     .modal-card { background: white; padding: 28px; border-radius: var(--radius-lg); width: 90%; max-width: 480px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
     /* Auth screens must fully hide the private dashboard behind them. */
     #bizRegisterModal, #paLoginModal, #paSetupModal, #paForgotModal, #forgotPasswordModal, #adminResetLinkModal { background: #F6F3ED !important; backdrop-filter: none; }
@@ -630,6 +630,20 @@ html, body { background-color: transparent !important; background-image: none !i
 .sync-badge.sync-pending{background:#fef3c7!important;color:#92400e!important;border:1px solid #fcd34d!important}
 .sync-badge.sync-offline{background:#e2e8f0!important;color:#475569!important;border:1px solid #cbd5e1!important}
 .sync-badge.sync-error{background:#fee2e2!important;color:#991b1b!important;border:1px solid #fca5a5!important}
+</style>
+<style id="ftMgmtStyles">
+.ftg-switch{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;padding:6px;background:rgba(255,255,255,.9);border:1px solid var(--border,#e5e7eb);border-radius:14px;box-shadow:0 6px 18px rgba(11,30,45,.06)}
+.ftg-btn{flex:1 1 180px;border:0;background:transparent;color:var(--atmos-navy,#0B1E2D);font-weight:800;font-size:.82rem;padding:11px 14px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .2s ease,color .2s ease,box-shadow .2s ease}
+.ftg-btn:hover{background:rgba(11,30,45,.06)}
+.ftg-btn.active{background:var(--grad-navy,linear-gradient(135deg,#0B1E2D,#162c3d));color:#fff;box-shadow:0 8px 18px rgba(11,30,45,.2)}
+.ftg-btn i{color:#EE2B2E}
+.ftg-btn.active i{color:#fff}
+.ftg-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin-bottom:20px}
+.ftg-box{display:flex;align-items:center;gap:10px;text-align:left;background:#fff;border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:14px 16px;font-weight:800;font-size:.84rem;color:var(--atmos-navy,#0B1E2D);cursor:pointer;box-shadow:0 6px 18px rgba(11,30,45,.06);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.ftg-box:hover{transform:translateY(-2px);border-color:rgba(11,30,45,.22);box-shadow:0 12px 26px rgba(11,30,45,.12)}
+.ftg-box i{font-size:1rem}
+.ftg-box span{line-height:1.25}
+@media(max-width:640px){.ftg-btn{flex:1 1 100%}}
 </style>
 </head>
 <body>
@@ -2000,25 +2014,23 @@ html, body { background-color: transparent !important; background-image: none !i
       </div>
     </div>
 
-    <!-- SUB-TAB NAVIGATION FOR ADMIN CONTROL -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin-bottom:16px">
-      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px">
-        <div style="font-size:.72rem;font-weight:900;color:var(--accent-green);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px"><i class="fa-solid fa-sack-dollar"></i> Money Management</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px">
-          <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem" onclick="showAdminSection('monthClosingSection')">Month Closing</button>
-          <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--accent-green)" onclick="showAdminSection('openingBalSection')">Opening Balances</button>
-        </div>
-      </div>
-      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px">
-        <div style="font-size:.72rem;font-weight:900;color:var(--accent-purple);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px"><i class="fa-solid fa-users-gear"></i> Staff Management</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px">
-          <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--atmos-navy)" onclick="showAdminSection('ftStaffSection')">1 &middot; Add Staff</button>
-          <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--accent-purple)" onclick="showAdminSection('staffSalarySection')">2 &middot; Salary &amp; Incentives</button>
-          <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--atmos-red)" onclick="showAdminSection('attendanceMgmtSection')">3 &middot; Attendance Management</button>
-          <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--accent-amber)" onclick="showAdminSection('staffReportSection')">4 &middot; Staff Reports</button>
-          <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--primary)" onclick="showAdminSection('analyticsSection')">Analytics &amp; Catalog</button>
-        </div>
-      </div>
+    <!-- MONEY & STAFF MANAGEMENT: two titles, each expands into its option boxes -->
+    <div class="ftg-switch" id="ftMgmtSwitch" role="tablist" aria-label="Money and staff management">
+      <button type="button" class="ftg-btn" id="ftMgmtBtn-money" role="tab" aria-selected="false" onclick="ftSetMgmtGroup('money', this)"><i class="fa-solid fa-sack-dollar"></i> Money Management</button>
+      <button type="button" class="ftg-btn" id="ftMgmtBtn-staff" role="tab" aria-selected="false" onclick="ftSetMgmtGroup('staff', this)"><i class="fa-solid fa-users-gear"></i> Staff Management</button>
+    </div>
+
+    <div class="ftg-panel" id="ftMgmtPanel-money" role="tabpanel" style="display:none">
+      <button type="button" class="ftg-box" onclick="showAdminSection('monthClosingSection')"><i class="fa-solid fa-calendar-check" style="color:var(--primary)"></i><span>Month Closing</span></button>
+      <button type="button" class="ftg-box" onclick="showAdminSection('openingBalSection')"><i class="fa-solid fa-scale-balanced" style="color:var(--accent-green)"></i><span>Opening Balances</span></button>
+    </div>
+
+    <div class="ftg-panel" id="ftMgmtPanel-staff" role="tabpanel" style="display:none">
+      <button type="button" class="ftg-box" onclick="showAdminSection('ftStaffSection')"><i class="fa-solid fa-user-plus" style="color:var(--atmos-navy)"></i><span>1 &middot; Add Staff</span></button>
+      <button type="button" class="ftg-box" onclick="showAdminSection('staffSalarySection')"><i class="fa-solid fa-money-check-dollar" style="color:var(--accent-purple)"></i><span>2 &middot; Salary &amp; Incentives</span></button>
+      <button type="button" class="ftg-box" onclick="showAdminSection('attendanceMgmtSection')"><i class="fa-solid fa-user-clock" style="color:var(--atmos-red)"></i><span>3 &middot; Attendance Management</span></button>
+      <button type="button" class="ftg-box" onclick="showAdminSection('staffReportSection')"><i class="fa-solid fa-file-lines" style="color:var(--accent-amber)"></i><span>4 &middot; Staff Reports</span></button>
+      <button type="button" class="ftg-box" onclick="showAdminSection('analyticsSection')"><i class="fa-solid fa-chart-pie" style="color:var(--primary)"></i><span>Analytics &amp; Catalog</span></button>
     </div>
 
     <!-- 1b. ATTENDANCE MANAGEMENT PORTAL (ADMIN ONLY) -->
@@ -11744,9 +11756,15 @@ function getSubscriptionState() {
   }
 
   /* FREE TRIAL - no grace period once a trial ends */
-  if (b.subscriptionStatus === 'trial') {
+  var recTrialEnd = trialEndFor(b);
+  var isTrialRecord = (b.subscriptionStatus === 'trial') || (!!recTrialEnd && !b.subscriptionStatus && recTrialEnd > now);
+  if (isTrialRecord) {
     st.plan = 'Free Trial';
     st.pricing = 'Free Trial';
+    if (st.trialDays <= 0 && recTrialEnd) {
+      var __tStart = b.trialStartDate ? Number(b.trialStartDate) : (b.joiningDate ? Date.parse(String(b.joiningDate).split('T')[0] + 'T00:00:00+05:30') : 0);
+      if (__tStart) st.trialDays = Math.max(1, Math.round((recTrialEnd - __tStart) / DAY));
+    }
     if (st.trialDays <= 0) {
       st.status = 'expired'; st.locked = true; st.daysLeft = 0; st.totalDays = 0;
       st.message = 'No free trial is configured for this platform. Kindly subscribe to continue.';
@@ -11834,7 +11852,7 @@ function upiPayUri(amount) {
 
   function buildBizSubCardHtml() {
   var st = getSubscriptionState();
-  var colors = { trial: 'var(--primary)', active: 'var(--accent-green)', grace: 'var(--accent-amber)', expired: 'var(--accent-rose)', blocked: 'var(--accent-rose)', none: 'var(--text-muted)' };
+  var colors = { trial: '#800080', active: 'var(--accent-green)', grace: 'var(--accent-amber)', expired: 'var(--accent-rose)', blocked: 'var(--accent-rose)', none: 'var(--text-muted)' };
   var labels = { trial: 'Free Trial', active: 'Active', grace: 'Grace Period', expired: 'Expired', blocked: 'Suspended', none: 'Not Registered' };
   var c = colors[st.status] || 'var(--text-muted)';
   var l = labels[st.status] || 'Unknown';
@@ -11842,16 +11860,16 @@ function upiPayUri(amount) {
   var isPaid = st.status === 'active' || st.status === 'grace';
   var dLeft = (st.status === 'grace') ? (st.graceLeft || 0) : (st.daysLeft || 0);
   var periodText = (st.status === 'grace') ? 'in grace period' : (isTrial ? 'in trial period' : (isPaid ? 'in subscription period' : ((st.status === 'expired' || st.status === 'blocked') ? 'period expired' : 'not registered')));
-  var dayCol = (st.status === 'expired' || st.status === 'blocked') ? 'var(--accent-rose)' : (dLeft <= 5 ? '#fd7e14' : (isTrial ? '#800080' : (isPaid ? '#28a745' : 'var(--text-muted)')));
-  var daysBox = '<div style="text-align:right;min-width:100px">' +
+  var dayCol = isTrial ? '#800080' : ((st.status === 'expired' || st.status === 'blocked') ? '#B22222' : (st.status === 'grace' ? '#D2691E' : (isPaid ? (dLeft <= 5 ? '#F97316' : '#2E8B57') : 'var(--text-muted)')));
+  var daysBox = '<div style="text-align:center;width:100%;min-width:100px;display:flex;flex-direction:column;align-items:center;justify-content:center">' +
     '<div style="font-size:2rem;font-weight:900;color:' + dayCol + ';line-height:1">' + dLeft + '</div>' +
     '<div style="font-size:.66rem;font-weight:900;color:' + dayCol + ';margin-top:3px;text-transform:uppercase;letter-spacing:.4px">days left</div>' +
     '<div style="font-size:.66rem;font-weight:800;color:' + dayCol + ';margin-top:1px">' + periodText + '</div>' +
     '</div>';
   var pill = 'background:var(--bg);border:1px solid var(--border);padding:4px 10px;border-radius:20px;font-size:.7rem;font-weight:800;color:var(--text-muted)';
   var counter = '';
-  if (st.status === 'trial' && st.totalDays > 0) counter = '<div style="font-size:.85rem;font-weight:900;color:var(--atmos-navy);margin-bottom:8px">' + st.daysLeft + ' of ' + st.totalDays + ' days left</div>';
-  if (st.status === 'grace') counter = '<div style="font-size:.85rem;font-weight:900;color:var(--accent-amber);margin-bottom:8px">' + st.graceLeft + ' of ' + SUB_GRACE_DAYS + ' grace days left</div>';
+  if (st.status === 'trial' && st.totalDays > 0) counter = '<div style="font-size:.85rem;font-weight:900;color:var(--atmos-navy);margin-bottom:8px;text-align:center">' + st.daysLeft + ' of ' + st.totalDays + ' days left</div>';
+  if (st.status === 'grace') counter = '<div style="font-size:.85rem;font-weight:900;color:#D2691E;margin-bottom:8px;text-align:center">' + st.graceLeft + ' of ' + SUB_GRACE_DAYS + ' grace days left</div>';
   var msg = st.message ? '<div style="font-size:.83rem;font-weight:800;color:' + st.messageColor + ';margin-bottom:12px">' + st.message + '</div>' : '';
   return '<div style="display:flex;justify-content:space-between;align-items:stretch;gap:16px;flex-wrap:wrap">'
     + '<div style="flex:1;min-width:230px">'
@@ -11866,7 +11884,7 @@ function upiPayUri(amount) {
     + '</div>'
     + '<button class="btn-admin" onclick="openPaSubmitPayment()" style="width:auto"><i class="fa-solid fa-qrcode"></i> Pay / Renew Subscription</button>'
     + '</div>'
-    + '<div style="text-align:center;min-width:150px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;display:flex;flex-direction:column;justify-content:center">'
+    + '<div style="text-align:center;min-width:150px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;display:flex;flex-direction:column;align-items:center;justify-content:center">'
     + daysBox
     + '<div style="font-size:.66rem;color:var(--text-muted);margin-top:8px">' + (st.expiryText !== '\u2014' ? 'Ends ' + st.expiryText : '\u2014') + '</div>'
     + '</div></div>';
@@ -12238,5 +12256,20 @@ function paPrepareTenantAssociations() {
 }
 
 </script><script src="fintrack-extras.js"></script>
+<script>
+window.ftSetMgmtGroup = function (key, btn) {
+  var panel = document.getElementById('ftMgmtPanel-' + key);
+  if (!panel) return;
+  var open = panel.style.display === 'none' || !panel.style.display;
+  ['money', 'staff'].forEach(function (g) {
+    var p = document.getElementById('ftMgmtPanel-' + g);
+    var b = document.getElementById('ftMgmtBtn-' + g);
+    if (!p) return;
+    var isThis = (g === key) && open;
+    p.style.display = isThis ? 'grid' : 'none';
+    if (b) { b.classList.toggle('active', isThis); b.setAttribute('aria-selected', isThis ? 'true' : 'false'); }
+  });
+};
+</script>
 </body>
 </html>
