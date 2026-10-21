@@ -291,7 +291,12 @@
     }
 
     /* Modal */
-    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11,30,45,0.85); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+     .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(246,243,237,0.55); backdrop-filter: none; display: flex; justify-content: center; align-items: center; z-index: 1000; overscroll-behavior: contain; }
+    .modal::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 200px; height: 200px; background: url('https://media.base44.com/images/public/6ad20c8082d97b3bd37417ae/266afcba3_IMG_2552.jpg') center/contain no-repeat; opacity: .5; pointer-events: none; }
+    .modal::after { content: var(--ft-veil-name, 'FinTrack Business'); position: absolute; top: calc(50% + 118px); left: 50%; transform: translateX(-50%); font-size: 1.1rem; font-weight: 900; letter-spacing: .4px; color: #0B1E2D; opacity: .5; pointer-events: none; white-space: nowrap; }
+    .modal-card { position: relative; z-index: 1; }
+    body.ft-modal-open { overflow: hidden !important; }
+    #bizRegisterModal::before, #bizRegisterModal::after, #paLoginModal::before, #paLoginModal::after, #paSetupModal::before, #paSetupModal::after, #paForgotModal::before, #paForgotModal::after, #forgotPasswordModal::before, #forgotPasswordModal::after, #adminResetLinkModal::before, #adminResetLinkModal::after { content: none !important; }
     .modal-card { background: white; padding: 28px; border-radius: var(--radius-lg); width: 90%; max-width: 480px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
     /* Auth screens must fully hide the private dashboard behind them. */
     #bizRegisterModal, #paLoginModal, #paSetupModal, #paForgotModal, #forgotPasswordModal, #adminResetLinkModal { background: #F6F3ED !important; backdrop-filter: none; }
@@ -1756,7 +1761,6 @@ html, body { background-color: transparent !important; background-image: none !i
     <div class="invoice-container" id="printableInvoiceArea">
       <div style="display: flex; justify-content: space-between; border-bottom: 2px solid var(--atmos-navy); padding-bottom: 16px; margin-bottom: 20px;">
         <div>
-          <h2 id="invBizHeading" style="font-size: 1.3rem; font-weight: 900; color: var(--atmos-navy);">Invoice</h2>
         </div>
         <div style="text-align: right;">
           <div style="font-size: 1.1rem; font-weight: 900; color: var(--atmos-red);">INVOICE</div>
@@ -2008,7 +2012,7 @@ html, body { background-color: transparent !important; background-image: none !i
       <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px">
         <div style="font-size:.72rem;font-weight:900;color:var(--accent-purple);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px"><i class="fa-solid fa-users-gear"></i> Staff Management</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px">
-          <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--atmos-navy)" onclick="openAddStaffModal()">1 &middot; Add Staff</button>
+          <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--atmos-navy)" onclick="showAdminSection('ftStaffSection')">1 &middot; Add Staff</button>
           <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--accent-purple)" onclick="showAdminSection('staffSalarySection')">2 &middot; Salary &amp; Incentives</button>
           <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--atmos-red)" onclick="showAdminSection('attendanceMgmtSection')">3 &middot; Attendance Management</button>
           <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--accent-amber)" onclick="showAdminSection('staffReportSection')">4 &middot; Staff Reports</button>
@@ -3206,8 +3210,8 @@ html, body { background-color: transparent !important; background-image: none !i
 <div id="pdfReportTemplate" style="padding: 20px; background: white; color: #0f172a;">
   <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #0B1E2D; padding-bottom: 10px; margin-bottom: 15px;">
     <div>
-      <h1 style="font-size: 18px; color: #0B1E2D; margin: 0;">ATMOS DIGITAL SOLUTIONS</h1>
-      <p style="font-size: 11px; color: #EE2B2E; font-weight: bold; margin: 2px 0 0 0;">FINANCIAL STATEMENT</p>
+      <h1 style="font-size: 18px; color: #0B1E2D; margin: 0;">__FTBIZNAME__</h1>
+      <p style="font-size: 11px; color: #EE2B2E; font-weight: bold; margin: 2px 0 0 0;">__FTBIZSUB__</p>
     </div>
     <div style="text-align: right; font-size: 10px; color: #64748b;">
       <p id="pdfReportTitle" style="font-size: 12px; font-weight: bold; color: #0B1E2D; margin:0;"></p>
@@ -5556,7 +5560,7 @@ const FIREBASE_CONFIG = {
     }).join('');
     if (!rows) rows = '<tr><td colspan="7" style="padding:8px; border:1px solid #cbd5e1; text-align:center; color:#64748b;">No transactions on this date</td></tr>';
     var html = '<div style="padding:20px; background:white; color:#0f172a;">' +
-      '<div style="display:flex; justify-content:space-between; border-bottom:2px solid #0B1E2D; padding-bottom:10px; margin-bottom:12px;"><div><h1 style="font-size:18px; color:#0B1E2D; margin:0;">ATMOS DIGITAL SOLUTIONS</h1><p style="font-size:11px; color:#EE2B2E; font-weight:bold; margin:2px 0 0 0;">DAILY FINANCIAL STATEMENT</p></div><div style="text-align:right; font-size:10px; color:#64748b; white-space:nowrap; min-width:170px;"><p style="font-size:12px; font-weight:bold; color:#0B1E2D; margin:0;">Date: '+date+'</p><p style="margin:2px 0 0 0;">Generated: '+getISTDateTimeStr()+'</p></div></div>' +
+      '<div style="display:flex; justify-content:space-between; border-bottom:2px solid #0B1E2D; padding-bottom:10px; margin-bottom:12px;"><div><h1 style="font-size:18px; color:#0B1E2D; margin:0;">__FTBIZNAME__</h1><p style="font-size:11px; color:#EE2B2E; font-weight:bold; margin:2px 0 0 0;">__FTBIZSUB__</p></div><div style="text-align:right; font-size:10px; color:#64748b; white-space:nowrap; min-width:170px;"><p style="font-size:12px; font-weight:bold; color:#0B1E2D; margin:0;">Date: '+date+'</p><p style="margin:2px 0 0 0;">Generated: '+getISTDateTimeStr()+'</p></div></div>' +
       '<p style="font-size:10px; font-weight:bold; color:#0B1E2D; margin:8px 0 4px 0;">OPENING BALANCE</p>' + openHtml +
       '<p style="font-size:10px; font-weight:bold; color:#0B1E2D; margin:12px 0 4px 0;">TRANSACTIONS (latest first)</p>' +
       '<table style="width:100%; table-layout:fixed; border-collapse:collapse; font-size:10px;"><colgroup><col style="width:56px"><col style="width:56px"><col style="width:196px"><col style="width:86px"><col style="width:78px"><col style="width:78px"><col style="width:180px"></colgroup><thead><tr style="background:#f1f5f9;"><th style="padding:5px; border:1px solid #cbd5e1; text-align:left;">Type</th><th style="padding:5px; border:1px solid #cbd5e1; text-align:left;">Time</th><th style="padding:5px; border:1px solid #cbd5e1; text-align:left; overflow-wrap:break-word;">Description</th><th style="padding:5px; border:1px solid #cbd5e1;">Net Income (₹)</th><th style="padding:5px; border:1px solid #cbd5e1;">Dept Fee (₹)</th><th style="padding:5px; border:1px solid #cbd5e1;">Expense (₹)</th><th style="padding:5px; border:1px solid #cbd5e1; text-align:left;">Staff</th></tr></thead><tbody>'+rows+'</tbody></table>' +
@@ -5564,9 +5568,9 @@ const FIREBASE_CONFIG = {
       '</div>';
     var container = document.createElement('div');
     container.style.width = '730px'; container.style.background = '#ffffff';
-    container.innerHTML = html;
+    container.innerHTML = ftBrandHtml(html, 'DAILY FINANCIAL STATEMENT');
     document.body.appendChild(container);
-    var opt = { margin: 8, filename: 'ATMOS_Daily_Report_'+date+'.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+    var opt = { margin: 8, filename: ftPdfFileName('Daily Report', date), image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
     html2pdf().set(opt).from(container).save().then(function(){ document.body.removeChild(container); }).catch(function(){ if (container.parentNode) document.body.removeChild(container); });
   }
 
@@ -6978,10 +6982,11 @@ const FIREBASE_CONFIG = {
 
     const element = document.getElementById('pdfReportTemplate');
     element.style.display = 'block';
+    ftApplyPdfBrand(element, 'FINANCIAL STATEMENT');
 
     const opt = {
       margin: 0.5,
-      filename: `ATMOS_Financial_Report_${month}.pdf`,
+      filename: ftPdfFileName('Financial Report', month),
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -9323,6 +9328,7 @@ function initPACharts(bizArr, statusCounts) {
 function renderPABusinesses() {
   var search = (document.getElementById('paBizSearch')?.value || '').toLowerCase();
   var businesses = platformData.businesses || {};
+  try { ensureDisplayIds(); } catch (e) {}
   var tbody = document.getElementById('paBusinessTableBody');
   if (!tbody) return;
   tbody.innerHTML = '';
@@ -9348,7 +9354,7 @@ function renderPABusinesses() {
     tr.onclick = function() { openBusinessProfile(b.id); };
     tr.innerHTML =
       '<td><strong>'+(b.name||'-')+'</strong>'+(b.blocked?' <span class="pa-badge pa-badge-blocked">Blocked</span>':'')+'</td>'+
-      '<td style="font-size:.78rem;font-family:monospace">'+(b.id||'-')+'</td>'+
+      '<td style="font-size:.78rem"><strong style="font-family:monospace">'+(b.displayId||'-')+'</strong><div style="font-size:.62rem;font-family:monospace;color:var(--text-muted);word-break:break-all">'+(b.id||'')+'</div></td>'+
       '<td>'+(b.category||'-')+'</td>'+
       '<td>'+(b.joiningDate||'-')+'</td>'+
       '<td>'+(b.adminName||'-')+'</td>'+
@@ -9357,8 +9363,8 @@ function renderPABusinesses() {
       '<td><span class="pa-dot '+(online?'pa-online':'pa-offline')+'"></span>'+(online?'Online':'Offline')+'</td>'+
       '<td style="font-size:.78rem">'+(lastAct?formatTimeAgo(lastAct):'Never')+'</td>'+
       '<td><span class="pa-badge pa-badge-'+subStatus+'">'+subStatus.charAt(0).toUpperCase()+subStatus.slice(1)+'</span></td>'+
-      '<td style="font-size:.78rem">'+(b.subscriptionExpiry||'-')+'</td>'+
-      '<td style="font-size:.78rem">'+usage.currentKB.toFixed(1)+' KB</td>';
+      '<td style="font-size:.78rem">'+window.ftExpiryCell(b, subStatus)+'</td>'+
+      '<td style="font-size:.78rem">'+window.ftFmtBytes((usage.currentKB||0)*1024)+'</td>';
     tbody.appendChild(tr);
   });
 }
@@ -10813,6 +10819,157 @@ window.addEventListener('DOMContentLoaded', function() {
   }
 }
   window.setSyncBadge = setSyncBadge;
+/* ===== FinTrack Business - shared UI helpers ===== */
+(function () {
+  window.ftBrandHtml = function (s, fallback) {
+    var p = {}; try { p = getBusinessProfile() || {}; } catch (e) {}
+    var name = p.shopName || 'My Business';
+    var sub = p.motto || fallback || '';
+    return String(s).split('__FTBIZNAME__').join(name).split('__FTBIZSUB__').join(sub);
+  };
+  window.ftApplyPdfBrand = function (el, fallback) {
+    if (!el) return;
+    try { var h = el.innerHTML, n = window.ftBrandHtml(h, fallback); if (n !== h) el.innerHTML = n; } catch (e) {}
+  };
+  window.ftPdfFileName = function (kind, suffix) {
+    var p = {}; try { p = getBusinessProfile() || {}; } catch (e) {}
+    var n = String(p.shopName || 'Business').replace(/[^A-Za-z0-9 ]/g, ' ').trim().replace(/\s+/g, '_') || 'Business';
+    return n + '_' + String(kind).replace(/\s+/g, '_') + '_' + suffix + '.pdf';
+  };
+  try {
+    var __ftH2P = window.html2pdf;
+    if (typeof __ftH2P === 'function') {
+      window.html2pdf = function () {
+        var w = __ftH2P.apply(this, arguments);
+        if (w && typeof w.from === 'function' && !w.__ftBranded) {
+          w.__ftBranded = true;
+          var of = w.from;
+          w.from = function (src) {
+            try { if (src && src.nodeType === 1) window.ftApplyPdfBrand(src, 'FINANCIAL STATEMENT'); } catch (e) {}
+            return of.apply(this, arguments);
+          };
+        }
+        return w;
+      };
+    }
+  } catch (e) {}
+  window.ftFmtBytes = function (b) {
+    if (b == null) return 'Unavailable';
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+    if (b < 1073741824) return (b / 1048576).toFixed(2) + ' MB';
+    return (b / 1073741824).toFixed(2) + ' GB';
+  };
+  window.ftExpiryCell = function (b, subStatus) {
+    try {
+      if (subStatus === 'trial') {
+        var te = trialEndFor(b);
+        if (te) return window.ftExpiryText(te) + '<div style="font-size:.62rem;color:var(--text-muted)">trial ends</div>';
+      }
+      if (b && b.subscriptionExpiry) {
+        var end = Date.parse(String(b.subscriptionExpiry).slice(0, 10) + 'T23:59:59+05:30');
+        return window.ftExpiryText(end) + '<div style="font-size:.62rem;color:var(--text-muted)">' + (subStatus === 'active' ? 'paid period' : 'paid period ended') + '</div>';
+      }
+    } catch (e) {}
+    return '-';
+  };
+  window.ftExpiryText = function (ts) {
+    if (!ts) return '-';
+    try {
+      var d = new Date(ts);
+      var day = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      var time = d.toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' });
+      return day + ' \u00b7 ' + time + ' IST';
+    } catch (e) { return '-'; }
+  };
+  var ftStorageBusy = false, ftStorageAt = 0;
+  window.ftRefreshStorageUsage = function (force) {
+    if (ftStorageBusy) return;
+    if (!force && window.ftStorageMeasured && (Date.now() - ftStorageAt) < 120000) return;
+    ftStorageBusy = true;
+    (async function () {
+      try {
+        var res = await measureStorage();
+        var pd = PD();
+        pd.dataUsage = pd.dataUsage || {};
+        var total = 0, any = false;
+        Object.keys(res || {}).forEach(function (k) {
+          var v = res[k];
+          if (v == null) return;
+          any = true; total += v;
+          pd.dataUsage[k] = Object.assign({}, pd.dataUsage[k] || {}, { currentKB: v / 1024 });
+        });
+        window.ftStorageTotal = total;
+        window.ftStorageMeasured = any;
+        var el = document.getElementById('paStorageUsed');
+        if (el) {
+          el.innerText = window.ftFmtBytes(total);
+          el.title = 'Measured from the stored records of ' + Object.keys(res || {}).length + ' business(es).';
+        }
+        if (any) { try { savePlatformData(); } catch (e) {} }
+        try { if (typeof renderPABusinesses === 'function') renderPABusinesses(); } catch (e) {}
+      } catch (e) {}
+      ftStorageBusy = false; ftStorageAt = Date.now();
+    })();
+  };
+  var lastLock = null;
+  window.ftSyncModalLock = function () {
+    var open = false, ms = document.querySelectorAll('.modal');
+    for (var i = 0; i < ms.length; i++) { if (window.getComputedStyle(ms[i]).display !== 'none') { open = true; break; } }
+    if (open !== lastLock) { lastLock = open; document.body.classList.toggle('ft-modal-open', open); }
+  };
+  try { new MutationObserver(function () { window.ftSyncModalLock(); }).observe(document.documentElement, { attributes: true, subtree: true, attributeFilter: ['style', 'class'] }); } catch (e) {}
+  setInterval(function () { window.ftSyncModalLock(); }, 700);
+  function nameVeil() {
+    try { var p = getBusinessProfile() || {}, n = p.shopName || 'FinTrack Business'; document.documentElement.style.setProperty('--ft-veil-name', '"' + String(n).replace(/"/g, '') + '"'); } catch (e) {}
+  }
+  setTimeout(nameVeil, 1200); setInterval(nameVeil, 8000);
+
+  function buildStaffBox() {
+    var adminTab = document.getElementById('adminTab');
+    if (!adminTab) return;
+    var ref = document.getElementById('monthClosingSection');
+    var host = ref ? ref.parentNode : adminTab;
+    if (!document.getElementById('ftStaffSection')) {
+      var sec = document.createElement('div');
+      sec.id = 'ftStaffSection';
+      sec.className = ref ? ref.className : 'app-card';
+      sec.style.cssText = 'display:none';
+      sec.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px"><h3 style="font-size:1.05rem;font-weight:800;margin:0"><i class="fa-solid fa-user-plus"></i> Add Staff</h3><button class="btn-primary" style="width:auto" onclick="openAddStaffModal()"><i class="fa-solid fa-user-plus"></i> Add New Staff</button></div><p style="font-size:.78rem;color:var(--text-muted);margin:0 0 12px 0">Add, edit or remove staff sign-ins. The Administrator is shown separately and is never listed as staff.</p><div id="ftStaffBoxBody"></div>';
+      if (ref && host) host.insertBefore(sec, ref); else adminTab.appendChild(sec);
+      var tbl = document.getElementById('staffPasswordTable');
+      var body = document.getElementById('ftStaffBoxBody');
+      if (tbl && body) {
+        var card = tbl.closest ? tbl.closest('.app-card') : null;
+        if (card && card !== sec) { while (card.firstChild) body.appendChild(card.firstChild); card.remove(); }
+      }
+    }
+    var ann = document.getElementById('ftStaffAnnounceSection');
+    if (ann && host && ref && ann.parentNode === adminTab) host.insertBefore(ann, ref);
+  }
+  var __ftSectionSwitch = showAdminSection;
+  showAdminSection = function (id) {
+    var r;
+    try { r = __ftSectionSwitch.apply(null, arguments); } catch (e) {}
+    ['monthClosingSection', 'staffSalarySection', 'openingBalSection', 'staffReportSection', 'analyticsSection', 'attendanceMgmtSection', 'ftStaffAnnounceSection', 'ftStaffSection'].forEach(function (x) {
+      var el = document.getElementById(x); if (el) el.style.display = (x === id) ? 'block' : 'none';
+    });
+    return r;
+  };
+  window.showAdminSection = showAdminSection;
+  function healAdminRole() {
+    try {
+      if (!currentUser || currentUser.role !== 'Admin' || !appData || !Array.isArray(appData.users)) return;
+      var hasAdmin = appData.users.some(function (u) { return u.role === 'Admin'; });
+      if (hasAdmin) return;
+      for (var i = 0; i < appData.users.length; i++) {
+        if (appData.users[i].name === currentUser.name) { appData.users[i].role = 'Admin'; saveData(); if (typeof renderStaffPasswordTable === 'function') renderStaffPasswordTable(); return; }
+      }
+    } catch (e) {}
+  }
+  setTimeout(function () { try { buildStaffBox(); healAdminRole(); } catch (e) {} }, 1800);
+  setTimeout(function () { try { buildStaffBox(); } catch (e) {} }, 5000);
+})();
 /* ===== FinTrack Business - platform upgrade module ===== */
 (function () {
   var PD = function () { try { return platformData || {}; } catch (e) { return {}; } };
@@ -10999,11 +11156,10 @@ window.addEventListener('DOMContentLoaded', function() {
       host.innerHTML = '<div style="font-weight:900;font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Verified Revenue by Plan</div>' + (rows || '<div style="color:var(--text-muted)">No approved payments yet.</div>');
     }
     var st = document.getElementById('paStorageUsed');
-    if (st) {
-      var any = Object.keys(PD().dataUsage || {}).length > 0;
-      st.innerText = any ? st.innerText : 'Not measured';
-      st.title = any ? 'Sum of recorded per-business storage readings.' : 'Per-business storage is measured in the Live Status view. Data transfer is not measurable from the browser.';
-    }
+  if (st) {
+    st.title = 'Measured from the stored records of every business.';
+    if (window.ftRefreshStorageUsage) window.ftRefreshStorageUsage();
+  }
   }
   var __ftRPS = renderPASubscriptions;
   renderPASubscriptions = function () { var r = __ftRPS.apply(null, arguments); try { ftRevenueRefresh(); } catch (e) {} return r; };
@@ -11164,17 +11320,19 @@ window.addEventListener('DOMContentLoaded', function() {
     var list = items.length ? items.map(itemHtml).join('') : '<div style="padding:36px 16px;text-align:center;color:var(--text-muted);font-size:.85rem"><i class="fa-regular fa-bell-slash" style="font-size:1.5rem;opacity:.5"></i><p style="margin-top:8px">No notifications.</p></div>';
     var el = document.createElement('div');
     el.id = 'ftNotifOverlay';
-    el.style.cssText = 'position:fixed;inset:0;z-index:3200;display:flex;align-items:center;justify-content:center;background:rgba(11,30,45,.45);padding:16px';
+    el.className = 'modal';
+    el.style.cssText = 'z-index:3200;padding:16px';
     el.onclick = function (e) { if (e.target === el) window.ftCloseNotifPanel(); };
-    el.innerHTML = '<div style="background:var(--card);color:var(--text);width:min(560px,100%);max-height:min(82vh,640px);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(11,30,45,.35)">' +
+    el.innerHTML = '<div style="background:#ffffff;color:var(--text);position:relative;z-index:1;width:min(560px,100%);max-height:min(82vh,640px);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(11,30,45,.35);border:1px solid var(--border)">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)"><strong style="font-size:.95rem;color:var(--atmos-navy)"><i class="fa-solid fa-bell" style="color:var(--accent-amber)"></i> Notifications</strong><button type="button" onclick="ftCloseNotifPanel()" style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;color:var(--text-muted)"><i class="fa-solid fa-xmark"></i></button></div>' +
       '<div style="flex:1;overflow-y:auto;max-height:22rem">' + list + '</div>' +
       '<div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:.7rem;color:var(--text-muted)">Read items are removed after 4 days.</span><button type="button" onclick="ftClearNotifs()" style="border:none;background:transparent;color:var(--accent-rose);font-size:.75rem;font-weight:800;cursor:pointer"><i class="fa-solid fa-trash-can"></i> Clear All Notifications</button></div>' +
       '</div>';
     document.body.appendChild(el);
+    if (window.ftSyncModalLock) window.ftSyncModalLock();
     refreshBell();
   };
-  window.ftCloseNotifPanel = function () { var el = document.getElementById('ftNotifOverlay'); if (el) el.remove(); };
+  window.ftCloseNotifPanel = function () { var el = document.getElementById('ftNotifOverlay'); if (el) el.remove(); if (window.ftSyncModalLock) window.ftSyncModalLock(); };
   window.ftDeleteNotif = function (id) {
     var n = collect().filter(function (x) { return x.id === id; })[0];
     if (n) markDeleted(n);
@@ -11666,7 +11824,9 @@ function upiPayUri(amount) {
       card.id = 'bizSubCard';
       card.className = 'app-card';
       card.style.cssText = 'border-left:5px solid var(--atmos-red);margin-bottom:24px';
-      adminTab.insertBefore(card, adminTab.firstChild);
+      var __sw = document.getElementById('admGroupSwitch');
+      if (__sw && __sw.parentNode === adminTab) adminTab.insertBefore(card, __sw.nextSibling);
+      else adminTab.insertBefore(card, adminTab.firstChild);
     }
     card.innerHTML = buildBizSubCardHtml();
     try { applyAdminGroups(); } catch (e) {}
@@ -11678,14 +11838,16 @@ function upiPayUri(amount) {
   var labels = { trial: 'Free Trial', active: 'Active', grace: 'Grace Period', expired: 'Expired', blocked: 'Suspended', none: 'Not Registered' };
   var c = colors[st.status] || 'var(--text-muted)';
   var l = labels[st.status] || 'Unknown';
-  var daysBox;
-  if (st.status === 'grace') {
-    daysBox = '<div style="font-size:1.7rem;font-weight:900;color:var(--accent-amber);line-height:1">' + st.graceLeft + '</div><div style="font-size:.65rem;font-weight:800;color:var(--text-muted);margin-top:2px">GRACE DAYS LEFT</div>';
-  } else if (st.status === 'expired' || st.status === 'blocked') {
-    daysBox = '<div style="font-size:1.7rem;font-weight:900;color:var(--accent-rose);line-height:1">0</div><div style="font-size:.65rem;font-weight:800;color:var(--text-muted);margin-top:2px">DAYS LEFT</div>';
-  } else {
-    daysBox = '<div style="font-size:1.7rem;font-weight:900;color:' + (st.daysLeft <= 3 ? 'var(--accent-rose)' : 'var(--atmos-navy)') + ';line-height:1">' + st.daysLeft + '</div><div style="font-size:.65rem;font-weight:800;color:var(--text-muted);margin-top:2px">DAYS LEFT</div>';
-  }
+  var isTrial = st.status === 'trial';
+  var isPaid = st.status === 'active' || st.status === 'grace';
+  var dLeft = (st.status === 'grace') ? (st.graceLeft || 0) : (st.daysLeft || 0);
+  var periodText = (st.status === 'grace') ? 'in grace period' : (isTrial ? 'in trial period' : (isPaid ? 'in subscription period' : ((st.status === 'expired' || st.status === 'blocked') ? 'period expired' : 'not registered')));
+  var dayCol = (st.status === 'expired' || st.status === 'blocked') ? 'var(--accent-rose)' : (dLeft <= 5 ? '#fd7e14' : (isTrial ? '#800080' : (isPaid ? '#28a745' : 'var(--text-muted)')));
+  var daysBox = '<div style="text-align:right;min-width:100px">' +
+    '<div style="font-size:2rem;font-weight:900;color:' + dayCol + ';line-height:1">' + dLeft + '</div>' +
+    '<div style="font-size:.66rem;font-weight:900;color:' + dayCol + ';margin-top:3px;text-transform:uppercase;letter-spacing:.4px">days left</div>' +
+    '<div style="font-size:.66rem;font-weight:800;color:' + dayCol + ';margin-top:1px">' + periodText + '</div>' +
+    '</div>';
   var pill = 'background:var(--bg);border:1px solid var(--border);padding:4px 10px;border-radius:20px;font-size:.7rem;font-weight:800;color:var(--text-muted)';
   var counter = '';
   if (st.status === 'trial' && st.totalDays > 0) counter = '<div style="font-size:.85rem;font-weight:900;color:var(--atmos-navy);margin-bottom:8px">' + st.daysLeft + ' of ' + st.totalDays + ' days left</div>';
