@@ -2030,6 +2030,7 @@ html, body { background-color: transparent !important; background-image: none !i
       <button type="button" class="ftg-box" onclick="showAdminSection('staffSalarySection')"><i class="fa-solid fa-money-check-dollar" style="color:var(--accent-purple)"></i><span>2 &middot; Salary &amp; Incentives</span></button>
       <button type="button" class="ftg-box" onclick="showAdminSection('attendanceMgmtSection')"><i class="fa-solid fa-user-clock" style="color:var(--atmos-red)"></i><span>3 &middot; Attendance Management</span></button>
       <button type="button" class="ftg-box" onclick="showAdminSection('staffReportSection')"><i class="fa-solid fa-file-lines" style="color:var(--accent-amber)"></i><span>4 &middot; Staff Reports</span></button>
+      <button type="button" class="ftg-box" onclick="showAdminSection('ftStaffAnnounceSection')"><i class="fa-solid fa-bullhorn" style="color:var(--accent-rose)"></i><span>Staff Announcements</span></button>
       <button type="button" class="ftg-box" onclick="showAdminSection('analyticsSection')"><i class="fa-solid fa-chart-pie" style="color:var(--primary)"></i><span>Analytics &amp; Catalog</span></button>
     </div>
 
@@ -9384,7 +9385,11 @@ function renderPABusinesses() {
 /* GET BUSINESS SUBSCRIPTION STATUS */
 function getBizSubscriptionStatus(b) {
   if (b.blocked) return 'blocked';
-  if (!b.subscriptionStatus) return 'none';
+  if (!b.subscriptionStatus) {
+    var __te = trialEndFor(b);
+    if (!__te) return 'none';
+    return (Date.now() <= __te) ? 'trial' : 'expired';
+  }
   if (b.subscriptionStatus === 'trial') {
     if (getPlatformBranding().trialDays <= 0) return 'expired';
     var trialEnd = trialEndFor(b);
@@ -9851,6 +9856,16 @@ function approvePayment() {
   b.subscriptionStartDate = getISTDateStr(startDate);
   b.subscriptionExpiry = expiryStr;
   savePlatformData();
+  /* Tell the business its subscription was verified by the platform administrator. */
+  try {
+    var __nid = 'v_' + Date.now().toString(36);
+    var __msg = 'The account subscription is being verified by the FinTrack Platform Administrator. Your subscription is now active until ' + expiryStr + '.';
+    platformData.notifications = platformData.notifications || {};
+    platformData.notifications[__nid] = { id: __nid, type: 'individual', businessId: p.businessId, subject: 'Subscription verified', message: __msg, senderName: 'Platform Administrator', senderRole: 'Platform Administrator', audience: 'admin', sentAt: Date.now(), publishDate: '', expiryDate: '', totalTargets: 1, readBy: {} };
+    savePlatformData();
+    var __r = db();
+    if (__r) __r.ref('atmos_platform_admin/businesses/' + p.businessId + '/inbox/' + __nid).update({ id: __nid, subject: 'Subscription verified', message: __msg, senderName: 'Platform Administrator', senderRole: 'Platform Administrator', audience: 'admin', sentAt: Date.now(), publishAt: 0, expiryAt: 0 }).catch(function () {});
+  } catch (e) {}
   alert('Payment approved! Subscription activated.\n\nPlan: '+planInfo.name+'\nStart Date: '+getISTDateStr(startDate)+'\nExpiry Date: '+expiryStr+'\n\nRenewal calculated in calendar months. The subscription will expire at the end of '+expiryStr+'.');
   closePaPaymentModal();
   renderPlatformAdminViews();
@@ -10961,6 +10976,7 @@ window.addEventListener('DOMContentLoaded', function() {
   }
   var __ftSectionSwitch = showAdminSection;
   showAdminSection = function (id) {
+    window.__ftOpenAdminSection = id;
     var r;
     try { r = __ftSectionSwitch.apply(null, arguments); } catch (e) {}
     ['monthClosingSection', 'staffSalarySection', 'openingBalSection', 'staffReportSection', 'analyticsSection', 'attendanceMgmtSection', 'ftStaffAnnounceSection', 'ftStaffSection'].forEach(function (x) {
@@ -11626,7 +11642,8 @@ window.addEventListener('DOMContentLoaded', function() {
   renderBizSubscriptionCard = function () {
     var r = __rbc.apply(null, arguments);
     try {
-      var card = document.getElementById('bizSubCard'); var b = (PD().businesses || {})[activeBiz()] || null;
+      var card = document.getElementById('bizSubCard');
+    var __newCard = !card; var b = (PD().businesses || {})[activeBiz()] || null;
       if (card && b && !platformAdminUser) {
         var s = subInfo(Object.assign({ id: activeBiz() }, b));
         var host = document.getElementById('ftBizSubDetail');
@@ -11673,11 +11690,20 @@ function istMidnightOf(ms) {
   return Date.parse(d.toISOString().split('T')[0] + 'T00:00:00+05:30');
 }
 /* A business's trial end, normalised to the IST midnight boundary. */
+function trialStartFor(b) {
+  if (!b) return 0;
+  var s = Number(b.trialStartDate) || 0;
+  if (!s && b.joiningDate) s = Date.parse(String(b.joiningDate).split('T')[0] + 'T00:00:00+05:30');
+  if (!s && b.registeredAt) s = Number(b.registeredAt) || 0;
+  if (!s && b.createdAt) s = Number(b.createdAt) || 0;
+  return s ? istMidnightOf(s) : 0;
+}
+/* A business's trial end: stored end date, else start + configured trial days.
+   Records created before trial dates existed fall back to today. */
 function trialEndFor(b) {
   var end = b && b.trialEndDate ? Number(b.trialEndDate) : 0;
-  if (!end && b && b.joiningDate) {
-    end = Date.parse(String(b.joiningDate).split('T')[0] + 'T00:00:00+05:30') + (getPlatformBranding().trialDays * 86400000);
-  }
+  var start = trialStartFor(b);
+  if (!end && start) end = start + (getPlatformBranding().trialDays * 86400000);
   if (!end) return 0;
   return istMidnightOf(end);
 }
@@ -11756,13 +11782,23 @@ function getSubscriptionState() {
   }
 
   /* FREE TRIAL - no grace period once a trial ends */
+  if (!b.subscriptionStatus && !trialEndFor(b)) {
+    /* Legacy record with no trial dates at all: start its trial from today, once. */
+    try {
+      b.trialStartDate = istMidnightOf(now);
+      b.joiningDate = b.joiningDate || getISTDateStr();
+      b.trialEndDate = b.trialStartDate + (getPlatformBranding().trialDays * DAY);
+      b.subscriptionStatus = 'trial';
+      if (typeof savePlatformData === 'function') savePlatformData();
+    } catch (e) {}
+  }
   var recTrialEnd = trialEndFor(b);
-  var isTrialRecord = (b.subscriptionStatus === 'trial') || (!!recTrialEnd && !b.subscriptionStatus && recTrialEnd > now);
+  var isTrialRecord = (b.subscriptionStatus === 'trial') || (!!recTrialEnd && !b.subscriptionStatus);
   if (isTrialRecord) {
     st.plan = 'Free Trial';
     st.pricing = 'Free Trial';
     if (st.trialDays <= 0 && recTrialEnd) {
-      var __tStart = b.trialStartDate ? Number(b.trialStartDate) : (b.joiningDate ? Date.parse(String(b.joiningDate).split('T')[0] + 'T00:00:00+05:30') : 0);
+      var __tStart = trialStartFor(b) || (recTrialEnd - (getPlatformBranding().trialDays * DAY));
       if (__tStart) st.trialDays = Math.max(1, Math.round((recTrialEnd - __tStart) / DAY));
     }
     if (st.trialDays <= 0) {
@@ -11771,7 +11807,7 @@ function getSubscriptionState() {
       st.messageColor = 'var(--accent-rose)';
       return st;
     }
-    var trialEnd = trialEndFor(b);
+    var trialEnd = recTrialEnd;
     if (!trialEnd) { st.status = 'trial'; st.locked = false; st.totalDays = st.trialDays; return st; }
     st.totalDays = st.trialDays;
     st.expiryText = istDateText(trialEnd);
@@ -11847,20 +11883,22 @@ function upiPayUri(amount) {
       else adminTab.insertBefore(card, adminTab.firstChild);
     }
     card.innerHTML = buildBizSubCardHtml();
-    try { applyAdminGroups(); } catch (e) {}
+    if (__newCard) { try { applyAdminGroups(); } catch (e) {} }
   }
 
   function buildBizSubCardHtml() {
   var st = getSubscriptionState();
-  var colors = { trial: '#800080', active: 'var(--accent-green)', grace: 'var(--accent-amber)', expired: 'var(--accent-rose)', blocked: 'var(--accent-rose)', none: 'var(--text-muted)' };
-  var labels = { trial: 'Free Trial', active: 'Active', grace: 'Grace Period', expired: 'Expired', blocked: 'Suspended', none: 'Not Registered' };
+  var colors = { trial: '#800080', active: '#2E8B57', grace: '#DC2626', expired: '#8B0000', blocked: '#8B0000', none: 'var(--text-muted)' };
+  var labels = { trial: 'Trial Period', active: 'Subscription Active', grace: 'Grace Period', expired: 'Not Renewed', blocked: 'Blocked', none: 'Not Registered' };
   var c = colors[st.status] || 'var(--text-muted)';
   var l = labels[st.status] || 'Unknown';
   var isTrial = st.status === 'trial';
-  var isPaid = st.status === 'active' || st.status === 'grace';
+  var isPaid = st.status === 'active';
   var dLeft = (st.status === 'grace') ? (st.graceLeft || 0) : (st.daysLeft || 0);
+  var endingSoon = (st.status === 'active' || isTrial) && dLeft <= 5;
+  if (endingSoon && dLeft > 0) l = isTrial ? 'Trial Ending' : 'Subscription Ending';
   var periodText = (st.status === 'grace') ? 'in grace period' : (isTrial ? 'in trial period' : (isPaid ? 'in subscription period' : ((st.status === 'expired' || st.status === 'blocked') ? 'period expired' : 'not registered')));
-  var dayCol = isTrial ? '#800080' : ((st.status === 'expired' || st.status === 'blocked') ? '#B22222' : (st.status === 'grace' ? '#D2691E' : (isPaid ? (dLeft <= 5 ? '#F97316' : '#2E8B57') : 'var(--text-muted)')));
+  var dayCol = isTrial ? '#800080' : (isPaid ? (dLeft <= 5 ? '#F97316' : '#2E8B57') : (st.status === 'grace' ? '#DC2626' : ((st.status === 'expired' || st.status === 'blocked') ? '#8B0000' : 'var(--text-muted)')));
   var daysBox = '<div style="text-align:center;width:100%;min-width:100px;display:flex;flex-direction:column;align-items:center;justify-content:center">' +
     '<div style="font-size:2rem;font-weight:900;color:' + dayCol + ';line-height:1">' + dLeft + '</div>' +
     '<div style="font-size:.66rem;font-weight:900;color:' + dayCol + ';margin-top:3px;text-transform:uppercase;letter-spacing:.4px">days left</div>' +
@@ -11869,7 +11907,7 @@ function upiPayUri(amount) {
   var pill = 'background:var(--bg);border:1px solid var(--border);padding:4px 10px;border-radius:20px;font-size:.7rem;font-weight:800;color:var(--text-muted)';
   var counter = '';
   if (st.status === 'trial' && st.totalDays > 0) counter = '<div style="font-size:.85rem;font-weight:900;color:var(--atmos-navy);margin-bottom:8px;text-align:center">' + st.daysLeft + ' of ' + st.totalDays + ' days left</div>';
-  if (st.status === 'grace') counter = '<div style="font-size:.85rem;font-weight:900;color:#D2691E;margin-bottom:8px;text-align:center">' + st.graceLeft + ' of ' + SUB_GRACE_DAYS + ' grace days left</div>';
+  if (st.status === 'grace') counter = '<div style="font-size:.85rem;font-weight:900;color:#DC2626;margin-bottom:8px;text-align:center">' + st.graceLeft + ' of ' + SUB_GRACE_DAYS + ' grace days left</div>';
   var msg = st.message ? '<div style="font-size:.83rem;font-weight:800;color:' + st.messageColor + ';margin-bottom:12px">' + st.message + '</div>' : '';
   return '<div style="display:flex;justify-content:space-between;align-items:stretch;gap:16px;flex-wrap:wrap">'
     + '<div style="flex:1;min-width:230px">'
@@ -11976,14 +12014,67 @@ function subscriptionBlocks(el) {
     }
   }, true);
 });
-setInterval(function () { try { renderSubLockBanner(); renderBizSubscriptionCard(); } catch (e) {} }, 8000);
+setInterval(function () { try { renderSubLockBanner(); renderBizSubscriptionCard(); ftRenderAccessLock(); } catch (e) {} }, 8000);
 
 function checkSubscriptionLock() {
   var m = document.getElementById('subLockModal');
   if (m) m.style.display = 'none';
   renderSubLockBanner();
   try { renderBizSubscriptionCard(); } catch (e) {}
+  try { ftRenderAccessLock(); } catch (e) {}
 }
+
+/* Full-screen access lock. Appears the moment a trial or the 3 day grace
+   period is over and stays until the platform administrator verifies payment. */
+function ftRenderAccessLock() {
+  var el = document.getElementById('ftAccessLock');
+  var st = null;
+  try { st = (currentUser && !platformAdminUser) ? getSubscriptionState() : null; } catch (e) { st = null; }
+  if (!st || !st.registered || !st.locked) { if (el) el.remove(); return; }
+  var anyModal = false;
+  document.querySelectorAll('.modal').forEach(function (m) {
+    var d = m.style.display;
+    if (m.id !== 'subLockModal' && d && d !== 'none') anyModal = true;
+  });
+  if (anyModal) { if (el) el.remove(); return; }
+  var isTrial = st.status === 'trial';
+  var blocked = st.status === 'blocked';
+  var col = isTrial ? '#800080' : '#8B0000';
+  var title = blocked ? 'Account Blocked' : (isTrial ? 'Free Trial Ended' : 'Subscription Not Renewed');
+  var pending = false;
+  try { pending = hasPendingPayment(); } catch (e) {}
+  var when = (st.expiryText && st.expiryText !== '—') ? '<div style="font-size:.72rem;color:var(--text-muted);margin-top:6px">Ended on ' + st.expiryText + '</div>' : '';
+  var body = ''
+    + '<div style="background:#fff;border-radius:18px;padding:24px;max-width:420px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(11,30,45,.35);border-top:6px solid ' + col + '">'
+    + '<div style="font-size:.68rem;font-weight:900;letter-spacing:1.2px;color:#0B1E2D;text-transform:uppercase">FinTrack Business</div>'
+    + '<div style="font-size:.62rem;font-weight:800;letter-spacing:.8px;color:#6B7A8F;text-transform:uppercase;margin-bottom:12px">Business Management Platform</div>'
+    + '<h3 style="font-size:1.12rem;font-weight:900;color:' + col + ';margin:0 0 8px">' + title + '</h3>'
+    + '<div style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg,#f6f8fb);border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:12px 22px;margin-bottom:10px">'
+    + '<div style="font-size:2rem;font-weight:900;color:' + col + ';line-height:1">' + (st.status === 'grace' ? (st.graceLeft || 0) : (st.daysLeft || 0)) + '</div>'
+    + '<div style="font-size:.64rem;font-weight:900;color:' + col + ';text-transform:uppercase;letter-spacing:.4px;margin-top:3px">days left</div>'
+    + when + '</div>'
+    + '<p style="font-size:.83rem;font-weight:700;color:#334155;margin:10px 0 14px;line-height:1.5">' + (st.message || 'Kindly renew your subscription to continue.') + '</p>'
+    + (pending
+        ? '<div style="background:#fff7ed;border:1px solid #fdba74;color:#9a3412;border-radius:10px;padding:10px 12px;font-size:.76rem;font-weight:800;margin-bottom:10px">Payment submitted. Waiting for the FinTrack Platform Administrator to verify it.</div>'
+        : '<button class="btn-admin" onclick="ftLockPay()" style="width:100%;justify-content:center"><i class="fa-solid fa-qrcode"></i> Pay / Renew Subscription</button>')
+    + '<div style="font-size:.66rem;color:#7c8899;margin-top:12px;line-height:1.5">Records, reports, edits, deletions and downloads are paused until the Platform Administrator verifies your payment.</div>'
+    + '<div style="font-size:.62rem;color:#9aa6b5;margin-top:8px">Access is restored automatically after verification.</div>'
+    + '</div>';
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'ftAccessLock';
+    el.style.cssText = 'position:fixed;inset:0;z-index:2147483200;background:rgba(11,30,45,.62);display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto';
+    document.body.appendChild(el);
+  }
+  el.innerHTML = body;
+}
+function ftLockPay() {
+  var el = document.getElementById('ftAccessLock');
+  if (el) el.remove();
+  try { openPaSubmitPayment(); } catch (e) {}
+}
+window.ftRenderAccessLock = ftRenderAccessLock;
+window.ftLockPay = ftLockPay;
 
 function toggleIntroOffer() {
     if (!platformData.introductoryOffer) platformData.introductoryOffer = {};
@@ -12155,6 +12246,12 @@ function applyAdminGroups() {
     if (isPlatform) { card.style.display = 'none'; return; }
     card.style.display = (admCardGroup(card) === adminGroup) ? '' : 'none';
   });
+  /* Keep whichever option box the administrator opened visible. */
+  var __open = window.__ftOpenAdminSection;
+  if (__open && !isPlatform) {
+    var __oe = document.getElementById(__open);
+    if (__oe && __oe.classList && __oe.classList.contains('app-card') && admCardGroup(__oe) === adminGroup) __oe.style.display = 'block';
+  }
 }
 
 function setAdminGroup(group, btnElem) {
