@@ -620,6 +620,12 @@ html, body { background-color: transparent !important; background-image: none !i
 .catalog-scroll thead th { position: sticky; top: 0; background: #fff; z-index: 1; }
 .catalog-hint { margin-top: 8px; font-size: .7rem; color: var(--text-muted, #5b6b7c); display: flex; align-items: center; gap: 6px; }
 </style>
+<style>
+.sync-badge.sync-online{background:#dcfce7!important;color:#166534!important;border:1px solid #86efac!important}
+.sync-badge.sync-pending{background:#fef3c7!important;color:#92400e!important;border:1px solid #fcd34d!important}
+.sync-badge.sync-offline{background:#e2e8f0!important;color:#475569!important;border:1px solid #cbd5e1!important}
+.sync-badge.sync-error{background:#fee2e2!important;color:#991b1b!important;border:1px solid #fca5a5!important}
+</style>
 </head>
 <body>
 <div id="ftbBootSplash" style="position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:#F6F3ED;opacity:1;transition:opacity .35s ease">
@@ -707,8 +713,8 @@ html, body { background-color: transparent !important; background-image: none !i
         <select id="bizRegCategory" onchange="toggleBizRegCustomCategory()">
           <option value="Akshaya Center">Akshaya Center</option>
           <option value="CSC">CSC (Common Service Center)</option>
-          <option value="All">All</option>
-          <option value="Other">Other (enter manually)</option>
+          
+          <option value="Custom">Custom (enter your own category)</option>
         </select>
       </div>
       <div class="pa-modal-field" id="bizRegCustomCategoryWrap" style="display:none"><label>Enter Your Category</label><input type="text" id="bizRegCustomCategory" placeholder="Type your business category"></div>
@@ -866,7 +872,7 @@ html, body { background-color: transparent !important; background-image: none !i
       </div>
 
       <div id="loginErrorMsg" class="login-error" style="display:none"><i class="fa-solid fa-circle-exclamation" style="margin-top:2px"></i><span id="loginErrorText"></span></div>
-      <button class="login-btn-primary" onclick="performLogin()">Access FinTrack <i class="fa-solid fa-arrow-right"></i></button><a class="login-link" id="paLoginLink" style="display:none;text-align:center;margin-top:12px;font-size:.72rem;font-weight:700" onclick="openPlatformAdminLogin()"><i class="fa-solid fa-shield-halved"></i> Platform Admin Login</a><div id="paSetupLinkContainer" style="display:none;text-align:center;margin-top:12px"><a class="login-link" onclick="openPaSetupModal()">Create Platform Administrator (one time)</a></div>
+      <button class="login-btn-primary" onclick="performLogin()">Access FinTrack Business <i class="fa-solid fa-arrow-right"></i></button><a class="login-link" id="paLoginLink" style="display:none;text-align:center;margin-top:12px;font-size:.72rem;font-weight:700" onclick="openPlatformAdminLogin()"><i class="fa-solid fa-shield-halved"></i> Platform Admin Login</a><div id="paSetupLinkContainer" style="display:none;text-align:center;margin-top:12px"><a class="login-link" onclick="openPaSetupModal()">Create Platform Administrator (one time)</a></div>
     </div>
 
     <div class="login-foot">
@@ -984,8 +990,8 @@ html, body { background-color: transparent !important; background-image: none !i
       <select id="bizDetCategory" onchange="toggleBizDetCustomCategory()">
         <option value="Akshaya Center">Akshaya Center</option>
         <option value="CSC">CSC (Common Service Center)</option>
-        <option value="All">All</option>
-        <option value="Other">Other (enter manually)</option>
+        
+        <option value="Custom">Custom (enter your own category)</option>
       </select>
     </div>
     <div class="pa-modal-field" id="bizDetCustomCategoryWrap" style="display:none"><label>Enter Your Category</label><input type="text" id="bizDetCustomCategory" placeholder="Type your business category"></div>
@@ -1009,7 +1015,7 @@ html, body { background-color: transparent !important; background-image: none !i
     </div>
   </div>
   <div class="nav-actions">
-    <span id="cloudSyncStatusBadge" class="sync-badge sync-local"><i class="fa-solid fa-cloud"></i> Sync to Cloud</span>
+    <button id="ftNotifBell" type="button" class="nav-icon-btn" title="Notifications" onclick="ftOpenNotifPanel()" style="position:relative;margin-right:6px"><i class="fa-solid fa-bell"></i><span id="ftNotifBadge" style="display:none;position:absolute;top:-5px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:#FACC15;color:#0B1E2D;font-size:.62rem;font-weight:900;line-height:16px;text-align:center;box-shadow:0 0 0 1px #fff">0</span></button><span id="cloudSyncStatusBadge" class="sync-badge sync-local"><i class="fa-solid fa-cloud"></i> Sync to Cloud</span>
     <span id="activeUserBadge" class="user-pill">Guest</span>
     <button class="nav-icon-btn" onclick="appLogout()" title="Sign Out"><i class="fa-solid fa-power-off"></i></button>
   </div>
@@ -1991,13 +1997,24 @@ html, body { background-color: transparent !important; background-image: none !i
     </div>
 
     <!-- SUB-TAB NAVIGATION FOR ADMIN CONTROL -->
-    <div style="display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto;">
-      <button class="btn-primary" style="width: auto; padding: 6px 12px; font-size: 0.8rem;" onclick="showAdminSection('monthClosingSection')">Month Closing</button>
-      <button class="btn-primary" style="width: auto; padding: 6px 12px; font-size: 0.8rem; background: var(--accent-purple);" onclick="showAdminSection('staffSalarySection')">Staff Salary & Incentive</button>
-      <button class="btn-primary" style="width: auto; padding: 6px 12px; font-size: 0.8rem; background: var(--accent-green);" onclick="showAdminSection('openingBalSection')">Opening Balances</button>
-      <button class="btn-primary" style="width: auto; padding: 6px 12px; font-size: 0.8rem; background: var(--accent-amber);" onclick="showAdminSection('staffReportSection')">Staff Reports</button>
-      <button class="btn-primary" style="width: auto; padding: 6px 12px; font-size: 0.8rem; background: var(--primary);" onclick="showAdminSection('analyticsSection')">Analytics & Catalog</button>
-      <button class="btn-primary" style="width: auto; padding: 6px 12px; font-size: 0.8rem; background: var(--atmos-red);" onclick="showAdminSection('attendanceMgmtSection')">Attendance Management</button>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin-bottom:16px">
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px">
+        <div style="font-size:.72rem;font-weight:900;color:var(--accent-green);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px"><i class="fa-solid fa-sack-dollar"></i> Money Management</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem" onclick="showAdminSection('monthClosingSection')">Month Closing</button>
+          <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--accent-green)" onclick="showAdminSection('openingBalSection')">Opening Balances</button>
+        </div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px">
+        <div style="font-size:.72rem;font-weight:900;color:var(--accent-purple);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px"><i class="fa-solid fa-users-gear"></i> Staff Management</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--atmos-navy)" onclick="openAddStaffModal()">1 &middot; Add Staff</button>
+          <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--accent-purple)" onclick="showAdminSection('staffSalarySection')">2 &middot; Salary &amp; Incentives</button>
+          <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--atmos-red)" onclick="showAdminSection('attendanceMgmtSection')">3 &middot; Attendance Management</button>
+          <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--accent-amber)" onclick="showAdminSection('staffReportSection')">4 &middot; Staff Reports</button>
+          <button class="btn-primary" style="width:auto;padding:7px 13px;font-size:.8rem;background:var(--primary)" onclick="showAdminSection('analyticsSection')">Analytics &amp; Catalog</button>
+        </div>
+      </div>
     </div>
 
     <!-- 1b. ATTENDANCE MANAGEMENT PORTAL (ADMIN ONLY) -->
@@ -2047,7 +2064,7 @@ html, body { background-color: transparent !important; background-image: none !i
             <input type="time" id="attRuleReportingTime" value="09:25">
           </div>
           <div class="form-group" style="margin: 0;">
-            <label>Grace Period (minutes)</label>
+            <label>Late Check-in Grace Period (minutes)</label>
             <input type="number" id="attRuleGrace" min="0" step="1" value="0">
           </div>
           <div class="form-group" style="margin: 0;">
@@ -2138,7 +2155,7 @@ html, body { background-color: transparent !important; background-image: none !i
               <th>SERVICE CHARGE COLLECTED (₹)</th>
               <th>INCENTIVE AMOUNT (₹)</th>
               <th>ATTENDANCE %</th>
-              <th>ATTENDANCE ADJUSTMENT (₹)</th>
+              <th>ATTENDANCE DEDUCTION (₹)</th>
               <th>TOTAL PAYABLE SALARY (₹)</th>
               <th>ACTION</th>
             </tr>
@@ -2228,12 +2245,20 @@ html, body { background-color: transparent !important; background-image: none !i
         </div>
 
         <div id="staffWiseReportCard" style="background: white; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border);">
+    <div style="border-bottom:2px solid var(--atmos-navy); padding-bottom:10px; margin-bottom:16px;">
+      <div id="repBizShopName" style="font-size:1.2rem; font-weight:900; color:var(--atmos-navy);">&mdash;</div>
+      <div id="repBizAddress" style="font-size:.8rem; color:var(--text-muted); margin-top:3px;">&mdash;</div>
+      <div id="repBizContact" style="font-size:.8rem; color:var(--text-muted);">&mdash;</div>
+      <div style="font-size:.7rem; font-weight:900; color:var(--atmos-red); letter-spacing:.08em; margin-top:8px;">INDIVIDUAL STAFF REPORT</div>
+    </div>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px;">
             <div><span style="font-size:0.7rem; color:var(--text-muted);">STAFF NAME</span><div id="repStaffName" style="font-weight:800; font-size:1rem;">-</div></div>
             <div><span style="font-size:0.7rem; color:var(--text-muted);">TOTAL INTERACTIONS</span><div id="repStaffInteractions" style="font-weight:800; font-size:1rem;">0</div></div>
             <div><span style="font-size:0.7rem; color:var(--text-muted);">TOTAL COLLECTION</span><div id="repStaffCollection" style="font-weight:800; font-size:1rem; color:var(--accent-green);">₹0.00</div></div>
             <div><span style="font-size:0.7rem; color:var(--text-muted);">INCENTIVE</span><div id="repStaffIncentive" style="font-weight:800; font-size:1rem; color:var(--primary);">₹0.00</div></div>
-            <div><span style="font-size:0.7rem; color:var(--text-muted);">WORKING DAYS</span><div id="repStaffWorkDays" style="font-weight:800; font-size:1rem;">0</div></div>
+            <div><span style="font-size:0.7rem; color:var(--text-muted);">BASIC SALARY</span><div id="repStaffBasic" style="font-weight:800; font-size:1rem;">₹0.00</div></div>
+        <div><span style="font-size:0.7rem; color:var(--text-muted);">ATTENDANCE DEDUCTION</span><div id="repStaffDeduction" style="font-weight:800; font-size:1rem; color:var(--accent-rose);">₹0.00</div></div>
+        <div><span style="font-size:0.7rem; color:var(--text-muted);">WORKING DAYS</span><div id="repStaffWorkDays" style="font-weight:800; font-size:1rem;">0</div></div>
             <div><span style="font-size:0.7rem; color:var(--text-muted);">SUNDAYS OFF</span><div id="repStaffSundays" style="font-weight:800; font-size:1rem;">0</div></div>
             <div><span style="font-size:0.7rem; color:var(--text-muted);">ON TIME / LATE / ABSENT</span><div id="repStaffAttdBreakdown" style="font-weight:800; font-size:1rem;">0 / 0 / 0</div></div>
             <div><span style="font-size:0.7rem; color:var(--text-muted);">ATTENDANCE %</span><div id="repStaffAttdPct" style="font-weight:800; font-size:1rem;">0%</div></div>
@@ -2245,7 +2270,7 @@ html, body { background-color: transparent !important; background-image: none !i
               <div id="repStaffTotalPayable" style="font-size: 1.4rem; font-weight: 900; color: var(--atmos-navy);">₹0.00</div>
             </div>
             <div style="font-size: 0.85rem; font-weight: 800; color: var(--accent-green); background: var(--accent-green-bg); padding: 8px 16px; border-radius: 20px;">
-              <i class="fa-solid fa-circle-check"></i> Verified by Admin: Anees Fazil
+              <i class="fa-solid fa-circle-check"></i> Verified by Admin: <span id="repStaffVerifiedBy">&mdash;</span>
             </div>
           </div>
         </div>
@@ -2405,8 +2430,9 @@ html, body { background-color: transparent !important; background-image: none !i
       <!-- STAFF CREDENTIAL MANAGEMENT -->
       <div class="app-card" style="margin-bottom: 24px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-          <h3 style="font-size: 1.05rem; font-weight: 800;">Staff Credential Management</h3>
+          <h3 style="font-size: 1.05rem; font-weight: 800;">Credential Management</h3>
           <button class="btn-primary" onclick="openAddStaffModal()" style="width: auto;"><i class="fa-solid fa-user-plus"></i> Add New Staff</button>
+      <div id="adminCredentialLine" style="margin-bottom:16px;padding:12px 14px;border:1px solid var(--border);border-left:4px solid var(--atmos-navy);border-radius:var(--radius-md);background:var(--bg);font-size:.85rem;font-weight:700;color:var(--atmos-navy);display:none"></div>
         </div>
         <div style="overflow-x: auto;">
           <table>
@@ -2819,8 +2845,7 @@ html, body { background-color: transparent !important; background-image: none !i
 <div class="app-card" style="border-left:5px solid var(--primary)">
 <h3 style="font-size:1rem;font-weight:800;margin-bottom:8px"><i class="fa-solid fa-shield-halved" style="color:var(--primary)"></i> Security & Firebase Rules</h3>
 <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:12px">Platform administrator permissions and business-level data separation are enforced through trusted backend logic and Firebase security rules. Do not rely on frontend visibility alone.</p>
-<div style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:var(--radius-md);font-family:monospace;font-size:.72rem;overflow-x:auto;max-height:300px;overflow-y:auto" id="paFirebaseRules"></div>
-<button class="btn-primary" onclick="copyFirebaseRules()" style="width:auto;margin-top:10px"><i class="fa-solid fa-copy"></i> Copy Rules</button>
+<div style="background:var(--accent-green-bg);border:1px solid var(--accent-green);border-radius:var(--radius-md);padding:12px;font-size:.82rem;color:var(--atmos-navy)"><i class="fa-solid fa-shield-halved" style="color:var(--accent-green)"></i> <strong>Security rules are active on the Firebase project.</strong> They are managed in the Firebase console and are deliberately not displayed here.</div>
 </div>
 <div class="app-card">
 <h3 style="font-size:1rem;font-weight:800;margin-bottom:12px">Platform Admin Account</h3>
@@ -3129,7 +3154,8 @@ html, body { background-color: transparent !important; background-image: none !i
 <div class="modal-card" style="max-width:520px">
 <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:16px">Register New Business</h3>
 <div class="form-group"><label>Business Name</label><input type="text" id="paNewBizName" placeholder="Enter the business name" required></div>
-<div class="form-group"><label>Category</label><select id="paNewBizCategory"><option value="CSC">Common Service Center</option><option value="Retail">Retail Shop</option><option value="Services">Service Business</option><option value="Other">Other</option></select></div>
+<div class="form-group"><label>Category</label><select id="paNewBizCategory" onchange="togglePaNewBizCustomCategory()"><option value="Akshaya Center">Akshaya Center</option><option value="CSC">CSC (Common Service Center)</option><option value="Custom">Custom (enter your own category)</option></select></div>
+      <div class="form-group" id="paNewBizCustomCategoryWrap" style="display:none"><label>Enter Your Category</label><input type="text" id="paNewBizCustomCategory" placeholder="Type your business category"></div>
 <div class="form-group"><label>Administrator Name</label><input type="text" id="paNewBizAdmin" placeholder="Business admin name" required></div>
 <div class="form-group"><label>Administrator Contact Number</label><input type="text" id="paNewBizContact" placeholder="Enter the mobile number"></div>
 <div class="form-group"><label>Administrator Email (optional)</label><input type="email" id="paNewBizEmail" placeholder="Enter the email address"></div>
@@ -3158,18 +3184,18 @@ html, body { background-color: transparent !important; background-image: none !i
 <div id="paSubmitPaymentModal" class="modal" style="display:none;z-index:1600">
 <div class="modal-card" style="max-width:540px;max-height:92vh;overflow-y:auto">
 <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:6px">Submit UPI Payment</h3>
-<p style="font-size:.8rem;color:var(--text-muted);margin-bottom:12px">Scan the QR below with any UPI app and enter the amount. Then submit your payment details for verification.</p>
+<p style="font-size:.8rem;color:var(--text-muted);margin-bottom:12px">Select a subscription plan, then scan the QR below with any UPI app. The amount is set automatically from your plan. Submit your payment details for verification.</p>
 <div style="text-align:center;margin-bottom:14px">
 <div id="paPayQr" style="display:inline-block;background:#fff;padding:10px;border:1px solid var(--border);border-radius:var(--radius-md)"></div>
 <div id="paPayQrAmount" style="font-size:1.05rem;font-weight:900;color:var(--accent-green);margin-top:8px">&#8377;0</div>
 <div style="font-size:.68rem;color:var(--text-muted);margin-top:2px">Scan with PhonePe / GPay / Paytm / any UPI app</div>
 </div>
-<div class="form-group"><label>Select Plan</label><select id="paPayPlan" onchange="syncPayAmount();refreshPaymentQr();"><option value="1month">Monthly</option><option value="3months">Quarterly</option><option value="6months">Half-Yearly</option><option value="12months">Yearly</option></select></div>
+<div class="form-group"><label>Select Plan</label><select id="paPayPlan" onchange="syncPayAmount();refreshPaymentQr();"><option value="">Select a plan...</option><option value="1month">Monthly</option><option value="3months">Quarterly</option><option value="6months">Half-Yearly</option><option value="12months">Yearly</option></select></div>
 <div class="form-group"><label>Pricing Type</label><select id="paPayPricingType"><option value="normal">Normal Pricing</option></select><div id="paPayPricingHint" style="font-size:.68rem;color:var(--text-muted);margin-top:5px"></div></div>
 <div class="form-group"><label>Transaction / Reference ID</label><input type="text" id="paPayTxnId" placeholder="Enter UPI transaction/reference ID" required></div>
 <div class="form-group"><label>Your Mobile Number</label><input type="tel" id="paPayMobile" placeholder="Enter the mobile number" required></div>
 <div class="form-group"><label>Payment Screenshot</label><input type="file" id="paPayScreenshot" accept="image/*"></div>
-<div class="form-group"><label>Amount Paid (₹)</label><input type="number" id="paPayAmount" placeholder="Enter the amount" min="1" oninput="refreshPaymentQr()" required></div>
+<div class="form-group"><label>Amount Paid (₹)</label><input type="number" id="paPayAmount" placeholder="Amount is set from the plan" min="1" readonly style="background:var(--bg);cursor:not-allowed;font-weight:800" title="The amount is set automatically from the selected plan" required></div>
 <div style="display:flex;gap:10px;margin-top:16px">
 <button style="flex:1;background:var(--bg);color:var(--text-muted)" onclick="closePaSubmitPayment()">Cancel</button>
 <button style="flex:1" class="btn-primary" onclick="submitPayment()"><i class="fa-brands fa-whatsapp"></i> Submit for Verification</button>
@@ -4085,7 +4111,7 @@ const FIREBASE_CONFIG = {
   }
 
   function saveData() {
-    if (currentUser && !platformAdminUser && getSubscriptionState().locked) { checkSubscriptionLock(); return; }
+    if (currentUser && !platformAdminUser && getSubscriptionState().locked) { checkSubscriptionLock(); showSubLockNotice(); return false; }
     persistLocalData();
     if (isFirebaseSyncActive && firebaseDbRef) {
       firebaseDbRef.set(convertToLegacyFormat()).catch(err => console.error("Firebase sync write error:", err));
@@ -7282,11 +7308,9 @@ const FIREBASE_CONFIG = {
     var salCfg = (appData.monthlySalaries[month] && appData.monthlySalaries[month][staffName]) || {};
     var basicForDed = parseFloat(salCfg.basic || 0);
     var dedInfo = getAttendanceDeductionDetails(staffName, month, basicForDed);
-    var override = null;
-    if (salCfg.attAdjustment !== undefined) override = parseFloat(salCfg.attAdjustment || 0);
     return {
       pct: getStaffAttendancePct(staffName, month),
-      adjustment: (override !== null ? override : dedInfo.deduction),
+      adjustment: dedInfo.deduction,
       reason: 'Absent ' + dedInfo.absent + ' × ₹' + dedInfo.dailyRate.toFixed(2) + ' + Half Day ' + dedInfo.halfDay + ' × ₹' + (dedInfo.dailyRate / 2).toFixed(2),
       autoDeduction: dedInfo.deduction
     };
@@ -7318,7 +7342,7 @@ const FIREBASE_CONFIG = {
         <td>₹${collection.toFixed(2)}</td>
         <td style="color:var(--accent-green); font-weight:800;">₹${incentive.toFixed(2)}</td>
         <td>${attPct}%</td>
-        <td><input type="number" id="attAdj_${u.name}" value="${attAdjustment}" style="width:90px;" min="0" ${finalized ? 'disabled' : ''} title="${adjInfo.reason}"><div style="font-size:0.62rem; color:var(--text-muted);">Auto: ₹${(adjInfo.autoDeduction || 0).toFixed(2)}</div></td>
+        <td style="font-weight:800; color:var(--accent-rose);" title="${adjInfo.reason}">₹${attAdjustment.toFixed(2)}</td>
         <td style="color:var(--atmos-navy); font-weight:900;">₹${totalPayable.toFixed(2)}</td>
         <td>${finalized ? '<button onclick="unfinalizeStaffSalary(\'${u.name}\')" style="background:none; color:var(--accent-amber); font-size:0.75rem;"><i class="fa-solid fa-lock-open"></i> Reopen</button>' : '<button onclick="finalizeStaffSalary(\'${u.name}\')" style="background:none; color:var(--accent-green); font-size:0.75rem;"><i class="fa-solid fa-check"></i> Finalize</button>'}</td>
       `;
@@ -7332,7 +7356,7 @@ const FIREBASE_CONFIG = {
     var basic = parseFloat(document.getElementById('basicSal_' + staffName).value || 0);
     var incPct = parseFloat(document.getElementById('incPct_' + staffName).value || 0);
     if (incPct < 0) incPct = 0; if (incPct > 100) incPct = 100;
-    var attAdj = parseFloat(document.getElementById('attAdj_' + staffName).value || 0);
+    var attAdj = getAttendanceDeductionDetails(staffName, month, basic).deduction;
     if (attAdj < 0) attAdj = 0;
     var collection = 0;
     appData.serviceLog.filter(s => s.staff === staffName && s.date.substring(0, 7) === month).forEach(s => { collection += parseFloat(s.serviceCharge || 0); });
@@ -7371,7 +7395,7 @@ const FIREBASE_CONFIG = {
       var basicVal = parseFloat(document.getElementById('basicSal_' + u.name).value || 0);
       var incPctVal = parseFloat(document.getElementById('incPct_' + u.name).value || 0);
       if (incPctVal < 0) incPctVal = 0; if (incPctVal > 100) incPctVal = 100;
-      var attAdjVal = parseFloat(document.getElementById('attAdj_' + u.name).value || 0);
+      var attAdjVal = getAttendanceDeductionDetails(u.name, month, basicVal).deduction;
       if (attAdjVal < 0) attAdjVal = 0;
       appData.monthlySalaries[month][u.name] = { basic: basicVal, incentivePct: incPctVal, attAdjustment: attAdjVal, finalized: existing.finalized || false, finalizedAmount: existing.finalizedAmount };
     });
@@ -7511,6 +7535,15 @@ const FIREBASE_CONFIG = {
 
     const workingDays = daysInMonth - sundays;
     document.getElementById('repStaffWorkDays').innerText = workingDays;
+  var __bizP = getBusinessProfile();
+  var __admU = appData.users.find(function (u) { return u.role === 'Admin'; });
+  var __put = function (id, val) { var el = document.getElementById(id); if (el) el.innerText = val; };
+  __put('repBizShopName', __bizP.shopName || 'My Business');
+  __put('repBizAddress', __bizP.address || 'Address not set');
+  __put('repBizContact', (__admU && __admU.mobile) ? ('Contact: ' + __admU.mobile) : 'Contact not set');
+  __put('repStaffVerifiedBy', __admU ? __admU.name : 'Admin');
+  __put('repStaffBasic', '₹' + basic.toFixed(2));
+  __put('repStaffDeduction', '₹' + adjInfo.adjustment.toFixed(2));
     document.getElementById('repStaffSundays').innerText = sundays;
 
     let onTime = 0, late = 0, absent = 0;
@@ -7742,7 +7775,16 @@ const FIREBASE_CONFIG = {
     const tbody = document.getElementById('staffPasswordTable');
     tbody.innerHTML = '';
 
-    appData.users.forEach((u, idx) => {
+    var adminUserRow = appData.users.find(function (u) { return u.role === 'Admin'; });
+  var adminLine = document.getElementById('adminCredentialLine');
+  if (adminLine) {
+    adminLine.style.display = 'block';
+    adminLine.innerHTML = '<i class="fa-solid fa-user-shield"></i> Administrator: ' + ((adminUserRow && adminUserRow.name) ? String(adminUserRow.name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '—') + ' <span style="font-weight:400;color:var(--text-muted)">— separate from staff sign-ins below</span>';
+  }
+  var staffCredUsers = appData.users.filter(function (u) { return u.role === 'Staff'; });
+  if (staffCredUsers.length === 0) tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">No staff members have been added yet. Use "Add New Staff" to create a staff sign-in.</td></tr>';
+  staffCredUsers.forEach((u) => {
+    var idx = appData.users.indexOf(u);
       const tr = document.createElement('tr');
       const delBtn = u.role !== 'Admin' ? '<button onclick="deleteStaffUser(' + idx + ')" style="background:none; color:var(--accent-rose);"><i class="fa-solid fa-trash"></i> Delete</button>' : '';
 
@@ -8088,7 +8130,11 @@ const FIREBASE_CONFIG = {
     var adminUser = appData.users.find(function(u) { return u.role === 'Admin'; });
     var adminName = adminUser ? adminUser.name : 'Admin';
     var shopName = (getBusinessProfile().shopName) || 'My Business';
-    var logs = appData.serviceLog.filter(function(s) { return s.staff === staffName && s.date.substring(0, 7) === month; });
+    var __bizProf = getBusinessProfile();
+  var bizAddress = __bizProf.address || 'Address not set';
+  var __bizAdminU = appData.users.find(function(u) { return u.role === 'Admin'; });
+  var bizPhone = __bizAdminU ? (__bizAdminU.mobile || '') : '';
+  var logs = appData.serviceLog.filter(function(s) { return s.staff === staffName && s.date.substring(0, 7) === month; });
     var collection = 0;
     logs.forEach(function(s) { collection += parseFloat(s.serviceCharge || 0); });
     var salCfg = (appData.monthlySalaries[month] && appData.monthlySalaries[month][staffName]) || {};
@@ -8126,13 +8172,15 @@ const FIREBASE_CONFIG = {
       row('STAFF NAME', staffName, '#0B1E2D') +
       row('TOTAL INTERACTIONS', logs.length, '#0B1E2D') +
       row('TOTAL COLLECTION', '₹' + collection.toFixed(2), '#059669') +
-      row('INCENTIVE', '₹' + incentive.toFixed(2), '#2563eb') +
+      row('BASIC SALARY', '₹' + basic.toFixed(2), '#0B1E2D') +
+    row('INCENTIVE PAYABLE', '₹' + incentive.toFixed(2), '#2563eb') +
+    row('ATTENDANCE DEDUCTION', '₹' + adjInfo.adjustment.toFixed(2) + ' (' + attPct + '%)', '#b91c1c') +
       row('WORKING DAYS', workingDays, '#0B1E2D') +
       row('SUNDAYS OFF', sundays, '#0B1E2D') +
       row('ON TIME / LATE / ABSENT', onTime + ' / ' + late + ' / ' + absent, '#0B1E2D') +
       row('ATTENDANCE %', attPct + '%', '#0B1E2D');
     var htmlContent = '<div style="padding:24px; font-family:Arial,sans-serif; color:#0f172a;">' +
-      '<div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #0B1E2D; padding-bottom:10px; margin-bottom:14px;"><div><h1 style="font-size:18px; color:#0B1E2D; margin:0;">' + shopName + '</h1><p style="font-size:11px; color:#EE2B2E; font-weight:bold; margin:3px 0 0 0;">INDIVIDUAL STAFF REPORT</p></div><div style="text-align:right; font-size:10px; color:#64748b; white-space:nowrap; min-width:150px;"><p style="font-size:12px; font-weight:bold; color:#0B1E2D; margin:0;">Month: ' + month + '</p><p style="margin:3px 0 0 0;">Generated: ' + getISTDateTimeStr() + '</p></div></div>' +
+      '<div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #0B1E2D; padding-bottom:10px; margin-bottom:14px;"><div><h1 style="font-size:18px; color:#0B1E2D; margin:0;">' + shopName + '</h1><p style="font-size:10px; color:#334155; margin:3px 0 0 0;">' + bizAddress + (bizPhone ? ' &nbsp;|&nbsp; Contact: ' + bizPhone : '') + '</p><p style="font-size:11px; color:#EE2B2E; font-weight:bold; margin:3px 0 0 0;">INDIVIDUAL STAFF REPORT</p></div><div style="text-align:right; font-size:10px; color:#64748b; white-space:nowrap; min-width:150px;"><p style="font-size:12px; font-weight:bold; color:#0B1E2D; margin:0;">Month: ' + month + '</p><p style="margin:3px 0 0 0;">Generated: ' + getISTDateTimeStr() + '</p></div></div>' +
       '<p style="font-size:10px; font-weight:bold; color:#0B1E2D; margin:0 0 6px 0;">STAFF DETAILS</p>' +
       '<div>' + detailsHtml + '</div>' +
       '<div style="margin-top:14px; padding:10px 12px; border:2px solid #0B1E2D; border-radius:8px; background:#fff;"><span style="font-size:11px; color:#64748b; text-transform:uppercase;">Total Payable Salary</span><div style="font-size:18px; font-weight:900; color:#0B1E2D;">₹' + totalPayable.toFixed(2) + '</div></div>' +
@@ -8142,7 +8190,7 @@ const FIREBASE_CONFIG = {
     container.style.width = '730px'; container.style.background = '#ffffff';
     container.innerHTML = htmlContent;
     document.body.appendChild(container);
-    var opt = { margin: 8, filename: 'ATMOS_Staff_Report_' + staffName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + month + '.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+    var opt = { margin: 0.5, filename: 'ATMOS_Staff_Report_' + staffName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + month + '.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
     html2pdf().set(opt).from(container).save().then(function() { document.body.removeChild(container); }).catch(function() { if (container.parentNode) document.body.removeChild(container); });
   }
 
@@ -8153,7 +8201,9 @@ const FIREBASE_CONFIG = {
 
     const monthAttd = appData.attendance[month] || {};
 
-    Object.keys(monthAttd).forEach(staffName => {
+    var __staffNames = appData.users.filter(function(u){ return u.role === 'Staff'; }).map(function(u){ return u.name; });
+  Object.keys(monthAttd).forEach(staffName => {
+    if (__staffNames.indexOf(staffName) < 0) return;
       const days = monthAttd[staffName];
       Object.keys(days).forEach(dateStr => {
         const rec = days[dateStr];
@@ -9317,11 +9367,18 @@ function renderPABusinesses() {
 function getBizSubscriptionStatus(b) {
   if (b.blocked) return 'blocked';
   if (!b.subscriptionStatus) return 'none';
-  if (b.subscriptionStatus === 'trial') { var trialEnd = b.trialEndDate || 0; if (!trialEnd && b.joiningDate) { var jt = new Date(String(b.joiningDate).split('T')[0] + 'T00:00:00').getTime(); if (jt) trialEnd = jt + getPlatformBranding().trialDays * 86400000; } if (trialEnd && Date.now() > trialEnd) return 'expired'; return 'trial'; }
-  if (b.subscriptionStatus === 'active') {
-    var expiry = b.subscriptionExpiry ? new Date(b.subscriptionExpiry).getTime() : 0;
-    if (expiry && Date.now() > expiry) return 'expired';
-    return 'active';
+  if (b.subscriptionStatus === 'trial') {
+    if (getPlatformBranding().trialDays <= 0) return 'expired';
+    var trialEnd = trialEndFor(b);
+    if (trialEnd && Date.now() > trialEnd) return 'expired';
+    return 'trial';
+  }
+  if (b.subscriptionStatus === 'active' || b.subscriptionStatus === 'grace') {
+    var expiry = b.subscriptionExpiry ? Date.parse(b.subscriptionExpiry + 'T23:59:59+05:30') : 0;
+    if (!expiry) return 'active';
+    if (Date.now() <= expiry) return 'active';
+    if (Date.now() <= expiry + SUB_GRACE_DAYS * 86400000) return 'active';
+    return 'expired';
   }
   if (b.subscriptionStatus === 'expired') return 'expired';
   return 'none';
@@ -9475,7 +9532,7 @@ function upsertCurrentBusinessRecord() {
   var rec = existing || {
     joiningDate: getISTDateStr(),
     subscriptionStatus: 'trial',
-    trialEndDate: Date.now() + getPlatformBranding().trialDays * 24 * 60 * 60 * 1000,
+    trialEndDate: Date.parse(getISTDateStr() + 'T00:00:00+05:30') + (getPlatformBranding().trialDays * 86400000),
     subscriptionExpiry: '',
     blocked: false,
     isCurrentBusiness: true
@@ -9508,15 +9565,23 @@ function registerCurrentBusiness() {
 }
 
 /* ADD NEW BUSINESS */
+function togglePaNewBizCustomCategory() {
+  var wrap = document.getElementById('paNewBizCustomCategoryWrap');
+  var sel = document.getElementById('paNewBizCategory');
+  if (wrap && sel) wrap.style.display = sel.value === 'Custom' ? 'block' : 'none';
+}
+
 function addNewBusiness() {
   var name = document.getElementById('paNewBizName').value.trim();
   var category = document.getElementById('paNewBizCategory').value;
+  var paCustomCat = (document.getElementById('paNewBizCustomCategory') || {}).value || '';
+  if (category === 'Custom') category = paCustomCat.trim() || 'Custom';
   var adminName = document.getElementById('paNewBizAdmin').value.trim();
   var adminContact = document.getElementById('paNewBizContact').value.trim();
   var adminEmail = document.getElementById('paNewBizEmail').value.trim();
   if (!name || !adminName) return alert('Please enter business name and administrator name.');
   var bizId = 'BIZ-' + Date.now().toString(36).toUpperCase();
-  var trialEnd = Date.now() + getPlatformBranding().trialDays * 24 * 60 * 60 * 1000;
+  var trialEnd = Date.parse(getISTDateStr() + 'T00:00:00+05:30') + (getPlatformBranding().trialDays * 86400000);
   if (!platformData.businesses) platformData.businesses = {};
   platformData.businesses[bizId] = {
     name: name, category: category, joiningDate: getISTDateStr(),
@@ -10064,6 +10129,7 @@ function savePlatformBranding() {
   var motto = (document.getElementById('paBrandMotto').value || '').trim();
   var desc = (document.getElementById('paBrandDescription').value || '').trim();
   var days = parseInt(document.getElementById('paBrandTrialDays').value, 10);
+  var __prevTrialDays = getPlatformBranding().trialDays;
   if (!name) return alert('Please enter the platform name.');
   if (isNaN(days) || days < 0) return alert('Please enter a valid free-trial duration in days.');
   if (!platformData.branding) platformData.branding = {};
@@ -10071,11 +10137,12 @@ function savePlatformBranding() {
   platformData.branding.motto = motto;
   platformData.branding.description = desc;
   platformData.branding.trialDays = days;
+  var __trialShifted = applyTrialDurationChange(__prevTrialDays, days);
   if (!platformDbRef || !platformSyncActive) return alert('The platform database is not connected yet. Please wait a few seconds and try saving again.');
   savePlatformData();
   renderPlatformBrandingSettings();
   applyPlatformBranding();
-  alert('Platform branding saved.\n\nName: ' + name + '\nMotto: ' + (motto || '-') + '\nFree trial: ' + days + ' days\n\nIt will appear on the welcome and login screens.');
+  alert('Platform branding saved.\n\nName: ' + name + '\nMotto: ' + (motto || '-') + '\nFree trial: ' + days + ' days\n\nIt will appear on the welcome and login screens.' + (__trialShifted ? '\n\n' + __trialShifted + ' business(es) still inside their trial now have the corrected remaining days.' : ''));
 }
 
 /* ===== SETTINGS ===== */
@@ -10257,19 +10324,24 @@ function openPaSubmitPayment() {
     document.getElementById('paSubmitPaymentModal').style.display = 'flex';
   }
 function closePaSubmitPayment() {
+  window.__ftPayBusy = false;
     document.getElementById('paSubmitPaymentModal').style.display = 'none';
     checkSubscriptionLock();
   }
 
 function submitPayment() {
     var plan = document.getElementById('paPayPlan').value;
+  if (!plan) return alert('Please select a subscription plan.');
     var pricingType = document.getElementById('paPayPricingType').value || 'normal';
     var txnId = document.getElementById('paPayTxnId').value.trim();
     var mobile = (document.getElementById('paPayMobile').value || '').trim();
-    var amount = parseFloat(document.getElementById('paPayAmount').value || 0);
+    var planDef = (paPlans()[pricingType] || paPlans().normal)[plan];
+  var amount = planDef ? planDef.price : parseFloat(document.getElementById('paPayAmount').value || 0);
+  document.getElementById('paPayAmount').value = amount;
     if (!txnId) return alert('Please enter the transaction/reference ID.');
     if (amount <= 0) return alert('Please enter a valid amount.');
     if (!mobile) return alert('Please enter your mobile number.');
+  if (!/^[0-9]{10}$/.test(mobile.replace(/[^0-9]/g, ''))) return alert('Please enter a valid 10-digit mobile number.');
     var existing = Object.keys(platformData.payments || {}).some(function (k) {
       var p = platformData.payments[k];
       return p.txnId === txnId && p.txnId && p.status !== 'rejected';
@@ -10287,6 +10359,8 @@ function submitPayment() {
   }
 
 function doSubmitPayment(plan, pricingType, txnId, amount, screenshotUrl, mobile) {
+  if (window.__ftPayBusy) return;
+  window.__ftPayBusy = true;
     var bizId = null;
     try { bizId = getCurrentPlatformBusinessId(); } catch (e) { bizId = null; }
     if (!bizId) return alert('This business is not registered with the platform. Please contact the platform administrator.');
@@ -10321,23 +10395,11 @@ function doSubmitPayment(plan, pricingType, txnId, amount, screenshotUrl, mobile
 
 /* ===== PRESENCE TRACKING ===== */
 function setupPlatformPresence() {
-  if (!platformDbRef || !platformAdminUser) return;
-  /* For the current business, set up presence */
-  var bizId = null;
-  Object.keys(platformData.businesses||{}).forEach(function(k) {
-    if (platformData.businesses[k].isCurrentBusiness) bizId = k;
-  });
-  if (bizId) {
-    var presenceRef = firebase.database().ref('atmos_platform_admin/presence/' + bizId);
-    presenceRef.onDisconnect().set({ online: false, lastActive: firebase.database.ServerValue.TIMESTAMP });
-    presenceRef.set({ online: true, lastActive: firebase.database.ServerValue.TIMESTAMP });
-    /* Update last activity periodically */
-    setInterval(function() {
-      if (platformAdminUser) {
-        presenceRef.update({ lastActive: firebase.database.ServerValue.TIMESTAMP });
-      }
-    }, 60000);
-  }
+  /* Single presence writer for every role. The authenticated member is published
+     under atmos_platform_admin/presence/<business>/accounts/<authUid>, which the
+     current rules allow for the Platform Administrator and for that business's
+     own claimed members. */
+  if (typeof window.ftPresenceStart === 'function') window.ftPresenceStart();
 }
 
 /* ===== OVERRIDE EXISTING FUNCTIONS ===== */
@@ -10384,9 +10446,9 @@ function openBizDetailsModal() {
   document.getElementById('bizDetMotto').value = p.motto || '';
   document.getElementById('bizDetShopCode').value = p.shopCode || '';
   document.getElementById('bizDetAddress').value = p.address || '';
-  var known = ['Akshaya Center', 'CSC', 'All'];
+  var known = ['Akshaya Center', 'CSC', 'Custom'];
   var cat = p.category || 'Akshaya Center';
-  document.getElementById('bizDetCategory').value = known.indexOf(cat) >= 0 ? cat : 'Other';
+  document.getElementById('bizDetCategory').value = known.indexOf(cat) >= 0 ? cat : 'Custom';
   document.getElementById('bizDetCustomCategory').value = known.indexOf(cat) >= 0 ? (p.customCategory || '') : (p.customCategory || cat);
   document.getElementById('bizDetMobile').value = admin ? (admin.mobile || '') : '';
   var emailLocked = !!(admin && admin.email);
@@ -10403,7 +10465,7 @@ function closeBizDetailsModal() { document.getElementById('bizDetailsModal').sty
 
 function toggleBizDetCustomCategory() {
   var val = document.getElementById('bizDetCategory').value;
-  document.getElementById('bizDetCustomCategoryWrap').style.display = val === 'Other' ? 'block' : 'none';
+  document.getElementById('bizDetCustomCategoryWrap').style.display = val === 'Custom' ? 'block' : 'none';
 }
 function handleBizDetLogo(e) {
   var file = e.target.files[0];
@@ -10433,9 +10495,10 @@ function saveBusinessDetails() {
      may change it, to avoid breaking the business <-> identity binding. */
   var email = (existingAdmin && existingAdmin.email) ? existingAdmin.email : document.getElementById('bizDetEmail').value.trim();
   if (!name) return alert('Please enter your business name.');
-  if (category === 'Other' && !customCategory) return alert('Please enter your business category.');
+  if (category === 'Custom' && !customCategory) return alert('Please enter your business category.');
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return alert('Please enter a valid administrator email address. It is required for sign-in and password recovery.');
   if (mobile && !/^[0-9]{10}$/.test(mobile.replace(/[^0-9]/g, ''))) return alert('Please enter a valid 10-digit mobile number.');
+        if (category === 'Custom') category = customCategory;
 
   appData.logoDataUrl = bizDetLogoDataUrl;
   var shopCode = document.getElementById('bizDetShopCode').value.trim().slice(0, 10);
@@ -10583,7 +10646,7 @@ function bizRegBack() {
 
 function toggleBizRegCustomCategory() {
   var val = document.getElementById('bizRegCategory').value;
-  document.getElementById('bizRegCustomCategoryWrap').style.display = val === 'Other' ? 'block' : 'none';
+  document.getElementById('bizRegCustomCategoryWrap').style.display = val === 'Custom' ? 'block' : 'none';
 }
 
 function handleBizRegLogo(e) {
@@ -10618,7 +10681,7 @@ async function submitBusinessRegistration() {
   if (!name || !adminName || !/^\d{10}$/.test(mobile) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return alert('Enter the business name, administrator name, valid email, and 10-digit mobile number.');
   if (password.length < 6 || password !== confirmPassword) return alert('Use a password of at least 6 characters and enter the same confirmation.');
   if (shopCode.length > 10) return alert('Shop code can contain up to 10 characters.');
-  if (category === 'Other' && !customCategory) return alert('Enter your business category.');
+  if (category === 'Custom' && !customCategory) return alert('Enter your business category.');
   var button = document.querySelector('[onclick="submitBusinessRegistration()"]');
   ftRegistrationBusy = true;
   if (button) { button.disabled = true; button.textContent = 'Saving registration...'; }
@@ -10650,7 +10713,7 @@ async function submitBusinessRegistration() {
       if (route && route.b !== bizId) throw new Error('This email or mobile is already linked to another business. Use its login or enter a different mobile number.');
     });
     var branding = getPlatformBranding();
-    var newRecord = { name: name, category: category === 'Other' ? customCategory : category, motto: motto, adminName: adminName, adminContact: mobile, adminEmail: email, adminUid: identity.uid, joiningDate: getISTDateStr(), staffCount: 0, blocked: false, subscriptionStatus: 'trial', trialEndDate: Date.now() + branding.trialDays * 86400000, subscriptionExpiry: '', lastActivity: Date.now(), isCurrentBusiness: false };
+    var newRecord = { name: name, category: category === 'Custom' ? customCategory : category, motto: motto, adminName: adminName, adminContact: mobile, adminEmail: email, adminUid: identity.uid, joiningDate: getISTDateStr(), staffCount: 0, blocked: false, subscriptionStatus: 'trial', trialEndDate: Date.parse(getISTDateStr() + 'T00:00:00+05:30') + (branding.trialDays * 86400000), subscriptionExpiry: '', lastActivity: Date.now(), isCurrentBusiness: false };
     var registryResult = await firebase.database().ref('atmos_platform_admin/businesses/' + bizId).transaction(function (current) {
       if (current) return;
       return newRecord;
@@ -10665,7 +10728,7 @@ async function submitBusinessRegistration() {
     appData = buildEmptyBusinessData(record);
     appData.users[0] = { id: 'ADM-001', name: adminName, role: 'Admin', pass: '', email: email, mobile: mobile, authVersion: 1, pinHash: '', pinSalt: '' };
     appData.logoDataUrl = bizRegLogoDataUrl || '';
-    appData.businessProfile = { shopName: name, motto: motto, category: category === 'Other' ? customCategory : category, customCategory: customCategory, shopCode: shopCode, address: address, detailsConfirmed: true };
+    appData.businessProfile = { shopName: name, motto: motto, category: category === 'Custom' ? customCategory : category, customCategory: customCategory, shopCode: shopCode, address: address, detailsConfirmed: true };
     var initialData = convertToLegacyFormat();
     initialData.businessId = bizId;
     var dataResult = await businessDataRef().transaction(function (current) {
@@ -10750,6 +10813,665 @@ window.addEventListener('DOMContentLoaded', function() {
   }
 }
   window.setSyncBadge = setSyncBadge;
+/* ===== FinTrack Business - platform upgrade module ===== */
+(function () {
+  var PD = function () { try { return platformData || {}; } catch (e) { return {}; } };
+  var ftPendingWrites = 0, ftLastOk = 0, ftErr = null, ftConn = null;
+
+  function ftPaint() {
+    var b = document.getElementById('cloudSyncStatusBadge'); if (!b) return;
+    var state = ftConn === false ? 'offline' : (ftErr ? 'error' : (ftPendingWrites > 0 ? 'pending' : (ftLastOk ? 'synced' : 'idle')));
+    var m = {
+      synced: ['sync-badge sync-online', 'fa-cloud-arrow-up', 'Synced to Cloud', 'Connected to Firebase. Last confirmed write: ' + new Date(ftLastOk).toLocaleString()],
+      pending: ['sync-badge sync-pending', 'fa-arrows-rotate', 'Syncing...', ftPendingWrites + ' change(s) waiting for Firebase confirmation'],
+      offline: ['sync-badge sync-offline', 'fa-wifi', 'Offline', 'No Firebase connection. Changes stay on this device and sync when the connection returns.'],
+      error: ['sync-badge sync-error', 'fa-triangle-exclamation', 'Sync Error', 'Firebase rejected the last write: ' + ftErr],
+      idle: ['sync-badge sync-local', 'fa-cloud', 'Sync to Cloud', 'Sign in to a business to start cloud synchronisation.']
+    }[state];
+    b.className = m[0]; b.title = m[3];
+    b.innerHTML = '<i class="fa-solid ' + m[1] + '"></i> ' + m[2];
+  }
+  setSyncBadge = function (state) {
+    if (state === 'online') { ftLastOk = Date.now(); ftErr = null; if (ftConn === null) ftConn = true; }
+    else if (state === 'error') { ftErr = ftErr || 'write failed'; }
+    else if (state === 'offline') { ftConn = false; }
+    ftPaint();
+  };
+  window.setSyncBadge = setSyncBadge;
+
+  function ftBindConn() {
+    try {
+      if (typeof firebase === 'undefined' || !firebase.database) return;
+      firebase.database().ref('.info/connected').on('value', function (s) {
+        ftConn = s.val() === true;
+        if (ftConn) ftErr = null;
+        ftPaint();
+      });
+    } catch (e) {}
+  }
+  function ftHookWrites() {
+    try {
+      if (typeof firebase === 'undefined' || !firebase.database) return;
+      var proto = Object.getPrototypeOf(firebase.database().ref());
+      if (!proto || proto.__ftHooked) return;
+      proto.__ftHooked = true;
+      ['set', 'update'].forEach(function (name) {
+        var orig = proto[name]; if (typeof orig !== 'function') return;
+        proto[name] = function () {
+          var quiet = /presence/.test(String(this));
+          if (!quiet) { ftPendingWrites++; ftPaint(); }
+          var out = orig.apply(this, arguments);
+          if (out && typeof out.then === 'function') {
+            return out.then(function (v) {
+              if (!quiet) { ftPendingWrites = Math.max(0, ftPendingWrites - 1); ftLastOk = Date.now(); ftErr = null; ftConn = true; ftPaint(); }
+              return v;
+            }, function (e) {
+              if (!quiet) { ftPendingWrites = Math.max(0, ftPendingWrites - 1); ftErr = (e && e.message) || 'write failed'; ftPaint(); }
+              throw e;
+            });
+          }
+          return out;
+        };
+      });
+    } catch (e) {}
+  }
+  ftBindConn(); ftHookWrites();
+  setTimeout(function () { ftBindConn(); ftHookWrites(); }, 2500);
+  setTimeout(function () { ftBindConn(); ftHookWrites(); }, 9000);
+
+  var ftPresenceStarted = false, ftLastBeat = 0;
+  function ftAuthUid() { try { var a = firebase.auth(); return (a && a.currentUser) ? a.currentUser.uid : null; } catch (e) { return null; } }
+  function ftBizId() {
+    try { if (typeof getActiveBusinessId === 'function') { var b = getActiveBusinessId(); if (b) return b; } } catch (e) {}
+    try { return (typeof authBusinessId !== 'undefined' && authBusinessId) ? authBusinessId : null; } catch (e) { return null; }
+  }
+  function ftRoleName() {
+    try { if (typeof currentUser !== 'undefined' && currentUser) return { role: currentUser.role === 'Admin' ? 'Business Administrator' : 'Staff', name: currentUser.name || '' }; } catch (e) {}
+    return { role: 'Staff', name: '' };
+  }
+  function ftPresenceStart() {
+    try {
+      if (ftPresenceStarted) return;
+      if (typeof firebase === 'undefined' || !firebase.database) return;
+      var db = firebase.database(), au = ftAuthUid();
+      if (!au) return;
+      var sv = firebase.database.ServerValue.TIMESTAMP;
+      if (typeof platformAdminUser !== 'undefined' && platformAdminUser) {
+        var pref = db.ref('atmos_platform_admin/presence/platform_' + au.replace(/[^A-Za-z0-9_]/g, '_'));
+        pref.onDisconnect().update({ online: false, lastActive: sv });
+        pref.update({ online: true, role: 'Platform Administrator', name: 'Platform Administrator', at: Date.now(), lastActive: sv }).catch(function () {});
+        ftPresenceStarted = true; return;
+      }
+      var biz = ftBizId(); if (!biz) return;
+      var rn = ftRoleName();
+      var root = db.ref('atmos_platform_admin/presence/' + biz), acct = root.child('accounts/' + au);
+      acct.onDisconnect().update({ online: false, lastActive: sv });
+      var beat = function () {
+        acct.update({ online: true, role: rn.role, name: rn.name, at: Date.now(), lastActive: sv }).catch(function () {});
+        root.update({ online: true, lastActive: sv }).catch(function () {});
+      };
+      beat();
+      setInterval(beat, 120000);
+      document.addEventListener('click', function () { var n = Date.now(); if (n - ftLastBeat < 60000) return; ftLastBeat = n; beat(); }, true);
+      window.addEventListener('beforeunload', function () { try { acct.update({ online: false, lastActive: sv }); } catch (e) {} });
+      ftPresenceStarted = true;
+    } catch (e) {}
+  }
+  window.ftPresenceStart = ftPresenceStart;
+  setTimeout(ftPresenceStart, 2500);
+  setInterval(function () { if (!ftPresenceStarted) ftPresenceStart(); }, 6000);
+
+  initPACharts = function (bizArr) {
+    var pd = PD(), businesses = pd.businesses || {};
+    var arr = (bizArr && bizArr.forEach) ? bizArr : Object.keys(businesses).map(function (k) { return Object.assign({ id: k }, businesses[k]); });
+    try {
+      var months = {}, cum = 0;
+      arr.forEach(function (b) { var m = String(b.joiningDate || '').substring(0, 7); if (m) months[m] = (months[m] || 0) + 1; });
+      var labels = Object.keys(months).sort();
+      var data = labels.map(function (m) { cum += months[m]; return cum; });
+      if (typeof paGrowthChartInst !== 'undefined' && paGrowthChartInst) paGrowthChartInst.destroy();
+      var g = document.getElementById('paGrowthChart');
+      if (g) paGrowthChartInst = new Chart(g.getContext('2d'), { type: 'line', data: { labels: labels, datasets: [{ label: 'Cumulative Businesses', data: data, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+    } catch (e) {}
+    try {
+      var c = { trial: 0, active: 0, expired: 0, pending: 0, blocked: 0 };
+      arr.forEach(function (b) {
+        var s = getBizSubscriptionStatus(b);
+        if (s === 'trial') c.trial++;
+        else if (s === 'active') c.active++;
+        else if (s === 'blocked') c.blocked++;
+        else if (s === 'expired') c.expired++;
+      });
+      Object.keys(pd.payments || {}).forEach(function (k) { if ((pd.payments[k] || {}).status === 'pending') c.pending++; });
+      var names = ['Free Trial', 'Active Subscription', 'Expired', 'Pending Verification', 'Blocked'];
+      var vals = [c.trial, c.active, c.expired, c.pending, c.blocked];
+      var total = vals.reduce(function (x, y) { return x + y; }, 0);
+      var canvas = document.getElementById('paSubChart');
+      var holder = canvas && canvas.parentNode;
+      var empty = holder && holder.querySelector('.ft-chart-empty');
+      if (typeof paSubChartInst !== 'undefined' && paSubChartInst) { paSubChartInst.destroy(); paSubChartInst = null; }
+      if (!total) {
+        if (canvas) canvas.style.display = 'none';
+        if (holder && !empty) { var d = document.createElement('div'); d.className = 'ft-chart-empty'; d.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;min-height:180px;color:var(--text-muted);font-size:.82rem;text-align:center'; d.innerText = 'No subscription records yet.'; holder.appendChild(d); }
+      } else if (canvas) {
+        if (empty) empty.remove();
+        canvas.style.display = 'block';
+        paSubChartInst = new Chart(canvas.getContext('2d'), { type: 'bar', data: { labels: names, datasets: [{ label: 'Businesses', data: vals, backgroundColor: ['#8b5cf6', '#059669', '#e11d48', '#f59e0b', '#334155'], borderRadius: 5 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (x) { return x.parsed.y + ' business(es)'; } } } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { ticks: { autoSkip: false, maxRotation: 40, minRotation: 0 } } } } });
+      }
+    } catch (e) { console.error('Subscription chart error', e); }
+    try {
+      if (typeof paActivityChartInst !== 'undefined' && paActivityChartInst) paActivityChartInst.destroy();
+      var a = document.getElementById('paActivityChart');
+      var seven = Date.now() - 7 * 86400000, act = 0, dorm = 0, blk = 0;
+      arr.forEach(function (b) {
+        if (b.blocked) { blk++; return; }
+        var pr = (pd.presence || {})[b.id] || {};
+        var last = Number(pr.lastActive) || b.lastActivity || 0;
+        if (last > seven) act++; else dorm++;
+      });
+      if (a) paActivityChartInst = new Chart(a.getContext('2d'), { type: 'bar', data: { labels: ['Active', 'Dormant', 'Blocked'], datasets: [{ label: 'Businesses', data: [act, dorm, blk], backgroundColor: ['#3b82f6', '#f59e0b', '#ef4444'], borderRadius: 5 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+    } catch (e) {}
+  };
+
+  function ftVerified() {
+    var pd = PD(), out = [];
+    Object.keys(pd.payments || {}).forEach(function (k) {
+      var p = pd.payments[k] || {};
+      if (p.status === 'approved') out.push(Object.assign({ id: k }, p));
+    });
+    return out;
+  }
+  function ftMoney(n) { return '\u20b9' + (Number(n) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function ftRevenueRefresh() {
+    var pays = ftVerified();
+    var total = pays.reduce(function (a, p) { return a + (Number(p.amount) || 0); }, 0);
+    var t = document.getElementById('paLifetimeRevenue');
+    if (t) { t.innerText = ftMoney(total); t.title = 'Cumulative total of every subscription payment approved by the Platform Administrator.'; }
+    var cnt = document.getElementById('paLifetimeSubs');
+    if (cnt) { cnt.innerText = String(pays.length); cnt.title = 'Approved payments only. Pending, rejected and duplicate entries are excluded.'; }
+    var card = t && t.closest ? t.closest('.app-card') : null;
+    if (card) {
+      var byPlan = {};
+      pays.forEach(function (p) { var k = p.planName || p.plan || p.duration || 'Subscription'; byPlan[k] = byPlan[k] || { n: 0, amt: 0 }; byPlan[k].n++; byPlan[k].amt += (Number(p.amount) || 0); });
+      var rows = Object.keys(byPlan).sort().map(function (k) { return '<div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px dashed var(--border)"><span>' + k + ' <span style="color:var(--text-muted)">&times;' + byPlan[k].n + '</span></span><strong>' + ftMoney(byPlan[k].amt) + '</strong></div>'; }).join('');
+      var host = document.getElementById('ftRevBreakdown');
+      if (!host) { host = document.createElement('div'); host.id = 'ftRevBreakdown'; host.style.cssText = 'margin-top:14px;font-size:.8rem'; card.appendChild(host); }
+      host.innerHTML = '<div style="font-weight:900;font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Verified Revenue by Plan</div>' + (rows || '<div style="color:var(--text-muted)">No approved payments yet.</div>');
+    }
+    var st = document.getElementById('paStorageUsed');
+    if (st) {
+      var any = Object.keys(PD().dataUsage || {}).length > 0;
+      st.innerText = any ? st.innerText : 'Not measured';
+      st.title = any ? 'Sum of recorded per-business storage readings.' : 'Per-business storage is measured in the Live Status view. Data transfer is not measurable from the browser.';
+    }
+  }
+  var __ftRPS = renderPASubscriptions;
+  renderPASubscriptions = function () { var r = __ftRPS.apply(null, arguments); try { ftRevenueRefresh(); } catch (e) {} return r; };
+  var __ftRPD = renderPADashboard;
+  renderPADashboard = function () { var r = __ftRPD.apply(null, arguments); try { ftRevenueRefresh(); } catch (e) {} return r; };
+
+  try { ftPaint(); } catch (e) {}
+})();
+/* ===== FinTrack Business - notifications, announcements, live status ===== */
+(function () {
+  function PD() { try { return platformData || {}; } catch (e) { return {}; } }
+  function isPA() { try { return !!platformAdminUser; } catch (e) { return false; } }
+  function db() { try { return firebase.database(); } catch (e) { return null; } }
+  function authUid() { try { var a = firebase.auth(); return (a && a.currentUser) ? a.currentUser.uid : null; } catch (e) { return null; } }
+  function activeBiz() {
+    try { if (typeof getActiveBusinessId === 'function') { var b = getActiveBusinessId(); if (b) return b; } } catch (e) {}
+    try { return (typeof authBusinessId !== 'undefined' && authBusinessId) ? authBusinessId : null; } catch (e) { return null; }
+  }
+  function me() {
+    try {
+      if (isPA()) { var pu = authUid() || 'platform'; return { uid: pu, id: pu, role: 'Platform Administrator', isAdmin: true, name: 'Platform Administrator' }; }
+      var u = currentUser || null; if (!u) return null;
+      var id = (u.id !== undefined && u.id !== null && u.id !== '') ? String(u.id) : String(u.email || u.name || 'user');
+      return { uid: authUid() || id, id: id, role: u.role === 'Admin' ? 'Business Administrator' : 'Staff', isAdmin: u.role === 'Admin', name: u.name || '' };
+    } catch (e) { return null; }
+  }
+  function dayMs(s) { if (!s) return 0; var str = String(s); var t = Date.parse(str.length <= 10 ? str + 'T00:00:00+05:30' : str); return isNaN(t) ? 0 : t; }
+  function fmt(ts) { if (!ts) return '-'; try { return new Date(ts).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { return '-'; } }
+  function money(n) { return '\u20b9' + (Number(n) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  var LSK = 'FT_NOTIF_LOCAL_fintrack-business';
+  function localState() { try { return JSON.parse(localStorage.getItem(LSK) || '{}') || {}; } catch (e) { return {}; } }
+  function setLocal(k, v) { try { var s = localState(); s[k] = v; localStorage.setItem(LSK, JSON.stringify(s)); } catch (e) {} }
+
+  /* read/delete receipts: atmos_notification_receipts/<business>/<authUid>/<notifId> */
+  var ftReceipts = {}, ftInboxCache = null;
+  function receiptsRef() { var r = db(), b = activeBiz(), u = authUid(); if (!r || !b || !u) return null; return r.ref('atmos_notification_receipts/' + b + '/' + u); }
+  function listenReceipts() {
+    var rr = receiptsRef(); if (!rr) return;
+    try { rr.on('value', function (s) { ftReceipts = s.val() || {}; refreshBell(); }, function () {}); } catch (e) {}
+  }
+  function receiptOf(id) {
+    var r = ftReceipts[id] || {}, ls = localState();
+    return { readAt: Number(r.readAt) || Number(ls['rc_read_' + id]) || 0, deletedAt: Number(r.deletedAt) || Number(ls['rc_del_' + id]) || 0 };
+  }
+  function writeReceipt(id, field) {
+    var rr = receiptsRef(), t = Date.now();
+    ftReceipts[id] = ftReceipts[id] || {};
+    ftReceipts[id][field] = t;
+    if (rr) { var o = {}; o[field] = t; rr.child(id).update(o).catch(function () { setLocal('rc_' + (field === 'readAt' ? 'read_' : 'del_') + id, t); }); }
+    else setLocal('rc_' + (field === 'readAt' ? 'read_' : 'del_') + id, t);
+  }
+  function loadInbox() {
+    var r = db(), b = activeBiz();
+    if (!r || !b || isPA()) return;
+    try { r.ref('atmos_platform_admin/businesses/' + b + '/inbox').on('value', function (s) { ftInboxCache = s.val() || {}; refreshBell(); }, function () {}); } catch (e) {}
+  }
+
+  function collect() {
+    var u = me(); if (!u) return [];
+    var out = [], t = Date.now(), ls = localState();
+    if (isPA()) {
+      var pd = PD();
+      Object.keys(pd.payments || {}).forEach(function (k) {
+        var p = pd.payments[k] || {};
+        if (p.status !== 'pending') return;
+        out.push({ id: 'pay_' + k, subject: 'Subscription payment awaiting verification', message: (p.businessName || ((pd.businesses || {})[p.businessId] || {}).name || p.businessId || 'A business') + ' submitted ' + money(p.amount) + ' for approval.', sender: 'System', role: 'System', at: Number(p.submittedAt || p.sentAt || 0), scope: 'sys' });
+      });
+      Object.keys(pd.businesses || {}).forEach(function (k) {
+        var b = pd.businesses[k] || {};
+        if (!(b.registrationStatus === 'pending' || b.verified === false)) return;
+        out.push({ id: 'reg_' + k, subject: 'Business registration awaiting verification', message: (b.name || k) + ' has registered and needs review.', sender: 'System', role: 'System', at: Number(b.registeredAt || 0), scope: 'sys' });
+      });
+      out.forEach(function (n) { n.readAt = Number(ls['sys_' + n.id]) || 0; if (ls['delsys_' + n.id]) n.hidden = true; });
+      out = out.filter(function (n) { return !n.hidden; });
+    } else {
+      var biz = (PD().businesses || {})[activeBiz()] || {};
+      var inbox = biz.inbox || ftInboxCache || {};
+      Object.keys(inbox).forEach(function (id) {
+        var n = inbox[id] || {};
+        var rc = receiptOf(id);
+        if (rc.deletedAt) return;
+        var exp = Number(n.expiryAt) || dayMs(n.expiryDate);
+        if (exp && t > exp) return;
+        if (rc.readAt && t - rc.readAt > 4 * 86400000) return;
+        if (n.audience === 'admin' && !u.isAdmin) return;
+        if (n.audience === 'selected' && (n.businessIds || []).indexOf(activeBiz()) < 0) return;
+        var pub = Number(n.publishAt) || 0; if (pub && t < pub) return;
+        out.push({ id: id, subject: n.subject || '(no subject)', message: n.message || '', sender: n.senderName || 'Platform Administrator', role: n.senderRole || 'Platform Administrator', at: Number(n.sentAt) || 0, scope: 'pa', readAt: rc.readAt });
+      });
+      var list = [];
+      try { list = Array.isArray(appData && appData.staffAnnouncements) ? appData.staffAnnouncements : []; } catch (e) { list = []; }
+      list.forEach(function (a) {
+        if (!a || !a.id) return;
+        if ((a.deletedBy || {})[u.id]) return;
+        var aud = a.audience || 'all';
+        if (aud === 'selected' && (a.targets || []).indexOf(u.id) < 0) return;
+        var exp2 = Number(a.expiryAt) || 0; if (exp2 && t > exp2) return;
+        var pub2 = Number(a.publishAt) || 0; if (pub2 && t < pub2) return;
+        var readAt = (a.readBy || {})[u.id] || 0;
+        if (readAt && t - readAt > 4 * 86400000) return;
+        out.push({ id: 'sa_' + a.id, rawId: a.id, subject: a.subject || '(no subject)', message: a.message || '', sender: a.senderName || 'Business Administrator', role: 'Business Administrator', at: Number(a.sentAt) || 0, scope: 'sa', readAt: readAt });
+      });
+    }
+    out.sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
+    return out;
+  }
+
+  function refreshBell() {
+    try {
+      var items = collect(), unread = items.filter(function (n) { return !n.readAt; }).length;
+      var b = document.getElementById('ftNotifBadge');
+      if (b) { if (unread > 0) { b.style.display = 'block'; b.innerText = unread > 99 ? '99+' : String(unread); } else { b.style.display = 'none'; } }
+      var bell = document.getElementById('ftNotifBell');
+      if (bell) bell.title = unread ? unread + ' unread notification(s)' : 'Notifications';
+    } catch (e) {}
+  }
+
+  function markRead(n) {
+    var u = me(); if (!u) return;
+    var t = Date.now();
+    if (n.scope === 'pa') writeReceipt(n.id, 'readAt');
+    else if (n.scope === 'sa') {
+      var list = (appData && Array.isArray(appData.staffAnnouncements)) ? appData.staffAnnouncements : [];
+      list.forEach(function (a) { if (a && a.id === n.rawId) { a.readBy = a.readBy || {}; a.readBy[u.id] = t; } });
+      if (typeof saveData === 'function') saveData();
+    } else setLocal('sys_' + n.id, t);
+  }
+  function markDeleted(n) {
+    var u = me(); if (!u) return;
+    var t = Date.now();
+    if (n.scope === 'pa') writeReceipt(n.id, 'deletedAt');
+    else if (n.scope === 'sa') {
+      var list = (appData && Array.isArray(appData.staffAnnouncements)) ? appData.staffAnnouncements : [];
+      list.forEach(function (a) { if (a && a.id === n.rawId) { a.deletedBy = a.deletedBy || {}; a.deletedBy[u.id] = t; } });
+      if (typeof saveData === 'function') saveData();
+    } else setLocal('delsys_' + n.id, t);
+  }
+
+  function itemHtml(n) {
+    var unread = !n.readAt;
+    return '<div style="display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);' + (unread ? 'background:#fffbeb;' : '') + '">' +
+      '<span style="width:8px;height:8px;border-radius:50%;margin-top:6px;flex:0 0 8px;background:' + (unread ? '#FACC15' : 'transparent') + '"></span>' +
+      '<div style="flex:1;min-width:0">' +
+      '<div style="font-size:.84rem;font-weight:800;color:var(--atmos-navy);line-height:1.35">' + escapeHtml(n.subject) + '</div>' +
+      '<div style="font-size:.79rem;color:var(--text);white-space:pre-wrap;line-height:1.5;margin-top:3px">' + escapeHtml(n.message) + '</div>' +
+      '<div style="font-size:.68rem;color:var(--text-muted);margin-top:5px">' + escapeHtml(n.sender) + ' &middot; ' + fmt(n.at) + (unread ? '' : ' &middot; read') + '</div>' +
+      '</div>' +
+      '<button type="button" title="Delete" onclick="ftDeleteNotif(\'' + n.id + '\')" style="border:none;background:transparent;color:var(--accent-rose);cursor:pointer;font-size:.9rem;align-self:flex-start"><i class="fa-solid fa-trash"></i></button>' +
+      '</div>';
+  }
+
+  window.ftOpenNotifPanel = function () {
+    var items = collect();
+    items.forEach(function (n) { if (!n.readAt) markRead(n); });
+    var old = document.getElementById('ftNotifOverlay'); if (old) old.remove();
+    var list = items.length ? items.map(itemHtml).join('') : '<div style="padding:36px 16px;text-align:center;color:var(--text-muted);font-size:.85rem"><i class="fa-regular fa-bell-slash" style="font-size:1.5rem;opacity:.5"></i><p style="margin-top:8px">No notifications.</p></div>';
+    var el = document.createElement('div');
+    el.id = 'ftNotifOverlay';
+    el.style.cssText = 'position:fixed;inset:0;z-index:3200;display:flex;align-items:center;justify-content:center;background:rgba(11,30,45,.45);padding:16px';
+    el.onclick = function (e) { if (e.target === el) window.ftCloseNotifPanel(); };
+    el.innerHTML = '<div style="background:var(--card);color:var(--text);width:min(560px,100%);max-height:min(82vh,640px);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(11,30,45,.35)">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)"><strong style="font-size:.95rem;color:var(--atmos-navy)"><i class="fa-solid fa-bell" style="color:var(--accent-amber)"></i> Notifications</strong><button type="button" onclick="ftCloseNotifPanel()" style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;color:var(--text-muted)"><i class="fa-solid fa-xmark"></i></button></div>' +
+      '<div style="flex:1;overflow-y:auto;max-height:22rem">' + list + '</div>' +
+      '<div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:.7rem;color:var(--text-muted)">Read items are removed after 4 days.</span><button type="button" onclick="ftClearNotifs()" style="border:none;background:transparent;color:var(--accent-rose);font-size:.75rem;font-weight:800;cursor:pointer"><i class="fa-solid fa-trash-can"></i> Clear All Notifications</button></div>' +
+      '</div>';
+    document.body.appendChild(el);
+    refreshBell();
+  };
+  window.ftCloseNotifPanel = function () { var el = document.getElementById('ftNotifOverlay'); if (el) el.remove(); };
+  window.ftDeleteNotif = function (id) {
+    var n = collect().filter(function (x) { return x.id === id; })[0];
+    if (n) markDeleted(n);
+    window.ftCloseNotifPanel(); window.ftOpenNotifPanel();
+  };
+  window.ftClearNotifs = function () {
+    var items = collect();
+    if (!items.length) { window.ftCloseNotifPanel(); return; }
+    if (!confirm('Delete all ' + items.length + ' notification(s)? This cannot be undone.')) return;
+    items.forEach(markDeleted);
+    window.ftCloseNotifPanel(); refreshBell();
+  };
+
+  function bizOptionsHtml() {
+    var pd = PD(), h = '';
+    Object.keys(pd.businesses || {}).forEach(function (k) {
+      var b = pd.businesses[k] || {};
+      h += '<label style="display:flex;gap:8px;align-items:center;padding:4px 2px;font-size:.8rem"><input type="checkbox" class="ftAnnBiz" value="' + k + '"> ' + escapeHtml(b.name || k) + (b.displayId ? ' <span style="color:var(--text-muted)">(' + b.displayId + ')</span>' : '') + '</label>';
+    });
+    return h || '<div style="color:var(--text-muted);font-size:.8rem">No businesses yet.</div>';
+  }
+  window.ftSendAnnouncement = async function () {
+    var mode = (document.getElementById('ftAnnTarget') || {}).value || 'all';
+    var aud = (document.getElementById('ftAnnAudience') || {}).value || 'admin';
+    var subject = ((document.getElementById('ftAnnSubject') || {}).value || '').trim();
+    var message = ((document.getElementById('ftAnnMessage') || {}).value || '');
+    var pub = dayMs((document.getElementById('ftAnnPublish') || {}).value);
+    var exp = dayMs((document.getElementById('ftAnnExpiry') || {}).value);
+    if (!subject) return alert('Please enter a subject.');
+    if (!message.trim()) return alert('Please enter a message.');
+    if (pub && exp && exp < pub) return alert('The expiry date must be after the publish date.');
+    var pd = PD(), ids = [], picked = {};
+    [].forEach.call(document.querySelectorAll('.ftAnnBiz:checked'), function (c) { picked[c.value] = true; });
+    Object.keys(pd.businesses || {}).forEach(function (k) {
+      var b = pd.businesses[k] || {};
+      if (b.blocked) return;
+      if (mode === 'selected' && !picked[k]) return;
+      if (mode === 'active') { var pr = (pd.presence || {})[k] || {}; if (!((pr.lastActive || b.lastActivity || 0) > Date.now() - 7 * 86400000)) return; }
+      ids.push(k);
+    });
+    if (!ids.length) return alert('No target business selected.');
+    var nid = 'n_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    var sentAt = Date.now();
+    platformData.notifications = platformData.notifications || {};
+    platformData.notifications[nid] = { id: nid, type: 'announcement', target: mode, audience: aud, businessIds: ids, subject: subject, message: message, senderName: 'Platform Administrator', senderRole: 'Platform Administrator', sentAt: sentAt, publishDate: pub ? new Date(pub).toISOString().slice(0, 10) : '', expiryDate: exp ? new Date(exp).toISOString().slice(0, 10) : '', totalTargets: ids.length };
+    var keys = Object.keys(platformData.notifications).sort(function (a, b) { return (platformData.notifications[b].sentAt || 0) - (platformData.notifications[a].sentAt || 0); });
+    keys.slice(5).forEach(function (k) { delete platformData.notifications[k]; });
+    try { await savePlatformData(); } catch (e) { console.error(e); }
+    var r = db(), ok = 0, bad = 0;
+    for (var i = 0; i < ids.length; i++) {
+      try {
+        await r.ref('atmos_platform_admin/businesses/' + ids[i] + '/inbox/' + nid).update({ id: nid, subject: subject, message: message, senderName: 'Platform Administrator', senderRole: 'Platform Administrator', audience: aud, sentAt: sentAt, publishAt: pub || 0, expiryAt: exp || 0 });
+        ok++;
+      } catch (e) { bad++; }
+    }
+    alert(bad ? ('Announcement saved, but delivery failed for ' + bad + ' business(es).') : ('Announcement sent to ' + ok + ' business(es).'));
+    if (typeof renderPANotifications === 'function') { try { renderPANotifications(); } catch (e) {} }
+    var s = document.getElementById('ftAnnSubject'); if (s) s.value = '';
+    var m = document.getElementById('ftAnnMessage'); if (m) m.value = '';
+  };
+
+  window.ftSendStaffAnnouncement = function () {
+    if (!currentUser || currentUser.role !== 'Admin') return alert('Only the Business Administrator can send announcements.');
+    try { if (typeof getSubscriptionState === 'function' && getSubscriptionState().locked) return alert('Your subscription access is restricted, so announcements cannot be sent right now.'); } catch (e) {}
+    var subject = ((document.getElementById('ftSaSubject') || {}).value || '').trim();
+    var message = ((document.getElementById('ftSaMessage') || {}).value || '');
+    var mode = (document.getElementById('ftSaTarget') || {}).value || 'all';
+    var pub = dayMs((document.getElementById('ftSaPublish') || {}).value);
+    var exp = dayMs((document.getElementById('ftSaExpiry') || {}).value);
+    if (!subject) return alert('Please enter a subject.');
+    if (!message.trim()) return alert('Please enter a message.');
+    if (pub && exp && exp < pub) return alert('The expiry date must be after the publish date.');
+    var staff = (appData && Array.isArray(appData.users)) ? appData.users.filter(function (u) { return u.role !== 'Admin'; }) : [];
+    var chosen = [];
+    if (mode === 'selected') {
+      [].forEach.call(document.querySelectorAll('.ftSaStaff:checked'), function (c) { chosen.push(String(c.value)); });
+      if (!chosen.length) return alert('Select at least one staff member.');
+    } else chosen = staff.map(function (u) { return String(u.id !== undefined && u.id !== null && u.id !== '' ? u.id : (u.email || u.name)); });
+    appData.staffAnnouncements = Array.isArray(appData.staffAnnouncements) ? appData.staffAnnouncements : [];
+    var okSaved = true;
+    appData.staffAnnouncements.push({ id: 'sa_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), subject: subject, message: message, audience: mode, targets: chosen, sentAt: Date.now(), publishAt: pub || 0, expiryAt: exp || 0, readBy: {}, deletedBy: {}, senderName: (currentUser && currentUser.name) || 'Business Administrator', senderRole: 'Business Administrator' });
+    if (typeof saveData === 'function') { try { okSaved = saveData() !== false; } catch (e) { okSaved = false; } }
+    if (!okSaved) return alert('The announcement could not be saved. Please check the connection and try again.');
+    alert('Announcement sent to ' + chosen.length + ' staff member(s).');
+    var s = document.getElementById('ftSaSubject'); if (s) s.value = '';
+    var m = document.getElementById('ftSaMessage'); if (m) m.value = '';
+    renderStaffAnnounceHistory();
+  };
+  function renderStaffAnnounceHistory() {
+    var host = document.getElementById('ftSaHistory'); if (!host) return;
+    var list = (appData && Array.isArray(appData.staffAnnouncements)) ? appData.staffAnnouncements.slice() : [];
+    list.sort(function (a, b) { return (b.sentAt || 0) - (a.sentAt || 0); });
+    list = list.slice(0, 5);
+    host.innerHTML = list.length ? list.map(function (a) {
+      return '<div style="border-bottom:1px dashed var(--border);padding:8px 0"><div style="font-weight:800;font-size:.82rem">' + escapeHtml(a.subject) + '</div><div style="font-size:.72rem;color:var(--text-muted)">' + (a.audience === 'all' ? 'All staff' : (a.targets || []).length + ' selected staff') + ' &middot; ' + fmt(a.sentAt) + '</div></div>';
+    }).join('') : '<div style="color:var(--text-muted);font-size:.8rem">No announcements sent yet.</div>';
+  }
+
+  function subInfo(b) {
+    var st = getBizSubscriptionStatus(b);
+    var labels = { trial: 'Free Trial', active: 'Active Subscription', expired: 'Expired', blocked: 'Blocked', none: 'Not Registered' };
+    var colors = { trial: 'var(--accent-purple)', active: 'var(--accent-green)', expired: 'var(--accent-rose)', blocked: 'var(--accent-rose)', none: 'var(--text-muted)' };
+    var detail = [];
+    if (b.subscriptionStatus === 'trial') {
+      var end = trialEndFor(b);
+      var days = end ? Math.max(0, Math.ceil((end - Date.now()) / 86400000)) : 0;
+      detail.push('Trial started ' + (b.joiningDate ? String(b.joiningDate).slice(0, 10) : '-'));
+      detail.push(end ? ('Trial ends ' + new Date(end).toLocaleDateString('en-IN') + ' \u00b7 ' + days + ' day(s) remaining') : 'No trial end date stored');
+    }
+    if (b.subscriptionExpiry) detail.push('Paid period ends ' + b.subscriptionExpiry + (st === 'active' ? '' : ' (in grace period)'));
+    var pd = PD(), pend = 0;
+    Object.keys(pd.payments || {}).forEach(function (k) { var p = pd.payments[k] || {}; if (p.businessId === b.id && p.status === 'pending') pend++; });
+    if (pend) detail.push(pend + ' payment(s) awaiting verification');
+    return { label: labels[st] || 'Unknown', color: colors[st] || 'var(--text-muted)', detail: detail };
+  }
+
+  function ensureDisplayIds() {
+    var pd = PD(), bl = pd.businesses || {}, changed = false, max = Number(pd.idCounter || 0);
+    Object.keys(bl).forEach(function (k) { var m = /^FT-(\d+)$/.exec((bl[k] || {}).displayId || ''); if (m) max = Math.max(max, Number(m[1])); });
+    Object.keys(bl).forEach(function (k) {
+      var b = bl[k] || {};
+      if (b.displayId) return;
+      max += 1; b.displayId = 'FT-' + String(max).padStart(3, '0'); changed = true;
+    });
+    if (changed) { pd.idCounter = max; try { if (typeof savePlatformData === 'function') savePlatformData(); } catch (e) {} }
+    return changed;
+  }
+
+  async function measureStorage() {
+    var r = db(); if (!r || !isPA()) return {};
+    var pd = PD(), ids = Object.keys(pd.businesses || {}).slice(0, 20), out = {};
+    for (var i = 0; i < ids.length; i++) {
+      try { var snap = await r.ref('businesses/' + ids[i] + '/data').get(); var v = snap && snap.val(); out[ids[i]] = v ? JSON.stringify(v).length : 0; }
+      catch (e) { out[ids[i]] = null; }
+    }
+    return out;
+  }
+  var ftStorageCache = null;
+  function bytes(b) { if (b == null) return 'Unavailable'; if (b < 1024) return b + ' B'; if (b < 1048576) return (b / 1024).toFixed(2) + ' KB'; return (b / 1048576).toFixed(2) + ' MB'; }
+  function renderLiveStatus(force) {
+    var host = document.getElementById('ftLiveStatusBody'); if (!host) return;
+    var pd = PD(), bl = pd.businesses || {}, pres = pd.presence || {};
+    var rows = Object.keys(bl).map(function (k) { return Object.assign({ id: k }, bl[k]); });
+    if (!rows.length) { host.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:22px">No businesses registered yet.</td></tr>'; return; }
+    host.innerHTML = rows.map(function (b) {
+      var s = subInfo(b), pr = pres[b.id] || {};
+      var stored = ftStorageCache ? bytes(ftStorageCache[b.id]) : '<span style="color:var(--text-muted)">Measuring...</span>';
+      return '<tr>' +
+        '<td><strong>' + escapeHtml(b.name || b.id) + '</strong><div style="font-size:.7rem;color:var(--text-muted)">' + (b.displayId || '-') + '</div></td>' +
+        '<td style="font-size:.78rem">' + escapeHtml(b.adminName || '-') + '<div style="font-size:.7rem;color:var(--text-muted)">' + escapeHtml(b.adminContact || b.adminEmail || '-') + '</div></td>' +
+        '<td><span style="background:' + s.color + ';color:#fff;padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:800">' + s.label + '</span><div style="font-size:.7rem;color:var(--text-muted);margin-top:4px;line-height:1.45">' + (s.detail.join('<br>') || '-') + '</div></td>' +
+        '<td style="font-size:.78rem">' + (b.staffCount || 0) + '</td>' +
+        '<td style="font-size:.78rem">' + stored + '<div style="font-size:.68rem;color:var(--text-muted)">transfer: not measurable</div></td>' +
+        '<td style="font-size:.78rem"><span style="color:' + (pr.online ? 'var(--accent-green)' : 'var(--text-muted)') + ';font-weight:800">' + (pr.online ? 'Online' : 'Offline') + '</span></td>' +
+        '<td style="font-size:.78rem">' + (pr.lastActive ? formatTimeAgo(pr.lastActive) : 'Never') + '</td>' +
+        '</tr>';
+    }).join('');
+    if (!ftStorageCache || force) measureStorage().then(function (m) { ftStorageCache = m; renderLiveStatus(false); }).catch(function () {});
+  }
+  window.ftRenderLiveStatus = renderLiveStatus;
+
+  function renderPending() {
+    var el = document.getElementById('paPendingActions'); if (!el) return;
+    var pd = PD(), pays = [], regs = [];
+    Object.keys(pd.payments || {}).forEach(function (k) { if ((pd.payments[k] || {}).status === 'pending') pays.push(k); });
+    Object.keys(pd.businesses || {}).forEach(function (k) { var b = pd.businesses[k] || {}; if (b.registrationStatus === 'pending' || b.verified === false) regs.push(k); });
+    if (!pays.length && !regs.length) { el.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:18px"><i class="fa-solid fa-circle-check" style="font-size:1.6rem;color:var(--accent-green)"></i><p style="margin-top:8px">No pending actions.</p></div>'; return; }
+    var h = '';
+    if (regs.length) h += '<div onclick="switchPATab(\'paBusinessesTab\')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px"><span style="font-size:.84rem"><i class="fa-solid fa-building-circle-exclamation" style="color:var(--accent-amber)"></i> Business registrations awaiting verification</span><strong>' + regs.length + '</strong></div>';
+    if (pays.length) h += '<div onclick="switchPATab(\'paSubscriptionsTab\')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid var(--border);border-radius:10px"><span style="font-size:.84rem"><i class="fa-solid fa-hourglass-half" style="color:var(--accent-amber)"></i> Subscription payments awaiting verification</span><strong>' + pays.length + '</strong></div>';
+    el.innerHTML = h;
+  }
+
+  function normalizePresence(map) {
+    var out = {};
+    Object.keys(map || {}).forEach(function (k) {
+      if (k.indexOf('platform_') === 0) return;
+      var v = map[k] || {}, online = false, last = Number(v.lastActive) || 0;
+      if (v.accounts) {
+        Object.keys(v.accounts).forEach(function (u) {
+          var a = v.accounts[u] || {};
+          if (a.online) online = true;
+          last = Math.max(last, Number(a.at) || 0, Number(a.lastActive) || 0);
+        });
+      } else online = !!v.online;
+      out[k] = { online: online, lastActive: last };
+    });
+    return out;
+  }
+  function listenPresence() {
+    var r = db(); if (!r || !isPA()) return;
+    try {
+      r.ref('atmos_platform_admin/presence').on('value', function (s) {
+        var norm = normalizePresence(s.val() || {});
+        try { platformData.presence = norm; } catch (e) {}
+        renderLiveStatus(false);
+      }, function () {});
+    } catch (e) {}
+  }
+
+  function build() {
+    var legacy = document.getElementById('paAnnounceSubject');
+    var legacyCard = legacy && legacy.closest ? legacy.closest('.app-card') : null;
+    if (legacyCard) legacyCard.style.display = 'none';
+    var tab = document.getElementById('paNotificationsTab');
+    if (tab && !document.getElementById('ftAnnComposer')) {
+      var c = document.createElement('div');
+      c.id = 'ftAnnComposer';
+      c.className = 'app-card';
+      c.style.cssText = 'border-left:5px solid var(--primary)';
+      c.innerHTML = '<h3 style="font-size:1rem;font-weight:900;color:var(--atmos-navy);margin-bottom:12px"><i class="fa-solid fa-bullhorn" style="color:var(--accent-green)"></i> Send Announcement</h3>' +
+        '<div class="form-group"><label>Target Business</label><select id="ftAnnTarget" onchange="document.getElementById(\'ftAnnBizWrap\').style.display=this.value===\'selected\'?\'block\':\'none\'"><option value="all">All Businesses</option><option value="active">Active Businesses (last 7 days)</option><option value="selected">Selected Businesses</option></select><div id="ftAnnBizWrap" style="display:none;margin-top:8px;max-height:160px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px">' + bizOptionsHtml() + '</div></div>' +
+        '<div class="form-group"><label>Target Audience</label><select id="ftAnnAudience"><option value="admin">Admin Only</option><option value="admin_staff">Admin and Staff</option></select></div>' +
+        '<div class="form-group"><label>Subject</label><input type="text" id="ftAnnSubject" placeholder="Announcement subject"></div>' +
+        '<div class="form-group"><label>Message</label><textarea id="ftAnnMessage" rows="5" placeholder="Enter announcement message"></textarea></div>' +
+        '<div style="display:flex;gap:12px;flex-wrap:wrap"><div class="form-group" style="flex:1"><label>Publish Date (optional)</label><input type="date" id="ftAnnPublish"></div><div class="form-group" style="flex:1"><label>Expiry Date (optional)</label><input type="date" id="ftAnnExpiry"></div></div>' +
+        '<button class="btn-primary" onclick="ftSendAnnouncement()" style="width:auto;background:var(--accent-green)"><i class="fa-solid fa-bullhorn"></i> Send Announcement</button>' +
+        '<p style="font-size:.7rem;color:var(--text-muted);margin-top:8px">History keeps the five most recent announcements. Recipients keep their own copy until it expires or is deleted.</p>';
+      if (legacyCard && legacyCard.parentNode) legacyCard.parentNode.insertBefore(c, legacyCard); else tab.appendChild(c);
+    }
+    var adminTab = document.getElementById('adminTab');
+    if (adminTab && !document.getElementById('ftStaffAnnounceSection')) {
+      var sec = document.createElement('div');
+      sec.id = 'ftStaffAnnounceSection';
+      sec.className = 'app-card';
+      sec.style.cssText = 'display:none;border-left:5px solid var(--accent-amber)';
+      var staff = (appData && Array.isArray(appData.users)) ? appData.users.filter(function (u) { return u.role !== 'Admin'; }) : [];
+      sec.innerHTML = '<h3 style="font-size:1rem;font-weight:900;color:var(--atmos-navy);margin-bottom:12px"><i class="fa-solid fa-bullhorn" style="color:var(--accent-amber)"></i> Staff Announcements</h3>' +
+        '<div class="form-group"><label>Target Staff</label><select id="ftSaTarget" onchange="document.getElementById(\'ftSaStaffWrap\').style.display=this.value===\'selected\'?\'block\':\'none\'"><option value="all">All Staff</option><option value="selected">Selected Staff</option></select><div id="ftSaStaffWrap" style="display:none;margin-top:8px;max-height:160px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px">' + (staff.map(function (u) { var id = (u.id !== undefined && u.id !== null && u.id !== '') ? String(u.id) : String(u.email || u.name); return '<label style="display:flex;gap:8px;align-items:center;padding:4px 2px;font-size:.8rem"><input type="checkbox" class="ftSaStaff" value="' + id + '"> ' + escapeHtml(u.name || id) + '</label>'; }).join('') || '<div style="color:var(--text-muted);font-size:.8rem">No staff added yet.</div>') + '</div></div>' +
+        '<div class="form-group"><label>Subject</label><input type="text" id="ftSaSubject"></div>' +
+        '<div class="form-group"><label>Message</label><textarea id="ftSaMessage" rows="4"></textarea></div>' +
+        '<div style="display:flex;gap:12px;flex-wrap:wrap"><div class="form-group" style="flex:1"><label>Publish Date (optional)</label><input type="date" id="ftSaPublish"></div><div class="form-group" style="flex:1"><label>Expiry Date (optional)</label><input type="date" id="ftSaExpiry"></div></div>' +
+        '<button class="btn-primary" onclick="ftSendStaffAnnouncement()" style="width:auto;background:var(--accent-amber)"><i class="fa-solid fa-paper-plane"></i> Send to Staff</button>' +
+        '<div style="margin-top:14px"><div style="font-size:.7rem;font-weight:900;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Recently Sent (last 5)</div><div id="ftSaHistory"></div></div>';
+      adminTab.appendChild(sec);
+      var btnHost = document.querySelector('[onclick="showAdminSection(\'analyticsSection\')"]');
+      if (btnHost && btnHost.parentNode) {
+        var b2 = document.createElement('button');
+        b2.className = 'btn-primary';
+        b2.style.cssText = 'width:auto;padding:7px 13px;font-size:.8rem;background:var(--accent-amber)';
+        b2.setAttribute('onclick', "showAdminSection('ftStaffAnnounceSection')");
+        b2.innerHTML = '5 &middot; Staff Announcements';
+        btnHost.parentNode.insertBefore(b2, btnHost);
+      }
+    }
+    var bizBtn = document.querySelector('[onclick="switchPATab(\'paBusinessesTab\')"]');
+    if (bizBtn && bizBtn.parentNode && !document.getElementById('ftLiveStatusNavBtn')) {
+      var nb = document.createElement('button');
+      nb.id = 'ftLiveStatusNavBtn';
+      nb.setAttribute('onclick', "switchPATab('ftLiveStatusTab')");
+      nb.className = bizBtn.className;
+      nb.innerHTML = '<i class="fa-solid fa-heart-pulse"></i> Live Status';
+      bizBtn.parentNode.insertBefore(nb, bizBtn.nextSibling);
+    }
+    var bizSection = document.getElementById('paBusinessesTab');
+    if (bizSection && bizSection.parentNode && !document.getElementById('ftLiveStatusTab')) {
+      var ls = document.createElement('div');
+      ls.id = 'ftLiveStatusTab';
+      ls.className = 'pa-section tab-content';
+      ls.style.display = 'none';
+      ls.innerHTML = '<div class="section-header admin-header"><i class="fa-solid fa-heart-pulse"></i> Live Status - Every Business</div>' +
+        '<div class="app-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap"><p style="font-size:.78rem;color:var(--text-muted);margin:0">Trial, paid, grace and verification state for every business, with the customer name and contact.</p><button class="btn-primary" style="width:auto;padding:6px 12px;font-size:.78rem" onclick="ftRenderLiveStatus(true)"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button></div>' +
+        '<div style="overflow-x:auto"><table><thead><tr><th>Business</th><th>Customer</th><th>Subscription</th><th>Staff</th><th>Data stored</th><th>Presence</th><th>Last activity</th></tr></thead><tbody id="ftLiveStatusBody"></tbody></table></div>' +
+        '<p style="font-size:.7rem;color:var(--text-muted);margin-top:8px">Data stored is measured by reading each business record. Data transfer is not measurable from the browser and is reported as such.</p></div>';
+      bizSection.parentNode.insertBefore(ls, bizSection);
+    }
+    renderStaffAnnounceHistory();
+  }
+
+  var __sw = switchPATab;
+  switchPATab = function (id) {
+    var r = __sw.apply(null, arguments);
+    try { var ls = document.getElementById('ftLiveStatusTab'); if (ls) ls.style.display = (id === 'ftLiveStatusTab') ? 'block' : 'none'; if (id === 'ftLiveStatusTab') { ensureDisplayIds(); renderLiveStatus(true); } } catch (e) {}
+    return r;
+  };
+  var __rpd = renderPADashboard;
+  renderPADashboard = function () { var r = __rpd.apply(null, arguments); try { ensureDisplayIds(); renderPending(); renderLiveStatus(false); } catch (e) {} return r; };
+  var __rbc = renderBizSubscriptionCard;
+  renderBizSubscriptionCard = function () {
+    var r = __rbc.apply(null, arguments);
+    try {
+      var card = document.getElementById('bizSubCard'); var b = (PD().businesses || {})[activeBiz()] || null;
+      if (card && b && !platformAdminUser) {
+        var s = subInfo(Object.assign({ id: activeBiz() }, b));
+        var host = document.getElementById('ftBizSubDetail');
+        if (!host) { host = document.createElement('div'); host.id = 'ftBizSubDetail'; card.appendChild(host); }
+        host.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);font-size:.78rem;line-height:1.6;color:var(--text)';
+        host.innerHTML = s.detail.length ? s.detail.join('<br>') : '';
+      }
+    } catch (e) {}
+    return r;
+  };
+  setInterval(function () { try { refreshBell(); } catch (e) {} }, 30000);
+  setTimeout(function () { try { build(); listenPresence(); listenReceipts(); loadInbox(); refreshBell(); } catch (e) { console.error('notif build', e); } }, 1200);
+  setTimeout(function () { try { listenReceipts(); loadInbox(); refreshBell(); } catch (e) {} }, 4000);
+  setTimeout(function () { try { refreshBell(); } catch (e) {} }, 4000);
+})();
 
   /* ============================================================
      SUBSCRIPTION, GRACE PERIOD, UPI QR & PAYMENT VERIFICATION
@@ -10757,7 +11479,7 @@ window.addEventListener('DOMContentLoaded', function() {
   var SUPPORT_WHATSAPP = '918089278115';
   var PLATFORM_UPI_ID = '8089278115@superyes';
   var PLATFORM_PAYEE_NAME = 'ATMOS Digital Solutions';
-  var SUB_GRACE_DAYS = 7;
+  var SUB_GRACE_DAYS = 3;
   var PLAN_LABELS = { '1month': 'Monthly', '3months': 'Quarterly', '6months': 'Half-Yearly', '12months': 'Yearly' };
 
   function getCurrentBizRecord() {
@@ -10767,40 +11489,138 @@ window.addEventListener('DOMContentLoaded', function() {
     return (platformData.businesses || {})[bizId] || null;
   }
 
-  function getSubscriptionState() {
-    var DAY = 86400000;
-    var st = { registered: false, status: 'none', locked: false, daysLeft: 0, graceLeft: 0,
-               plan: '\u2014', pricing: '\u2014', expiryText: '\u2014' };
-    var b = getCurrentBizRecord();
-    if (!b) return st;
-    st.registered = true;
-    if (b.blocked) { st.status = 'blocked'; st.locked = true; return st; }
-    var end = 0;
-    if (b.subscriptionStatus === 'active' && b.subscriptionExpiry) {
-      end = new Date(b.subscriptionExpiry).getTime(); st.status = 'active';
-    } else if (b.subscriptionStatus === 'trial') { end = b.trialEndDate || 0; if (!end && b.joiningDate) { var jt2 = new Date(String(b.joiningDate).split('T')[0] + 'T00:00:00').getTime(); if (jt2) end = jt2 + getPlatformBranding().trialDays * DAY; } st.status = 'trial';
+  
+/* IST helpers + trial maths used by the subscription engine.
+   Every boundary below is an IST midnight, so a trial that starts on
+   1 January with 7 days ends the moment 8 January begins in India. */
+function istDateText(ms) {
+  var d = new Date(ms + 19800000);
+  var p = function (n) { return (n < 10 ? '0' : '') + n; };
+  return p(d.getUTCDate()) + '/' + p(d.getUTCMonth() + 1) + '/' + d.getUTCFullYear();
+}
+function istMidnightOf(ms) {
+  var d = new Date(ms + 19800000);
+  return Date.parse(d.toISOString().split('T')[0] + 'T00:00:00+05:30');
+}
+/* A business's trial end, normalised to the IST midnight boundary. */
+function trialEndFor(b) {
+  var end = b && b.trialEndDate ? Number(b.trialEndDate) : 0;
+  if (!end && b && b.joiningDate) {
+    end = Date.parse(String(b.joiningDate).split('T')[0] + 'T00:00:00+05:30') + (getPlatformBranding().trialDays * 86400000);
+  }
+  if (!end) return 0;
+  return istMidnightOf(end);
+}
+/* Plain-language status line + colour for the subscription card. */
+function subStatusMessage(daysLeft, kind) {
+  var d = Math.max(0, daysLeft);
+  if (d > 5) return { text: (kind === 'trial' ? 'Free trial left for ' + d + ' days.' : 'Subscription left for ' + d + ' days.'), color: 'var(--accent-green)' };
+  if (d > 1) return { text: (kind === 'trial' ? 'Your free trial will be ending in ' + d + ' days, kindly subscribe.' : 'Your subscription will be ending in ' + d + ' days,'), color: 'var(--accent-amber)' };
+  return { text: (kind === 'trial' ? 'Your free trial will end in one day - kindly subscribe.' : 'Your subscription will end in one day - kindly renew.'), color: 'var(--accent-rose)' };
+}
+/* Platform administrator changes the free-trial duration: a business still
+   inside its trial gains or loses the difference. A trial that has already
+   ended is never reactivated by a longer setting. */
+function applyTrialDurationChange(prevDays, newDays) {
+  if (typeof prevDays !== 'number' || isNaN(prevDays)) prevDays = newDays;
+  if (prevDays === newDays) return 0;
+  var delta = (newDays - prevDays) * 86400000;
+  var now = Date.now();
+  var changed = 0;
+  Object.keys(platformData.businesses || {}).forEach(function (id) {
+    var b = (platformData.businesses || {})[id];
+    if (!b || b.subscriptionStatus !== 'trial') return;
+    var end = trialEndFor(b);
+    if (!end || end <= now) return;
+    var next = end + delta;
+    if (next <= now) next = now - 1;
+    b.trialEndDate = next;
+    changed++;
+  });
+  return changed;
+}
+
+function getSubscriptionState() {
+  var DAY = 86400000;
+  var st = { registered: false, status: 'none', locked: false, daysLeft: 0, graceLeft: 0, totalDays: 0, trialDays: 0,
+             message: '', messageColor: 'var(--text-muted)',
+             plan: '\u2014', pricing: '\u2014', expiryText: '\u2014' };
+  var b = getCurrentBizRecord();
+  if (!b) return st;
+  st.registered = true;
+  st.trialDays = getPlatformBranding().trialDays;
+  if (b.blocked) {
+    st.status = 'blocked'; st.locked = true;
+    st.message = 'Your business account has been suspended by the platform administrator. Please contact support.';
+    st.messageColor = 'var(--accent-rose)';
+    return st;
+  }
+  var now = Date.now();
+
+  /* PAID subscription - the 3 day grace period runs only after a paid plan ends */
+  if ((b.subscriptionStatus === 'active' || b.subscriptionStatus === 'grace') && b.subscriptionExpiry) {
+    st.plan = PLAN_LABELS[b.subscriptionPlan] || 'Paid Subscription';
+    st.pricing = (b.subscriptionPricingType === 'introductory') ? 'Introductory Pricing' : 'Normal Pricing';
+    var paidEnd = Date.parse(b.subscriptionExpiry + 'T23:59:59+05:30');
+    if (isNaN(paidEnd)) paidEnd = new Date(b.subscriptionExpiry).getTime();
+    st.expiryText = istDateText(paidEnd);
+    if (now <= paidEnd) {
+      st.status = 'active'; st.locked = false;
+      st.daysLeft = Math.max(0, Math.ceil((paidEnd - now) / DAY));
+      var m1 = subStatusMessage(st.daysLeft, 'paid');
+      st.message = m1.text; st.messageColor = m1.color;
+      return st;
     }
-    st.plan = PLAN_LABELS[b.subscriptionPlan] || (st.status === 'trial' ? 'Free Trial' : '\u2014');
-    st.pricing = (st.status === 'trial') ? 'Free Trial'
-                : (b.subscriptionPricingType === 'introductory' ? 'Introductory Pricing' : 'Normal Pricing');
-    if (!end) return st;
-    st.expiryText = new Date(end).toLocaleDateString('en-GB');
-    var now = Date.now();
-    if (now <= end) {
-      st.daysLeft = Math.max(0, Math.ceil((end - now) / DAY));
-      st.locked = false;
-    } else {
-      var graceEnd = end + SUB_GRACE_DAYS * DAY;
-      if (now <= graceEnd) {
-        st.status = 'grace'; st.daysLeft = 0;
-        st.graceLeft = Math.max(0, Math.ceil((graceEnd - now) / DAY));
-        st.locked = false;
-      } else { st.status = 'expired'; st.locked = true; }
+    var graceEnd = paidEnd + SUB_GRACE_DAYS * DAY;
+    if (now <= graceEnd) {
+      st.status = 'grace'; st.locked = false; st.daysLeft = 0;
+      st.graceLeft = Math.max(0, Math.ceil((graceEnd - now) / DAY));
+      st.message = 'Your paid subscription has ended. ' + st.graceLeft + ' of ' + SUB_GRACE_DAYS + ' grace day(s) left - kindly renew.';
+      st.messageColor = 'var(--accent-amber)';
+      return st;
     }
+    st.status = 'expired'; st.locked = true; st.daysLeft = 0;
+    st.message = 'Your subscription and its grace period have ended. Kindly renew; access is restored after the Platform Administrator verifies your payment.';
+    st.messageColor = 'var(--accent-rose)';
     return st;
   }
 
-  function upiPayUri(amount) {
+  /* FREE TRIAL - no grace period once a trial ends */
+  if (b.subscriptionStatus === 'trial') {
+    st.plan = 'Free Trial';
+    st.pricing = 'Free Trial';
+    if (st.trialDays <= 0) {
+      st.status = 'expired'; st.locked = true; st.daysLeft = 0; st.totalDays = 0;
+      st.message = 'No free trial is configured for this platform. Kindly subscribe to continue.';
+      st.messageColor = 'var(--accent-rose)';
+      return st;
+    }
+    var trialEnd = trialEndFor(b);
+    if (!trialEnd) { st.status = 'trial'; st.locked = false; st.totalDays = st.trialDays; return st; }
+    st.totalDays = st.trialDays;
+    st.expiryText = istDateText(trialEnd);
+    if (now <= trialEnd) {
+      st.status = 'trial'; st.locked = false;
+      st.daysLeft = Math.max(0, Math.ceil((trialEnd - now) / DAY));
+      var m2 = subStatusMessage(st.daysLeft, 'trial');
+      st.message = m2.text; st.messageColor = m2.color;
+      return st;
+    }
+    st.status = 'expired'; st.locked = true; st.daysLeft = 0;
+    st.message = 'Your free trial has ended. Kindly subscribe; access is restored after the Platform Administrator verifies your payment.';
+    st.messageColor = 'var(--accent-rose)';
+    return st;
+  }
+
+  if (b.subscriptionStatus === 'expired') {
+    st.status = 'expired'; st.locked = true;
+    st.message = 'Your subscription has ended. Kindly renew to restore operational access.';
+    st.messageColor = 'var(--accent-rose)';
+  }
+  return st;
+}
+
+function upiPayUri(amount) {
     var uri = 'upi://pay?pa=' + encodeURIComponent(PLATFORM_UPI_ID) + '&pn=' + encodeURIComponent(PLATFORM_PAYEE_NAME) + '&cu=INR';
     if (amount > 0) uri += '&am=' + Number(amount).toFixed(2);
     uri += '&tn=' + encodeURIComponent('ATMOS Subscription');
@@ -10832,8 +11652,8 @@ window.addEventListener('DOMContentLoaded', function() {
     var amtEl = document.getElementById('paPayAmount');
     if (!planEl || !amtEl) return;
     var pt = (ptEl && ptEl.value) ? ptEl.value : 'normal';
-    var def = (paPlans()[pt] || paPlans().normal)[planEl.value];
-    if (def) amtEl.value = def.price;
+    var def = planEl.value ? ((paPlans()[pt] || paPlans().normal)[planEl.value]) : null;
+    amtEl.value = def ? def.price : '';
   }
 
   function renderBizSubscriptionCard() {
@@ -10853,58 +11673,139 @@ window.addEventListener('DOMContentLoaded', function() {
   }
 
   function buildBizSubCardHtml() {
-    var st = getSubscriptionState();
-    var colors = { trial: 'var(--primary)', active: 'var(--accent-green)', grace: 'var(--accent-amber)', expired: 'var(--accent-rose)', blocked: 'var(--accent-rose)', none: 'var(--text-muted)' };
-    var labels = { trial: 'Free Trial', active: 'Active', grace: 'Grace Period', expired: 'Expired', blocked: 'Suspended', none: 'Not Registered' };
-    var c = colors[st.status] || 'var(--text-muted)';
-    var l = labels[st.status] || 'Unknown';
-    var daysBox;
-    if (st.status === 'grace') {
-      daysBox = '<div style="font-size:1.7rem;font-weight:900;color:var(--accent-amber);line-height:1">' + st.graceLeft + '</div><div style="font-size:.65rem;font-weight:800;color:var(--text-muted);margin-top:2px">GRACE DAYS LEFT</div>';
-    } else if (st.status === 'expired' || st.status === 'blocked') {
-      daysBox = '<div style="font-size:1.7rem;font-weight:900;color:var(--accent-rose);line-height:1">0</div><div style="font-size:.65rem;font-weight:800;color:var(--text-muted);margin-top:2px">DAYS LEFT</div>';
-    } else {
-      daysBox = '<div style="font-size:1.7rem;font-weight:900;color:' + (st.daysLeft <= 3 ? 'var(--accent-rose)' : 'var(--atmos-navy)') + ';line-height:1">' + st.daysLeft + '</div><div style="font-size:.65rem;font-weight:800;color:var(--text-muted);margin-top:2px">DAYS LEFT</div>';
-    }
-    var pill = 'background:var(--bg);border:1px solid var(--border);padding:4px 10px;border-radius:20px;font-size:.7rem;font-weight:800;color:var(--text-muted)';
-    return '<div style="display:flex;justify-content:space-between;align-items:stretch;gap:16px;flex-wrap:wrap">'
-      + '<div style="flex:1;min-width:230px">'
-      + '<h3 style="font-size:1.05rem;font-weight:900;color:var(--atmos-navy);margin-bottom:6px"><i class="fa-solid fa-credit-card" style="color:var(--atmos-red)"></i> Platform Subscription</h3>'
-      + '<p style="font-size:.8rem;color:var(--text-muted);margin-bottom:12px">Scan the payment QR and submit your payment details for verification.</p>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
-      + '<span style="background:' + c + ';color:#fff;padding:4px 10px;border-radius:20px;font-size:.7rem;font-weight:800">' + l + '</span>'
-      + '<span style="' + pill + '">' + st.plan + '</span>'
-      + '<span style="' + pill + '">' + st.pricing + '</span>'
-      + '</div>'
-      + '<button class="btn-admin" onclick="openPaSubmitPayment()" style="width:auto"><i class="fa-solid fa-qrcode"></i> Pay / Renew Subscription</button>'
-      + '</div>'
-      + '<div style="text-align:center;min-width:150px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;display:flex;flex-direction:column;justify-content:center">'
-      + daysBox
-      + '<div style="font-size:.66rem;color:var(--text-muted);margin-top:8px">' + (st.expiryText !== '\u2014' ? 'Ends ' + st.expiryText : '\u2014') + '</div>'
-      + '</div></div>';
+  var st = getSubscriptionState();
+  var colors = { trial: 'var(--primary)', active: 'var(--accent-green)', grace: 'var(--accent-amber)', expired: 'var(--accent-rose)', blocked: 'var(--accent-rose)', none: 'var(--text-muted)' };
+  var labels = { trial: 'Free Trial', active: 'Active', grace: 'Grace Period', expired: 'Expired', blocked: 'Suspended', none: 'Not Registered' };
+  var c = colors[st.status] || 'var(--text-muted)';
+  var l = labels[st.status] || 'Unknown';
+  var daysBox;
+  if (st.status === 'grace') {
+    daysBox = '<div style="font-size:1.7rem;font-weight:900;color:var(--accent-amber);line-height:1">' + st.graceLeft + '</div><div style="font-size:.65rem;font-weight:800;color:var(--text-muted);margin-top:2px">GRACE DAYS LEFT</div>';
+  } else if (st.status === 'expired' || st.status === 'blocked') {
+    daysBox = '<div style="font-size:1.7rem;font-weight:900;color:var(--accent-rose);line-height:1">0</div><div style="font-size:.65rem;font-weight:800;color:var(--text-muted);margin-top:2px">DAYS LEFT</div>';
+  } else {
+    daysBox = '<div style="font-size:1.7rem;font-weight:900;color:' + (st.daysLeft <= 3 ? 'var(--accent-rose)' : 'var(--atmos-navy)') + ';line-height:1">' + st.daysLeft + '</div><div style="font-size:.65rem;font-weight:800;color:var(--text-muted);margin-top:2px">DAYS LEFT</div>';
   }
+  var pill = 'background:var(--bg);border:1px solid var(--border);padding:4px 10px;border-radius:20px;font-size:.7rem;font-weight:800;color:var(--text-muted)';
+  var counter = '';
+  if (st.status === 'trial' && st.totalDays > 0) counter = '<div style="font-size:.85rem;font-weight:900;color:var(--atmos-navy);margin-bottom:8px">' + st.daysLeft + ' of ' + st.totalDays + ' days left</div>';
+  if (st.status === 'grace') counter = '<div style="font-size:.85rem;font-weight:900;color:var(--accent-amber);margin-bottom:8px">' + st.graceLeft + ' of ' + SUB_GRACE_DAYS + ' grace days left</div>';
+  var msg = st.message ? '<div style="font-size:.83rem;font-weight:800;color:' + st.messageColor + ';margin-bottom:12px">' + st.message + '</div>' : '';
+  return '<div style="display:flex;justify-content:space-between;align-items:stretch;gap:16px;flex-wrap:wrap">'
+    + '<div style="flex:1;min-width:230px">'
+    + '<h3 style="font-size:1.05rem;font-weight:900;color:var(--atmos-navy);margin-bottom:6px"><i class="fa-solid fa-credit-card" style="color:var(--atmos-red)"></i> Platform Subscription</h3>'
+    + msg + counter
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'
+    + '<span style="background:' + c + ';color:#fff;padding:4px 10px;border-radius:20px;font-size:.7rem;font-weight:800">' + l + '</span>'
+    + '<span style="' + pill + '">Trial: ' + (st.trialDays > 0 ? st.trialDays + ' days' : 'not offered') + '</span>'
+    + '<span style="' + pill + '">Paid: ' + st.plan + '</span>'
+    + '<span style="' + pill + '">Pricing: ' + st.pricing + '</span>'
+    + (st.status === 'grace' ? '<span style="' + pill + '">Grace: ' + st.graceLeft + ' of ' + SUB_GRACE_DAYS + ' days</span>' : '')
+    + '</div>'
+    + '<button class="btn-admin" onclick="openPaSubmitPayment()" style="width:auto"><i class="fa-solid fa-qrcode"></i> Pay / Renew Subscription</button>'
+    + '</div>'
+    + '<div style="text-align:center;min-width:150px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;display:flex;flex-direction:column;justify-content:center">'
+    + daysBox
+    + '<div style="font-size:.66rem;color:var(--text-muted);margin-top:8px">' + (st.expiryText !== '\u2014' ? 'Ends ' + st.expiryText : '\u2014') + '</div>'
+    + '</div></div>';
+}
 
-  function openPaSubmitPaymentFromLock() {
+function openPaSubmitPaymentFromLock() {
     var m = document.getElementById('subLockModal');
     if (m) m.style.display = 'none';
     openPaSubmitPayment();
   }
 
-  function checkSubscriptionLock() {
-    var m = document.getElementById('subLockModal'); if (!m) return;
-    if (!currentUser || platformAdminUser) { m.style.display = 'none'; return; }
-    var st = getSubscriptionState(); if (!st.registered || !st.locked) { m.style.display = 'none'; return; }
-    var pending = hasPendingPayment();
-    var titleEl = document.getElementById('subLockTitle'); var msgEl = document.getElementById('subLockMsg');
-    var payBtn = document.getElementById('subLockPayBtn'); var pendNote = document.getElementById('subLockPendingNote');
-    if (titleEl) titleEl.innerText = st.status === 'blocked' ? 'Account Suspended' : (pending ? 'Payment Verification Pending' : 'Free Trial Ended');
-    if (msgEl) msgEl.innerText = st.status === 'blocked' ? 'Your business account has been suspended by the platform administrator. Please contact support to restore access.' : (pending ? 'Your payment has been submitted and is pending verification by the Main Platform Administrator. Full access will be restored automatically the moment it is verified.' : 'Your free trial has ended. Subscribe to Fintrack Business Premium to unlock complete features for your selected period. Complete your payment below to restore full access.');
-    if (payBtn) payBtn.style.display = (pending || st.status === 'blocked') ? 'none' : 'block';
-    if (pendNote) pendNote.style.display = pending ? 'block' : 'none';
-    m.style.display = 'flex';
-  }
+  
+/* True when this business has a payment waiting for platform verification. */
+function hasPendingPayment() {
+  var bizId = null;
+  try { bizId = getCurrentPlatformBusinessId(); } catch (e) { bizId = null; }
+  if (!bizId) return false;
+  var list = platformData.payments || {};
+  return Object.keys(list).some(function (k) {
+    var p = list[k];
+    return p && p.businessId === bizId && p.status === 'pending';
+  });
+}
 
-  function toggleIntroOffer() {
+/* Restricted access is shown as a persistent banner, so the business can still
+   move around the application and reach the subscription/payment area. */
+function ensureSubLockBanner() {
+  var el = document.getElementById('subLockBanner');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'subLockBanner';
+    el.style.cssText = 'display:none;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;text-align:center;background:#fff1f2;border-bottom:3px solid var(--atmos-red);padding:12px 16px;font-size:.85rem;font-weight:800;color:#991b1b';
+    if (document.body) document.body.insertBefore(el, document.body.firstChild);
+  }
+  return el;
+}
+
+function renderSubLockBanner() {
+  var el = ensureSubLockBanner();
+  if (!el) return;
+  var show = !!(currentUser && !platformAdminUser && getSubscriptionState().registered && getSubscriptionState().locked);
+  if (!show) { el.style.display = 'none'; return; }
+  var br = getPlatformBranding();
+  var logo = br.logoDataUrl
+    ? '<img src="' + br.logoDataUrl + '" alt="Platform logo" style="max-height:38px;max-width:130px;object-fit:contain">'
+    : '<span style="font-weight:900;font-size:1rem;color:var(--atmos-navy)">' + (br.name || 'FinTrack Business') + '</span>';
+  var pending = hasPendingPayment();
+  el.style.display = 'flex';
+  el.innerHTML = logo
+    + '<span>Kindly subscribe to any of our plans to get the seamless opportunity to explore our features</span>'
+    + (pending ? '<span style="font-weight:800;color:var(--accent-amber)">Your payment is with the Platform Administrator for verification.</span>' : '')
+    + '<button onclick="openPaSubmitPayment()" style="background:var(--atmos-red);color:#fff;border:none;padding:9px 18px;border-radius:20px;font-weight:800;font-size:.8rem;cursor:pointer"><i class="fa-solid fa-qrcode"></i> Pay / Renew Subscription</button>';
+}
+
+function showSubLockNotice() {
+  if (window.__ftLockNoticeAt && Date.now() - window.__ftLockNoticeAt < 2500) return;
+  window.__ftLockNoticeAt = Date.now();
+  alert('Subscription required.\n\nKindly subscribe to any of our plans to get the seamless opportunity to explore our features.\n\nNothing was saved or changed. Your existing records are safe.');
+}
+
+/* Every action that would record, change, delete, print or download operational
+   information is refused while access is restricted. Navigation, viewing and the
+   subscription/payment area keep working. */
+var SUB_BLOCKED_FN = /^(save|add|submit|delete|remove|finalize|unfinalize|record|create|update|import|apply|edit|export|download|generate|print|transfer|settle|closeMonth|reopenMonth)/i;
+var SUB_ALLOWED_FN = /^(openPaSubmitPayment|closePaSubmitPayment|refreshPaymentQr|syncPayAmount|switchTab|navigateFromDrawer|setStaffReportTab|toggleAttendanceMoreDetails|logout|showPasswordLogin)/i;
+function subscriptionBlocks(el) {
+  try {
+    if (!(currentUser && !platformAdminUser && getSubscriptionState().registered && getSubscriptionState().locked)) return false;
+  } catch (e) { return false; }
+  var node = el;
+  while (node && node !== document.body) {
+    var oc = node.getAttribute ? node.getAttribute('onclick') : null;
+    if (!oc && node.getAttribute) oc = node.getAttribute('onchange');
+    if (oc) {
+      var m = oc.match(/^\s*(?:[A-Za-z0-9_$]+\.)*([A-Za-z0-9_$]+)\s*\(/);
+      if (!m) return false;
+      if (SUB_ALLOWED_FN.test(m[1])) return false;
+      return SUB_BLOCKED_FN.test(m[1]);
+    }
+    node = node.parentElement;
+  }
+  return false;
+}
+['click', 'change', 'submit'].forEach(function (type) {
+  document.addEventListener(type, function (e) {
+    if (subscriptionBlocks(e.target)) {
+      e.preventDefault(); e.stopPropagation();
+      showSubLockNotice();
+    }
+  }, true);
+});
+setInterval(function () { try { renderSubLockBanner(); renderBizSubscriptionCard(); } catch (e) {} }, 8000);
+
+function checkSubscriptionLock() {
+  var m = document.getElementById('subLockModal');
+  if (m) m.style.display = 'none';
+  renderSubLockBanner();
+  try { renderBizSubscriptionCard(); } catch (e) {}
+}
+
+function toggleIntroOffer() {
     if (!platformData.introductoryOffer) platformData.introductoryOffer = {};
     var next = !platformData.introductoryOffer.active;
     platformData.introductoryOffer.active = next;
