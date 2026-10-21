@@ -1824,11 +1824,11 @@ html, body { background-color: transparent !important; background-image: none !i
       </div>
 
       <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px;">
-        <div>
-          <div id="invoiceLogoDisplay" style="display: none; margin-bottom: 6px; text-align: left;">
+        <div style="text-align: center;">
+          <div id="invoiceLogoDisplay" style="display: none; margin-bottom: 6px; text-align: center;">
             <img id="invoiceLogoImg" src="" alt="Shop Logo" style="max-height: 70px; max-width: 180px; object-fit: contain;">
           </div>
-          <p id="invoicePoweredBy" style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Powered by FinTrack Business</p>
+          <p id="invoicePoweredBy" style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; text-align: center; margin: 0;">Powered by FinTrack Business</p>
         </div>
         <div style="text-align: right;">
           <div style="font-size: 1.1rem; font-weight: 900; color: var(--atmos-navy); margin-bottom: 25px;">
@@ -7499,7 +7499,7 @@ const FIREBASE_CONFIG = {
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><strong>${u.name}</strong> <i class="fa-solid fa-file-pdf" onclick="exportIndividualStaffPDF('${u.name}')" style="cursor:pointer; color:#e11d48; margin-left:8px;" title="Download ${u.name} report"></i></td>
+          <td><strong>${u.name}</strong> <i class="fa-solid fa-file-pdf" onclick="ftExportStaffPDF('${u.name}')" style="cursor:pointer; color:#e11d48; margin-left:8px;" title="Download ${u.name} report"></i></td>
           <td>${logs.length}</td>
           <td style="color:var(--accent-green); font-weight:800;">₹${collection.toFixed(2)}</td>
           <td style="color:var(--primary); font-weight:800;">₹${incentive.toFixed(2)}</td>
@@ -7534,7 +7534,7 @@ const FIREBASE_CONFIG = {
     var adjInfo = getStaffAttendanceAdjustment(staffName, month, basic + incentive);
     let totalPayable = Math.max(0, basic + incentive - adjInfo.adjustment);
 
-    document.getElementById('repStaffName').innerHTML = staffName + ' <i class="fa-solid fa-file-pdf" onclick="exportIndividualStaffPDF(\'' + staffName + '\')" style="cursor:pointer; color:#e11d48; margin-left:8px;" title="Download report"></i>';
+    document.getElementById('repStaffName').innerHTML = staffName + ' <i class="fa-solid fa-file-pdf" onclick="ftExportStaffPDF(\'' + staffName + '\')" style="cursor:pointer; color:#e11d48; margin-left:8px;" title="Download report"></i>';
     document.getElementById('repStaffInteractions').innerText = logs.length;
     document.getElementById('repStaffCollection').innerText = `₹${collection.toFixed(2)}`;
     document.getElementById('repStaffIncentive').innerText = `₹${incentive.toFixed(2)}`;
@@ -8143,7 +8143,7 @@ const FIREBASE_CONFIG = {
     html2pdf().set(opt).from(container).save().then(function() { document.body.removeChild(container); });
   }
 
-  function exportIndividualStaffPDF(staffName) {
+  function ftExportStaffPDF(staffName) {
     var month = document.getElementById('staffReportMonthPicker').value || getISTMonthStr();
     var adminUser = appData.users.find(function(u) { return u.role === 'Admin'; });
     var adminName = adminUser ? adminUser.name : 'Admin';
@@ -8210,6 +8210,109 @@ const FIREBASE_CONFIG = {
     document.body.appendChild(container);
     var opt = { margin: 0.5, filename: 'ATMOS_Staff_Report_' + staffName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + month + '.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
     html2pdf().set(opt).from(container).save().then(function() { document.body.removeChild(container); }).catch(function() { if (container.parentNode) document.body.removeChild(container); });
+  }
+
+  /* Individual staff payslip PDF - business letterhead with logo, the full
+     month attendance breakdown and the verified signature of this business's admin. */
+  function ftExportStaffPDF(staffName) {
+    var picker = document.getElementById('staffReportMonthPicker');
+    var month = (picker && picker.value) || getISTMonthStr();
+    var prof = {};
+    try { prof = getBusinessProfile() || {}; } catch (e) { prof = {}; }
+    var shopName = prof.shopName || 'My Business';
+    var motto = prof.motto || 'Fast. Secure. Seamless.';
+    var adminUser = (appData.users || []).filter(function (u) { return u.role === 'Admin'; })[0] || null;
+    var adminName = adminUser ? adminUser.name : 'Admin';
+    var contact = adminUser ? (adminUser.mobile || '') : '';
+    var logo = (typeof appData !== 'undefined' && appData && appData.logoDataUrl) || '';
+    var logs = (appData.serviceLog || []).filter(function (x) { return x.staff === staffName && String(x.date || '').substring(0, 7) === month; });
+    var collection = 0;
+    logs.forEach(function (x) { collection += parseFloat(x.serviceCharge || 0); });
+    var salCfg = (appData.monthlySalaries[month] && appData.monthlySalaries[month][staffName]) || {};
+    var basic = parseFloat(salCfg.basic || 0);
+    var incPct = parseFloat(salCfg.incentivePct !== undefined ? salCfg.incentivePct : 20);
+    if (isNaN(incPct)) incPct = 20;
+    if (incPct < 0) incPct = 0;
+    if (incPct > 100) incPct = 100;
+    var incentive = collection > basic ? (incPct / 100) * (collection - basic) : 0;
+    var ded = getAttendanceDeductionDetails(staffName, month, basic);
+    var totalPayable = Math.max(0, basic + incentive - ded.deduction);
+    var year = parseInt(month.split('-')[0], 10);
+    var mIdx = parseInt(month.split('-')[1], 10) - 1;
+    var daysInMonth = new Date(year, mIdx + 1, 0).getDate();
+    var sundays = 0;
+    for (var d = 1; d <= daysInMonth; d++) { if (new Date(year, mIdx, d).getDay() === 0) sundays++; }
+    var workingDays = daysInMonth - sundays;
+    var attMonth = (appData.attendance[month] && appData.attendance[month][staffName]) || {};
+    var todayIST = getISTDate();
+    var isCur = getISTMonthStr(todayIST) === month;
+    var lastDay = isCur ? todayIST.getDate() : daysInMonth;
+    var onTime = 0, late = 0, absent = 0, halfDay = 0, leaveDays = 0;
+    for (var d2 = 1; d2 <= lastDay; d2++) {
+      var dt = new Date(year, mIdx, d2);
+      if (dt.getDay() === 0) continue;
+      var ds = year + '-' + String(mIdx + 1).padStart(2, '0') + '-' + String(d2).padStart(2, '0');
+      var rec = attMonth[ds];
+      if (!rec) continue;
+      var tag = rec.status || (rec.isLate ? 'Late' : 'On-time');
+      if (tag === 'Absent') absent++;
+      else if (tag === 'Half Day') halfDay++;
+      else if (tag === 'Approved Leave' || tag === 'Holiday') leaveDays++;
+      else if (tag === 'Late' || rec.isLate) late++;
+      else onTime++;
+    }
+    var present = onTime + late + halfDay;
+    var attPct = getStaffAttendancePct(staffName, month);
+    function line(label, val, color) {
+      return '<tr><td style="padding:6px 8px; border:1px solid #cbd5e1; background:#f8fafc; font-size:10px; font-weight:bold; color:#64748b; text-transform:uppercase;">' + label + '</td><td style="padding:6px 8px; border:1px solid #cbd5e1; text-align:right; font-size:11px; font-weight:bold; color:' + (color || '#0B1E2D') + ';">' + val + '</td></tr>';
+    }
+    var details = line('Staff Name', staffName) +
+      line('Total Interactions', logs.length) +
+      line('Total Collection', '\u20b9' + collection.toFixed(2), '#059669') +
+      line('Basic Salary', '\u20b9' + basic.toFixed(2)) +
+      line('Incentive Payable', '\u20b9' + incentive.toFixed(2), '#2563eb') +
+      line('Attendance Deduction', '\u20b9' + ded.deduction.toFixed(2), '#b91c1c');
+    var attendance = line('Working Days', workingDays) +
+      line('Sundays Off', sundays) +
+      line('Present Days', present) +
+      line('On Time', onTime, '#059669') +
+      line('Late', late, '#d97706') +
+      line('Absent', absent, '#b91c1c') +
+      line('Half Day', halfDay, '#d97706') +
+      line('Approved Leave / Holiday', leaveDays) +
+      line('Attendance', attPct + '%', '#0B1E2D');
+    var logoHtml = logo ? '<img src="' + logo + '" alt="Logo" style="max-height:60px; max-width:170px; object-fit:contain; display:block; margin:0 auto 8px auto;">' : '';
+    var html = '<div style="padding:24px; background:#ffffff; font-family:Arial,Helvetica,sans-serif; color:#0f172a;">' +
+      '<div style="text-align:center; border-bottom:3px solid #0B1E2D; padding-bottom:10px; margin-bottom:12px;">' +
+        logoHtml +
+        '<h1 style="font-size:20px; color:#0B1E2D; margin:0; letter-spacing:.5px;">' + shopName + '</h1>' +
+        '<p style="font-size:10px; color:#EE2B2E; font-weight:bold; margin:4px 0 0 0; text-transform:uppercase; letter-spacing:1px;">' + motto + '</p>' +
+        (contact ? '<p style="font-size:10px; color:#64748b; margin:3px 0 0 0;">Contact: ' + contact + '</p>' : '') +
+      '</div>' +
+      '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">' +
+        '<p style="font-size:11px; font-weight:bold; color:#EE2B2E; margin:0; text-transform:uppercase; letter-spacing:.6px;">Individual Staff Report</p>' +
+        '<div style="text-align:right; font-size:10px; color:#64748b;"><p style="font-size:11px; font-weight:bold; color:#0B1E2D; margin:0;">Month: ' + month + '</p><p style="margin:3px 0 0 0;">Generated: ' + getISTDateTimeStr() + '</p></div>' +
+      '</div>' +
+      '<table style="width:100%; border-collapse:collapse; margin-bottom:8px;"><tbody>' + details + '</tbody></table>' +
+      '<p style="font-size:10px; font-weight:bold; color:#0B1E2D; margin:12px 0 5px 0; text-transform:uppercase;">Attendance Summary</p>' +
+      '<table style="width:100%; border-collapse:collapse;"><tbody>' + attendance + '</tbody></table>' +
+      '<div style="margin-top:14px; padding:10px 12px; border:2px solid #0B1E2D; border-radius:8px; background:#f8fafc;"><span style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase;">Total Payable Salary</span><div style="font-size:20px; font-weight:900; color:#0B1E2D;">\u20b9' + totalPayable.toFixed(2) + '</div></div>' +
+      '<div style="margin-top:34px; display:flex; justify-content:flex-end;"><div style="text-align:center; border-top:2px dashed #64748b; width:220px; padding-top:6px;"><p style="font-size:10px; color:#64748b; margin:0; text-transform:uppercase;">Verified by Admin</p><p style="font-size:13px; font-weight:bold; color:#0B1E2D; margin:4px 0 0 0;">' + adminName + '</p></div></div>' +
+      '</div>';
+    var safeName = String(staffName).replace(/[^A-Za-z0-9]+/g, '_');
+    var container = document.createElement('div');
+    container.style.width = '730px';
+    container.style.background = '#ffffff';
+    container.innerHTML = html;
+    document.body.appendChild(container);
+    var opt = {
+      margin: 8,
+      filename: ftPdfFileName('Staff Report', safeName + '_' + month),
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 730 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(container).save().then(function () { if (container.parentNode) container.parentNode.removeChild(container); }).catch(function (err) { console.error('Staff PDF failed:', err); if (container.parentNode) container.parentNode.removeChild(container); });
   }
 
   function renderAttendanceTable() {
@@ -9532,10 +9635,46 @@ function metricBox(label, val, icon, color) {
 /* REGISTER CURRENT BUSINESS (updates the single existing registration — never creates a duplicate) */
 function getCurrentPlatformBusinessId() {
   if (!platformData || !platformData.businesses) return null;
-  var keys = Object.keys(platformData.businesses);
+  var bids = platformData.businesses;
+  var keys = Object.keys(bids);
+  /* 1. The id this device registered with. */
+  var localId = null;
+  try { localId = localStorage.getItem(BIZ_ID_KEY); } catch (e) { localId = null; }
+  if (localId && bids[localId]) return localId;
+  /* 2. The record flagged as the current business. */
   for (var i = 0; i < keys.length; i++) {
-    var b = platformData.businesses[keys[i]];
-    if (b && b.isCurrentBusiness) return keys[i];
+    if (bids[keys[i]] && bids[keys[i]].isCurrentBusiness) return keys[i];
+  }
+  /* 3. The record belonging to the signed-in administrator (survives a cloud
+        refresh that does not carry the local "current" flag). */
+  var uid = '', email = '';
+  try { uid = (currentUser && currentUser.authUid) || ''; } catch (e) {}
+  try { email = String((currentUser && currentUser.email) || '').toLowerCase(); } catch (e) {}
+  for (var j = 0; j < keys.length; j++) {
+    var b = bids[keys[j]];
+    if (!b) continue;
+    if (uid && b.adminUid && String(b.adminUid) === String(uid)) {
+      b.isCurrentBusiness = true;
+      try { localStorage.setItem(BIZ_ID_KEY, keys[j]); } catch (e) {}
+      try { savePlatformData(); } catch (e) {}
+      return keys[j];
+    }
+    if (email && b.adminEmail && String(b.adminEmail).toLowerCase() === email) {
+      b.isCurrentBusiness = true;
+      try { localStorage.setItem(BIZ_ID_KEY, keys[j]); } catch (e) {}
+      try { savePlatformData(); } catch (e) {}
+      return keys[j];
+    }
+  }
+  /* 4. The only business on this device, or the one matching the local profile name. */
+  if (!platformAdminUser && keys.length === 1) return keys[0];
+  var profName = '';
+  try { profName = String((getBusinessProfile() || {}).shopName || '').toLowerCase().trim(); } catch (e) {}
+  if (profName) {
+    for (var k = 0; k < keys.length; k++) {
+      var kb = bids[keys[k]];
+      if (kb && String(kb.name || '').toLowerCase().trim() === profName) return keys[k];
+    }
   }
   return null;
 }
