@@ -886,7 +886,7 @@ html, body { background-color: transparent !important; background-image: none !i
 
       <div class="login-row">
         <label class="login-remember" for="loginRememberDevice">
-          <input type="checkbox" id="loginRememberDevice" checked>
+          <input type="checkbox" id="loginRememberDevice">
           <span>Remember me</span>
         </label>
         <span id="forgotPasswordBtnContainer" style="display:none"><a class="login-link" onclick="openForgotPasswordModal()">Forgot Password?</a></span>
@@ -4995,9 +4995,54 @@ const FIREBASE_CONFIG = {
     if (select) select.innerHTML = '';
   }
 
+  /* "Remember me" keeps the sign-in ID - the administrator email or the staff
+     mobile number - and never the password. */
+  var FT_REMEMBER_KEY = 'ATMOS_REMEMBER_LOGIN';
+  function ftRememberedInput(mode) {
+    var id = (mode === 'Admin') ? 'loginEmailInput' : 'loginStaffId';
+    var el = document.getElementById(id);
+    var raw = el ? String(el.value || '').trim() : '';
+    if (!raw) return '';
+    return (mode === 'Admin') ? raw.toLowerCase() : raw.replace(/[^0-9]/g, '');
+  }
+  function saveRememberedLogin() {
+    try {
+      var box = document.getElementById('loginRememberDevice');
+      var mode = (currentLoginMode === 'Admin') ? 'Admin' : 'Staff';
+      var id = ftRememberedInput(mode);
+      if (!id) return;
+      if (!box || !box.checked) { localStorage.removeItem(FT_REMEMBER_KEY); return; }
+      localStorage.setItem(FT_REMEMBER_KEY, JSON.stringify({ mode: mode, id: id }));
+    } catch (e) {}
+  }
+  function clearRememberedLogin() {
+    try { localStorage.removeItem(FT_REMEMBER_KEY); } catch (e) {}
+  }
+  function restoreRememberedLogin() {
+    var box = document.getElementById('loginRememberDevice');
+    var saved = null;
+    try {
+      var raw = localStorage.getItem(FT_REMEMBER_KEY);
+      if (raw) saved = JSON.parse(raw);
+    } catch (e) {}
+    if (!saved || !saved.id) { if (box) box.checked = false; return; }
+    try {
+      if (saved.mode === 'Admin') {
+        setLoginMode('Admin');
+        var e1 = document.getElementById('loginEmailInput'); if (e1) e1.value = saved.id;
+      } else {
+        setLoginMode('Staff');
+        var s1 = document.getElementById('loginStaffId'); if (s1) s1.value = saved.id;
+      }
+      var pw = document.getElementById('loginPassword'); if (pw) pw.value = '';
+    } catch (e) {}
+    if (box) box.checked = true;
+  }
+
   function completeLogin(user) {
     document.body.classList.remove('guest-mode');
     hideWelcomeScreen();
+    saveRememberedLogin();
     currentUser = user;
     document.getElementById('activeUserBadge').innerText = user.name + ' (' + user.role + ')';
     document.getElementById('loginModal').style.display = 'none';
@@ -5143,6 +5188,44 @@ const FIREBASE_CONFIG = {
   /* Fresh-browser administrator sign-in: the administrator's secure identity
      lives under their own email address, so verify it directly with Firebase
      Authentication, then wait for this business's data to load. */
+  async   function findRegistryBusinessByAdminEmail(email) {
+    var reg = (platformData && platformData.businesses) || {};
+    var want = ftEmail(email);
+    var hit = null;
+    Object.keys(reg).forEach(function (id) {
+      if (hit) return;
+      var b = reg[id] || {};
+      if (!b || b.deletedAt) return;
+      if (ftEmail(b.adminEmail) !== want) return;
+      hit = { id: id, record: b };
+    });
+    return hit;
+  }
+
+  function managedAdminAuthEmail(bizId, gen) {
+    return ((bizId + '-ADM-001-g' + gen).toLowerCase().replace(/[^a-z0-9._-]/g, '')) + AUTH_EMAIL_DOMAIN;
+  }
+
+  async function signInManagedAdmin(typedEmail, password) {
+    var found = findRegistryBusinessByAdminEmail(typedEmail);
+    if (!found) return null;
+    var gen = Number(found.record.adminPassGen || 1) || 1;
+    var auth = firebaseAuth();
+    var authEmail = managedAdminAuthEmail(found.id, gen);
+    var credential;
+    try {
+      credential = await auth.signInWithEmailAndPassword(authEmail, password);
+    } catch (e) {
+      var code = (e && e.code) ? e.code : '';
+      if (code === 'auth/wrong-password' || code === 'auth/invalid-credential' || code === 'auth/invalid-login-credentials') {
+        throw new Error('Incorrect password. Please check your password and try again.');
+      }
+      if (code !== 'auth/user-not-found') throw e;
+      credential = await auth.createUserWithEmailAndPassword(authEmail, password);
+    }
+    return { credential: credential, businessId: found.id, record: found.record, gen: gen };
+  }
+
   async function directAdminSignIn(typedEmail, password, button) {
     try {
       await waitForPlatformData();
@@ -5150,8 +5233,25 @@ const FIREBASE_CONFIG = {
       detachTenant();
       currentUser = null;
       appData = buildEmptyBusinessData(); appData.users = [];
-      var credential = await firebaseAuth().signInWithEmailAndPassword(typedEmail, password);
-      var owned = await ftOwnedBusiness(credential.user);
+      var credential = null, owned = null, managed = false, managedGen = 1, firstError = null;
+      try {
+        credential = await firebaseAuth().signInWithEmailAndPassword(typedEmail, password);
+        owned = await ftOwnedBusiness(credential.user);
+      } catch (err) {
+        var code = (err && err.code) ? err.code : '';
+        if (code === 'auth/too-many-requests' || code === 'auth/network-request-failed' || code === 'auth/operation-not-allowed' || code === 'auth/api-key-not-valid' || code === 'auth/invalid-api-key') throw err;
+        firstError = err;
+        credential = null;
+        owned = null;
+      }
+      if (!credential) {
+        var managedRun = await signInManagedAdmin(typedEmail, password);
+        if (!managedRun) throw firstError || { code: 'auth/user-not-found' };
+        credential = managedRun.credential;
+        owned = { id: managedRun.businessId, record: managedRun.record };
+        managed = true;
+        managedGen = managedRun.gen;
+      }
       if (!owned || !owned.record) throw new Error('Your email is verified, but business registration is incomplete. Open Register Your Business and use this same email and password to finish it.');
       if (owned.record.blocked || owned.record.deletedAt) throw new Error('This business is unavailable. Contact the platform administrator.');
       detachTenant();
@@ -5160,10 +5260,15 @@ const FIREBASE_CONFIG = {
       platformData.businesses[owned.id] = owned.record;
       await writeTenantClaim(credential.user.uid, owned.id, 'ADM-001', 'Admin');
       var snapshot = await businessDataRef().once('value');
-      if (!snapshot.exists()) throw new Error('Your business registration is incomplete. Finish Register Your Business using the same email and password.');
+      if (!snapshot.exists()) throw new Error('Your business registration is incomplete. Finish Register Your Business using this same email and password.');
       appData = convertLegacyData(snapshot.val());
       var admin = appData.users.find(function (user) { return user.role === 'Admin' && ftEmail(user.email) === typedEmail; });
+      if (!admin) admin = appData.users.find(function (user) { return user.role === 'Admin'; });
       if (!admin) throw new Error('The verified business has no matching administrator record. Contact the platform administrator.');
+      if (managed) {
+        if (ftEmail(admin.email) !== typedEmail) admin.email = typedEmail;
+        admin.authVersion = managedGen;
+      }
       admin.authUid = credential.user.uid;
       admin.pass = '';
       currentUser = admin;
@@ -5173,6 +5278,7 @@ const FIREBASE_CONFIG = {
       document.getElementById('loginPassword').value = '';
       completeLogin(admin);
       await afterFirebaseLogin(admin);
+      if (managed) { try { saveData(); } catch (e) {} }
     } catch (error) {
       if (!currentUser) detachTenant();
       showLoginError(ftAccountError(error));
@@ -7881,10 +7987,22 @@ const FIREBASE_CONFIG = {
   function saveStaffCredentials() {
     const idx = parseInt(document.getElementById('staffEditIndex').value);
     const name = document.getElementById('staffNameInput').value.trim();
-    const mobile = document.getElementById('staffMobileInput').value.trim();
+    let mobile = document.getElementById('staffMobileInput').value.trim();
     const pass = document.getElementById('staffPassInput').value.trim();
 
     if (!name || !pass) return alert("Please fill all required fields.");
+    var mobileDigits = String(mobile || '').replace(/[^0-9]/g, '');
+    if (!mobileDigits && idx < 0) return alert("Please enter the staff mobile number - it is the staff sign-in ID.");
+    if (mobileDigits && mobileDigits.length < 10) return alert("Please enter a 10 digit mobile number.");
+    if (mobileDigits) {
+      var mobileClash = null;
+      appData.users.forEach(function (u, ix) {
+        if (mobileClash || ix === idx) return;
+        if (String(u.mobile || '').replace(/[^0-9]/g, '') === mobileDigits) mobileClash = u;
+      });
+      if (mobileClash) return alert("This mobile number " + mobileDigits + " already exists in our database for " + mobileClash.name + ". Kindly choose another mobile number.");
+      mobile = mobileDigits;
+    }
 
     if (idx >= 0) {
       var acct = appData.users[idx];
@@ -8609,7 +8727,11 @@ var DEFAULT_PLATFORM_BRANDING = {
 };
 
 function getPlatformBranding() {
-  var b = (platformData && platformData.branding) || {};
+  /* The public node is written first on every save and is what the welcome and
+     login screens read, so it is the newest copy. Reading it here keeps the
+     Platform Settings boxes identical to what the welcome page shows. */
+  var pb = (platformData && platformData.publicInfo && platformData.publicInfo.branding) || null;
+  var b = (pb && typeof pb === 'object') ? pb : ((platformData && platformData.branding) || {});
   var days = parseInt(b.trialDays, 10);
   return {
     logoDataUrl: b.logoDataUrl || DEFAULT_PLATFORM_BRANDING.logoDataUrl,
@@ -8914,6 +9036,15 @@ function ftPublicChanged() {
   updatePlatformAdminLoginUI();
   ftbBootBranding();
 }
+/* A registry refresh must never roll the branding back to an older copy. */
+function ftKeepSavedBranding() {
+  try {
+    var pb = platformData.publicInfo && platformData.publicInfo.branding;
+    if (pb && typeof pb === 'object') platformData.branding = pb;
+  } catch (e) {}
+  return platformData.branding;
+}
+
 function ftAcceptPublic(value) {
   var pub = value || {};
   platformData.publicInfo = pub;
@@ -8938,6 +9069,7 @@ function ftAttachPlatform(uid) {
     if (!value || !value.credentials || value.credentials.uid !== uid) throw new Error('This identity is not the platform administrator. Use the business administrator login instead.');
     ftObservedAuthUid = uid;
     platformData = Object.assign({}, platformData, value);
+    ftKeepSavedBranding();
     platformDbRef = ref;
     platformSyncActive = true;
     if (ftPlatformListenerUid !== uid) {
@@ -8948,6 +9080,7 @@ function ftAttachPlatform(uid) {
         var data = next.val();
         if (!data || !data.credentials || data.credentials.uid !== uid) return;
         platformData = Object.assign({}, platformData, data);
+        ftKeepSavedBranding();
         platformSyncActive = true;
         updatePlatformAdminLoginUI();
         if (platformAdminUser) renderPlatformAdminViews();
@@ -9353,6 +9486,7 @@ function paLogout() {
   document.querySelectorAll('.pa-section').forEach(function(s) { s.classList.remove('active'); });
   document.querySelectorAll('.tab-btn:not(.pa-tab-btn)').forEach(function(b) { b.style.display = ''; });
   document.getElementById('loginModal').style.display = 'flex';
+  try { restoreRememberedLogin(); } catch (e) {}
   document.getElementById('activeUserBadge').innerText = 'Guest';
   var b = document.getElementById('btn-adminTab'); if (b) b.style.display = 'none';
   var d = document.getElementById('drawer-adminTab'); if (d) d.style.display = 'none';
@@ -9629,6 +9763,17 @@ function openBusinessProfile(bizId) {
     + '<button class="btn-primary" onclick="paSetBizAdminPassword(\'' + bizId + '\')" style="width:auto;padding:10px 16px;font-size:.8rem"><i class="fa-solid fa-floppy-disk"></i> Update Password</button>'
     + '<button class="btn-admin" onclick="paSendBizResetEmail(\'' + bizId + '\')" style="width:auto;padding:10px 16px;font-size:.8rem"><i class="fa-solid fa-envelope"></i> Send Reset Email</button>'
     + '</div>'
+    + '<div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--border)">'
+    + '<label style="font-size:.72rem;font-weight:800;color:var(--text-muted)">Change the administrator email address</label>'
+    + '<p style="font-size:.72rem;color:var(--text-muted);margin:4px 0 8px">All records, the staff list and the subscription stay exactly as they are - only the sign-in address changes.</p>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+    + '<div style="flex:1;min-width:150px"><label style="font-size:.7rem;font-weight:700;color:var(--text-muted)">Current email</label><input type="email" id="paBizCurEmail" value="' + (b.adminEmail || '') + '" readonly style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-md);font-family:inherit;margin-top:3px;background:#f5f6f8"></div>'
+    + '<div style="flex:1;min-width:150px"><label style="font-size:.7rem;font-weight:700;color:var(--text-muted)">New email</label><input type="email" id="paBizNewEmail" placeholder="New email address" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-md);font-family:inherit;margin-top:3px"></div>'
+    + '<div style="flex:1;min-width:150px"><label style="font-size:.7rem;font-weight:700;color:var(--text-muted)">Confirm new email</label><input type="email" id="paBizNewEmail2" placeholder="Repeat the new email" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-md);font-family:inherit;margin-top:3px"></div>'
+    + '<div style="flex:1;min-width:150px"><label style="font-size:.7rem;font-weight:700;color:var(--text-muted)">Your platform admin password</label><input type="password" id="paBizAdminPw" placeholder="Confirm with your password" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-md);font-family:inherit;margin-top:3px"></div>'
+    + '</div>'
+    + '<button class="btn-primary" onclick="paChangeBizAdminEmail(\'' + bizId + '\')" style="margin-top:10px;width:auto;padding:9px 16px;font-size:.8rem"><i class="fa-solid fa-at"></i> Save Email Change</button>'
+    + '</div>'
     + '<p id="paBizCredStatus" style="font-size:.75rem;color:var(--text-muted);margin-top:10px"></p></div>';
 
   /* Data Usage Section */
@@ -9848,13 +9993,13 @@ function deleteBusiness(bizId) {
   var typed = window.prompt(
     'DELETE ONE BUSINESS\n\n' +
     'Business name : ' + (rec.name || '(no name)') + '\n' +
-    'Business ID   : ' + bizId + '\n' +
+    'Business ID   : ' + (rec.displayId || bizId) + '\n' +
     'Other businesses that will NOT be modified: ' + others.length + '\n\n' +
     'Sign-in access for this business will be revoked and an audit record kept.\n' +
     'Its own stored records are retained, not destroyed.\n\n' +
-    'Type the Business ID exactly to confirm:', '');
+    'Type the Business ID ' + (rec.displayId || bizId) + ' to confirm:', '');
   if (typed === null) return;
-  if (String(typed).trim() !== bizId) { alert('The confirmation did not match the Business ID. Nothing was deleted.'); return; }
+  var typedKey = String(typed).trim().toLowerCase(); var okId = String(rec.displayId || bizId).trim().toLowerCase(); if (typedKey !== okId && typedKey !== String(bizId).toLowerCase()) { alert('The confirmation did not match the Business ID ' + (rec.displayId || bizId) + '. Nothing was deleted.'); return; }
 
   var audit = {
     businessId: bizId,
@@ -10798,6 +10943,7 @@ function welcomeGoLogin() {
   hideWelcomeScreen();
   document.getElementById('loginModal').style.display = 'flex';
   showPasswordLogin();
+  try { restoreRememberedLogin(); } catch (e) {}
 }
 function welcomeGoForgot() {
   markWelcomeSeen();
@@ -12426,6 +12572,43 @@ function toggleIntroOffer() {
     }
   }
 
+    async function paChangeBizAdminEmail(bizId) {
+    var b = (platformData.businesses || {})[bizId];
+    if (!b) return;
+    var status = document.getElementById('paBizCredStatus');
+    function val(id) { var el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; }
+    var n1 = val('paBizNewEmail').toLowerCase();
+    var n2 = val('paBizNewEmail2').toLowerCase();
+    var pw = val('paBizAdminPw');
+    var current = String(b.adminEmail || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(n1)) { if (status) status.innerText = 'Enter a valid new email address.'; return; }
+    if (n1 !== n2) { if (status) status.innerText = 'The two new email addresses do not match.'; return; }
+    if (n1 === current) { if (status) status.innerText = 'That is already the registered email address.'; return; }
+    if (!pw) { if (status) status.innerText = 'Enter your own platform administrator password to confirm.'; return; }
+    if (status) status.innerText = 'Confirming...';
+    try {
+      var identity = firebaseAuth().currentUser;
+      if (!identity) throw new Error('Platform administrator sign-in is required.');
+      var cred = firebase.auth.EmailAuthProvider.credential(platformAdminEmail(), pw);
+      try { await identity.reauthenticateWithCredential(cred); }
+      catch (e) { throw new Error('The platform administrator password did not match.'); }
+      b.adminEmail = n1;
+      b.adminEmailPrevious = current;
+      b.adminEmailChangedAt = Date.now();
+      if (typeof savePlatformData === 'function') savePlatformData();
+      try { await signinIndexRef(n1).set({ b: bizId, a: 'ADM-001', g: Number(b.adminPassGen || 1) || 1 }); } catch (e) {}
+      var e1 = document.getElementById('paBizCurEmail'); if (e1) e1.value = n1;
+      var e2 = document.getElementById('paBizNewEmail'); if (e2) e2.value = '';
+      var e3 = document.getElementById('paBizNewEmail2'); if (e3) e3.value = '';
+      var e4 = document.getElementById('paBizAdminPw'); if (e4) e4.value = '';
+      if (status) status.innerText = 'Administrator email changed to ' + n1 + '.';
+      alert('Administrator email changed.\n\nOld address: ' + (current || '-') + '\nNew address: ' + n1 + '\n\nNothing else changed - every record, the staff list and the subscription stay exactly as they are. The administrator signs in with the new address and their existing password.');
+      if (typeof openBusinessProfile === 'function') openBusinessProfile(bizId);
+    } catch (err) {
+      if (status) status.innerText = (err && err.message) ? err.message : 'The email address could not be changed.';
+    }
+  }
+
   async function paSetBizAdminPassword(bizId) {
     var b = (platformData.businesses || {})[bizId];
     if (!b) return;
@@ -12434,38 +12617,24 @@ function toggleIntroOffer() {
     var pw = (el && el.value) ? el.value.trim() : '';
     if (pw.length < 6) { if (status) status.innerText = 'Please enter a password of at least 6 characters.'; return; }
     var email = String(b.adminEmail || '').trim().toLowerCase();
-    if (!email) { if (status) status.innerText = 'No administrator email is on record for this business, so a password cannot be set. Ask the owner to add one first.'; return; }
+    if (!email) { if (status) status.innerText = 'No administrator email is on record for this business yet. Set the email address first.'; return; }
     if (status) status.innerText = 'Setting the sign-in password...';
-    var outcome = 'exists';
+    var gen = Math.max(Number(b.adminPassGen || 1) + 1, Date.now());
+    var authEmail = managedAdminAuthEmail(bizId, gen);
+    var secondary = null;
     try {
-      var secondary = firebase.initializeApp(FIREBASE_CONFIG, 'ftpass' + Date.now());
-      try { await secondary.auth().createUserWithEmailAndPassword(email, pw); outcome = 'created'; }
-      catch (err) { if (err && err.code === 'auth/email-already-in-use') outcome = 'exists'; else throw err; }
+      secondary = firebase.initializeApp(FIREBASE_CONFIG, 'ftpass' + Date.now());
+      await secondary.auth().createUserWithEmailAndPassword(authEmail, pw);
       try { await secondary.auth().signOut(); } catch (e) {}
       try { await secondary.delete(); } catch (e) {}
+      b.adminPassGen = gen;
+      if (typeof savePlatformData === 'function') savePlatformData();
+      if (el) el.value = '';
+      if (status) status.innerText = 'Password updated. ' + email + ' can sign in with this password now.';
+      alert('Password updated.\n\nAdministrator: ' + email + '\n\nThey can sign in with this new password straight away. Every record, the staff list and the subscription stay exactly as they are.');
     } catch (err) {
       if (status) status.innerText = 'Could not reach Firebase to set the password: ' + ((err && err.message) ? err.message : 'unknown error');
-      return;
     }
-    if (outcome === 'created') {
-      if (el) el.value = '';
-      if (status) status.innerText = 'Sign-in password set for ' + email + '. They can sign in with this new password now.';
-      alert('Password set.\n\nAdministrator: ' + email + '\n\nThey can sign in with this new password straight away.');
-      return;
-    }
-    var sent = false;
-    try { await firebase.auth().sendPasswordResetEmail(email); sent = true; }
-    catch (e2) {
-      try {
-        var s2 = firebase.initializeApp(FIREBASE_CONFIG, 'ftreset' + Date.now());
-        await s2.auth().sendPasswordResetEmail(email);
-        try { await s2.auth().signOut(); } catch (e3) {}
-        try { await s2.delete(); } catch (e3) {}
-        sent = true;
-      } catch (e4) { sent = false; }
-    }
-    if (status) status.innerText = sent ? ('A secure password link was emailed to ' + email + '.') : ('Could not email a password link to ' + email + '.');
-    alert(sent ? ('A secure password link has been emailed to ' + email + '.\n\nThis account already existed, so nobody can set its password directly - the owner must open that link once.') : 'The password could not be set for ' + email + '.');
   }
 
   async function paSendBizResetEmail(bizId) {
