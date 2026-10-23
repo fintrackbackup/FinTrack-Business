@@ -786,7 +786,8 @@ html, body { background-color: transparent !important; background-image: none !i
   <a class="drawer-menu-item" id="drawer-invoiceTab" onclick="navigateFromDrawer('invoiceTab')"><i class="fa-solid fa-file-invoice"></i> Invoice Generator</a>
   <a class="drawer-menu-item" id="drawer-reportsTab" onclick="navigateFromDrawer('reportsTab')"><i class="fa-solid fa-file-invoice-dollar"></i> Financial Reports</a>
   <a class="drawer-menu-item" id="drawer-adminTab" style="display: none;" onclick="navigateFromDrawer('adminTab')"><i class="fa-solid fa-user-shield"></i> Admin Controls</a>
-  <a class="drawer-menu-item" id="drawer-hrTab" onclick="navigateFromDrawer('hrTab')"><i class="fa-solid fa-id-card-clip"></i> HR Management</a>
+  <a class="drawer-menu-item" id="drawer-hrMgmtTab" onclick="navigateFromDrawer('hrMgmtTab')"><i class="fa-solid fa-users-gear"></i> HR Management</a>
+  <a class="drawer-menu-item" id="drawer-hrTab" onclick="navigateFromDrawer('hrTab')"><i class="fa-solid fa-id-card-clip"></i> Staff Profile</a>
 <a class="drawer-menu-item" data-pa="1" id="drawer-paDashboardTab" onclick="navigateFromDrawer('paDashboardTab')" style="display:none"><i class="fa-solid fa-chart-line"></i> PA Dashboard</a>
 <a class="drawer-menu-item" data-pa="1" id="drawer-paBusinessesTab" onclick="navigateFromDrawer('paBusinessesTab')" style="display:none"><i class="fa-solid fa-building"></i> Businesses</a>
 <a class="drawer-menu-item" data-pa="1" id="drawer-paSubscriptionsTab" onclick="navigateFromDrawer('paSubscriptionsTab')" style="display:none"><i class="fa-solid fa-credit-card"></i> Subscriptions</a>
@@ -1052,7 +1053,8 @@ html, body { background-color: transparent !important; background-image: none !i
   <button class="tab-btn" id="btn-invoiceTab" onclick="switchTab('invoiceTab', this)">Invoice</button>
   <button class="tab-btn" id="btn-reportsTab" onclick="switchTab('reportsTab', this)">Financial Reports</button>
   <button class="tab-btn" id="btn-adminTab" style="display: none;" onclick="switchTab('adminTab', this)">Admin Controls</button>
-  <button class="tab-btn" id="btn-hrTab" onclick="switchTab('hrTab', this)">HR Management</button>
+  <button class="tab-btn" id="btn-hrMgmtTab" onclick="switchTab('hrMgmtTab', this)">HR Management</button>
+  <button class="tab-btn" id="btn-hrTab" onclick="switchTab('hrTab', this)">Staff Profile</button>
 <button class="tab-btn pa-tab-btn" id="btn-paDashboardTab" onclick="switchPATab('paDashboardTab',this)" style="display:none">PA Dashboard</button>
 <button class="tab-btn pa-tab-btn" id="btn-paBusinessesTab" onclick="switchPATab('paBusinessesTab',this)" style="display:none">Businesses</button>
 <button class="tab-btn pa-tab-btn" id="btn-paSubscriptionsTab" onclick="switchPATab('paSubscriptionsTab',this)" style="display:none">Subscriptions</button>
@@ -1953,7 +1955,7 @@ html, body { background-color: transparent !important; background-image: none !i
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;">
         <div>
           <h3 style="font-size: 1.05rem; font-weight: 900; color: var(--atmos-navy);">
-            <i class="fa-solid fa-chart-pie" style="color: var(--accent-green); margin-right: 6px;"></i> HR Monthly Financial Management
+            <i class="fa-solid fa-chart-pie" style="color: var(--accent-green); margin-right: 6px;"></i> Monthly Overview
           </h3>
         </div>
         <div class="month-picker-box">
@@ -2470,6 +2472,14 @@ html, body { background-color: transparent !important; background-image: none !i
   </div>
 
   <!-- TAB 8: HR MANAGEMENT & STAFF PROFILE -->
+  <div id="hrMgmtTab" class="tab-content">
+    <div class="glass-card" style="padding:18px 20px; margin-bottom:16px;">
+      <h3 style="font-size:1.05rem; font-weight:900; color:var(--atmos-navy);"><i class="fa-solid fa-users-gear" style="color:var(--primary); margin-right:6px;"></i> HR Management</h3>
+      <p style="font-size:.82rem; color:var(--text-muted); margin-top:6px;">Money Management covers month closing and opening balances. Staff Management covers staff records, salary, attendance, reports and analytics.</p>
+    </div>
+    <div id="hrMgmtMount"></div>
+  </div>
+
   <div id="hrTab" class="tab-content">
     
     <div class="section-header hr-header"><i class="fa-solid fa-id-card-clip"></i> HR Management & Staff Profile Dashboard
@@ -4127,9 +4137,23 @@ const FIREBASE_CONFIG = {
     return changed;
   }
 
+  var ftFactsAt = 0;
+  function ftPublishBusinessFacts() {
+    try {
+      if (!currentUser || currentUser.role !== 'Admin' || platformAdminUser) return;
+      if (!authBusinessId) return;
+      var now = Date.now();
+      if ((now - ftFactsAt) < 15000) return;
+      ftFactsAt = now;
+      var staff = 0;
+      (appData.users || []).forEach(function (u) { if (u && u.role === 'Staff') staff++; });
+      firebase.database().ref('atmos_platform_admin/businesses/' + authBusinessId + '/staffCount').set(staff).catch(function () {});
+    } catch (e) {}
+  }
   function saveData() {
     if (currentUser && !platformAdminUser && getSubscriptionState().locked) { checkSubscriptionLock(); showSubLockNotice(); return false; }
     persistLocalData();
+    try { ftPublishBusinessFacts(); } catch (e) {}
     if (isFirebaseSyncActive && firebaseDbRef) {
       firebaseDbRef.set(convertToLegacyFormat()).catch(err => console.error("Firebase sync write error:", err));
       if (currentUser && currentUser.role === 'Admin') syncMembershipSlots(currentUser);
@@ -4944,6 +4968,12 @@ const FIREBASE_CONFIG = {
 
   /* LOGIN & USER SWITCHING */  function setLoginMode(mode) {
     currentLoginMode = mode;
+    try {
+      ['loginEmailInput', 'loginStaffId', 'loginPassword'].forEach(function (id) {
+        var el = document.getElementById(id); if (el) el.value = '';
+      });
+      clearLoginError();
+    } catch (e) {}
     var ts = document.getElementById('loginTabStaff');
     var ta = document.getElementById('loginTabAdmin');
     if (ts) ts.className = 'login-tab' + (mode === 'Staff' ? ' active' : '');
@@ -5096,7 +5126,9 @@ const FIREBASE_CONFIG = {
            business's data has arrived. */
         waitForBusinessData(6000).then(function () {
           var real = (appData.users || []).find(function (u) { return accountKey(u) === accountKey(user); });
-          if (real) { currentUser = real; try { refreshAllViews(); } catch (e) {} }
+          if (real) { currentUser = real; }
+          try { if (currentUser) { logAttendance(currentUser); refreshAllViews(); } } catch (e) {}
+          try { if (window.ftStartOnboarding) window.ftStartOnboarding(); } catch (e) {}
         }).catch(function () {});
       });
     }).catch(function (err) {
@@ -7014,9 +7046,19 @@ const FIREBASE_CONFIG = {
      7. ADMIN CONTROLS & MONTH CLOSING
   --------------------------------------------------- */
   function showAdminSection(secId) {
-    ['monthClosingSection', 'staffSalarySection', 'openingBalSection', 'staffReportSection', 'analyticsSection', 'attendanceMgmtSection'].forEach(id => {
-      document.getElementById(id).style.display = id === secId ? 'block' : 'none';
+    ['monthClosingSection', 'ftStaffSection', 'staffSalarySection', 'openingBalSection', 'staffReportSection', 'analyticsSection', 'attendanceMgmtSection'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = (id === secId) ? 'block' : 'none';
     });
+    var target = document.getElementById(secId);
+    if (target) {
+      var host = target.closest ? target.closest('.tab-content') : null;
+      if (host && !host.classList.contains('active')) {
+        var hostBtn = document.getElementById('btn-' + host.id);
+        if (hostBtn) hostBtn.click();
+      }
+      try { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+    }
   }
 
   function renderAdminTab() {
@@ -8943,7 +8985,8 @@ async function ftOwnedBusiness(identity) {
   if (!id) return null;
   var snapshot = await firebase.database().ref('atmos_platform_admin/businesses/' + id).once('value');
   var record = snapshot.val();
-  if (record && (record.adminUid !== identity.uid || ftEmail(record.adminEmail) !== ftEmail(identity.email))) throw new Error('This email is not the administrator of that business.');
+    if (record && record.adminEmail && ftEmail(record.adminEmail) !== ftEmail(identity.email)) throw new Error('This email is not the administrator of that business.');
+  if (record && record.adminUid !== identity.uid) { try { await firebase.database().ref('atmos_platform_admin/businesses/' + id + '/adminUid').set(identity.uid); } catch (e) {} }
   return { id: id, record: record };
 }
 async function ftPublishHandle(handle, entry, strict) {
@@ -9470,7 +9513,7 @@ function renderPABusinesses() {
     tr.onclick = function() { openBusinessProfile(b.id); };
     tr.innerHTML =
       '<td><strong>'+(b.name||'-')+'</strong>'+(b.blocked?' <span class="pa-badge pa-badge-blocked">Blocked</span>':'')+'</td>'+
-      '<td style="font-size:.78rem"><strong style="font-family:monospace">'+(b.displayId||'-')+'</strong><div style="font-size:.62rem;font-family:monospace;color:var(--text-muted);word-break:break-all">'+(b.id||'')+'</div></td>'+
+      '<td style="font-size:.78rem"><strong style="font-family:monospace">'+(b.displayId||'-')+'</strong><div style="font-size:.62rem;font-family:monospace;color:var(--text-muted);word-break:break-all">'+(b.displayId||'')+'</div></td>'+
       '<td>'+(b.category||'-')+'</td>'+
       '<td>'+(b.joiningDate||'-')+'</td>'+
       '<td>'+(b.adminName||'-')+'</td>'+
@@ -9558,7 +9601,7 @@ function openBusinessProfile(bizId) {
     '<div class="app-card"><button class="pa-link" onclick="switchPATab(\'paBusinessesTab\')" style="margin-bottom:12px"><i class="fa-solid fa-arrow-left"></i> Back to Directory</button>'+
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:16px">'+
     '<div><h2 style="font-size:1.4rem;font-weight:900;color:var(--atmos-navy)">'+(b.name||'-')+'</h2>'+
-    '<p style="font-size:.82rem;color:var(--text-muted);margin-top:4px">Business ID: <code style="background:var(--bg);padding:2px 6px;border-radius:4px">'+(b.id||'-')+'</code></p></div>'+
+    '<p style="font-size:.82rem;color:var(--text-muted);margin-top:4px">Business ID: <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-weight:800">'+(b.displayId||b.id||'-')+'</code></p></div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
     '<button class="btn-primary" onclick="blockBusiness(\''+bizId+'\')" style="width:auto;padding:6px 14px;font-size:.8rem;background:'+(b.blocked?'var(--accent-green)':'var(--accent-rose)')+'">'+(b.blocked?'<i class="fa-solid fa-unlock"></i> Unblock':'<i class="fa-solid fa-ban"></i> Block')+'</button>'+
     '<button class="btn-danger" onclick="deleteBusiness(\''+bizId+'\')" style="padding:6px 14px;font-size:.8rem"><i class="fa-solid fa-trash"></i> Delete</button></div></div>'+
@@ -9572,7 +9615,7 @@ function openBusinessProfile(bizId) {
     metricBox('Activity', '<span class="pa-badge pa-badge-'+(isActive?'active':'dormant')+'">'+(isActive?'Active':'Dormant')+'</span>','fa-circle-check',isActive?'green':'amber')+
     metricBox('Last Activity', presence.lastActive?formatTimeAgo(presence.lastActive):'Never','fa-clock','blue')+
     metricBox('Subscription', '<span class="pa-badge pa-badge-'+subStatus+'">'+subStatus.charAt(0).toUpperCase()+subStatus.slice(1)+'</span>','fa-credit-card',subStatus==='active'?'green':subStatus==='trial'?'purple':'amber')+
-    metricBox('Expiry Date', b.subscriptionExpiry||'-','fa-calendar-xmark','blue')+
+    metricBox('Expiry Date', (window.ftExpiryCell ? window.ftExpiryCell(b, subStatus) : (b.subscriptionExpiry||'-')),'fa-calendar-xmark','blue')+
     '</div></div>';
 
   /* Administrator Credentials Section */
@@ -10296,6 +10339,7 @@ function removePlatformLogo() {
 }
 
 function savePlatformBranding() {
+    try { if (!platformAdminUser && platformData.credentials) { var _paId = firebaseAuth().currentUser; if (_paId && platformData.credentials.uid === _paId.uid) platformAdminUser = platformData.credentials; } } catch (e) {}
   if (!platformAdminUser) { alert('Only the Main Platform Administrator can change platform branding.'); return; }
   var name = (document.getElementById('paBrandName').value || '').trim();
   var motto = (document.getElementById('paBrandMotto').value || '').trim();
@@ -11678,13 +11722,18 @@ window.addEventListener('DOMContentLoaded', function() {
     Object.keys(map || {}).forEach(function (k) {
       if (k.indexOf('platform_') === 0) return;
       var v = map[k] || {}, online = false, last = Number(v.lastActive) || 0;
+      var FT_FRESH = 5 * 60 * 1000;
       if (v.accounts) {
         Object.keys(v.accounts).forEach(function (u) {
           var a = v.accounts[u] || {};
-          if (a.online) online = true;
-          last = Math.max(last, Number(a.at) || 0, Number(a.lastActive) || 0);
+          var seen = Math.max(Number(a.at) || 0, Number(a.lastActive) || 0);
+          if (seen > last) last = seen;
+          if (a.online && seen && (Date.now() - seen) < FT_FRESH) online = true;
         });
-      } else online = !!v.online;
+      } else {
+        var seenRoot = Math.max(Number(v.at) || 0, last);
+        online = !!(v.online && seenRoot && (Date.now() - seenRoot) < FT_FRESH);
+      }
       out[k] = { online: online, lastActive: last };
     });
     return out;
@@ -11840,11 +11889,14 @@ function trialStartFor(b) {
 /* A business's trial end: stored end date, else start + configured trial days.
    Records created before trial dates existed fall back to today. */
 function trialEndFor(b) {
-  var end = b && b.trialEndDate ? Number(b.trialEndDate) : 0;
+  var stored = b && b.trialEndDate ? Number(b.trialEndDate) : 0;
   var start = trialStartFor(b);
-  if (!end && start) end = start + (getPlatformBranding().trialDays * 86400000);
-  if (!end) return 0;
-  return istMidnightOf(end);
+  var days = getPlatformBranding().trialDays;
+  /* The trial length set today by the Platform Administrator always wins, so
+     shortening (or extending) it immediately re-evaluates trials already running. */
+  if (start && !isNaN(days)) return istMidnightOf(start + (days * 86400000));
+  if (!stored) return 0;
+  return istMidnightOf(stored);
 }
 /* Plain-language status line + colour for the subscription card. */
 function subStatusMessage(daysLeft, kind) {
@@ -12263,20 +12315,46 @@ function toggleIntroOffer() {
     }
   }
 
-  function paSetBizAdminPassword(bizId) {
+  async function paSetBizAdminPassword(bizId) {
     var b = (platformData.businesses || {})[bizId];
     if (!b) return;
     var el = document.getElementById('paBizNewPass');
     var status = document.getElementById('paBizCredStatus');
     var pw = (el && el.value) ? el.value.trim() : '';
     if (pw.length < 6) { if (status) status.innerText = 'Please enter a password of at least 6 characters.'; return; }
-    if (!b.adminEmail) { if (status) status.innerText = 'No administrator email is on record for this business, so a password cannot be set. Ask the owner to add one first.'; return; }
-    if (!platformData.passwordResets) platformData.passwordResets = {};
-    platformData.passwordResets[bizId] = { password: pw, email: String(b.adminEmail).trim().toLowerCase(), setAt: Date.now() };
-    savePlatformData();
-    if (el) el.value = '';
-    if (status) status.innerText = 'Password updated for ' + b.adminEmail + '. They can sign in with this new password.';
-    alert('Password updated.\n\nAdministrator: ' + b.adminEmail + '\n\nThey can now sign in with the new password you set.');
+    var email = String(b.adminEmail || '').trim().toLowerCase();
+    if (!email) { if (status) status.innerText = 'No administrator email is on record for this business, so a password cannot be set. Ask the owner to add one first.'; return; }
+    if (status) status.innerText = 'Setting the sign-in password...';
+    var outcome = 'exists';
+    try {
+      var secondary = firebase.initializeApp(FIREBASE_CONFIG, 'ftpass' + Date.now());
+      try { await secondary.auth().createUserWithEmailAndPassword(email, pw); outcome = 'created'; }
+      catch (err) { if (err && err.code === 'auth/email-already-in-use') outcome = 'exists'; else throw err; }
+      try { await secondary.auth().signOut(); } catch (e) {}
+      try { await secondary.delete(); } catch (e) {}
+    } catch (err) {
+      if (status) status.innerText = 'Could not reach Firebase to set the password: ' + ((err && err.message) ? err.message : 'unknown error');
+      return;
+    }
+    if (outcome === 'created') {
+      if (el) el.value = '';
+      if (status) status.innerText = 'Sign-in password set for ' + email + '. They can sign in with this new password now.';
+      alert('Password set.\n\nAdministrator: ' + email + '\n\nThey can sign in with this new password straight away.');
+      return;
+    }
+    var sent = false;
+    try { await firebase.auth().sendPasswordResetEmail(email); sent = true; }
+    catch (e2) {
+      try {
+        var s2 = firebase.initializeApp(FIREBASE_CONFIG, 'ftreset' + Date.now());
+        await s2.auth().sendPasswordResetEmail(email);
+        try { await s2.auth().signOut(); } catch (e3) {}
+        try { await s2.delete(); } catch (e3) {}
+        sent = true;
+      } catch (e4) { sent = false; }
+    }
+    if (status) status.innerText = sent ? ('A secure password link was emailed to ' + email + '.') : ('Could not email a password link to ' + email + '.');
+    alert(sent ? ('A secure password link has been emailed to ' + email + '.\n\nThis account already existed, so nobody can set its password directly - the owner must open that link once.') : 'The password could not be set for ' + email + '.');
   }
 
   async function paSendBizResetEmail(bizId) {
@@ -12506,6 +12584,181 @@ window.ftSetMgmtGroup = function (key, btn) {
     if (b) { b.classList.toggle('active', isThis); b.setAttribute('aria-selected', isThis ? 'true' : 'false'); }
   });
 };
+</script>
+<script>
+/* ===== FinTrack Business: report rendering, HR Management area, welcome guide ===== */
+window.ftFmtDate = window.ftFmtDate || function (v) {
+  var t = Number(v) || 0;
+  if (!t && v) { var d = new Date(v); t = isNaN(d.getTime()) ? 0 : d.getTime(); }
+  if (!t) return '-';
+  var ist = new Date(t + 19800000);
+  var m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return ist.getUTCDate() + ' ' + m[ist.getUTCMonth()] + ' ' + ist.getUTCFullYear();
+};
+window.ftExpiryCell = window.ftExpiryCell || function (b, state) {
+  if (!b) return '-';
+  if (state === 'Trial') return window.ftFmtDate(b.trialEndDate);
+  return window.ftFmtDate(b.subscriptionEnd || b.subscriptionExpiry || b.trialEndDate);
+};
+
+window.ftRenderPdf = function (node, filename, opt) {
+  return new Promise(function (resolve, reject) {
+    var h2c = window.html2canvas;
+    var J = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+    if (!node) { reject(new Error('No report content')); return; }
+    if (!h2c || !J) {
+      alert('The PDF engine could not be loaded. Check the internet connection and try again.');
+      reject(new Error('engine missing')); return;
+    }
+    try { if (typeof window.ftApplyPdfBrand === 'function') window.ftApplyPdfBrand(node, ''); } catch (e) {}
+    var width = parseInt(node.style.width, 10) || 760;
+    var holder = document.createElement('div');
+    holder.setAttribute('style', 'position:fixed;left:0;top:0;z-index:2147483000;background:#ffffff;width:' + width + 'px;padding:0;margin:0;');
+    var clone = node.cloneNode(true);
+    clone.style.width = width + 'px';
+    clone.style.margin = '0';
+    clone.style.boxShadow = 'none';
+    holder.appendChild(clone);
+    document.body.appendChild(holder);
+    h2c(clone, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false, windowWidth: width + 40, scrollX: 0, scrollY: 0 })
+      .then(function (canvas) {
+        var pdf = new J('p', 'mm', 'a4');
+        var pageW = 210, pageH = 297;
+        var imgH = canvas.height * pageW / canvas.width;
+        var img = canvas.toDataURL('image/jpeg', 0.95);
+        var pages = Math.max(1, Math.ceil(imgH / pageH));
+        for (var p = 0; p < pages; p++) {
+          if (p > 0) pdf.addPage();
+          pdf.addImage(img, 'JPEG', 0, -p * pageH, pageW, imgH);
+        }
+        pdf.save(filename);
+        if (holder.parentNode) holder.parentNode.removeChild(holder);
+        resolve(true);
+      })
+      .catch(function (err) {
+        if (holder.parentNode) holder.parentNode.removeChild(holder);
+        console.error('PDF render failed:', err);
+        alert('The PDF could not be created. Please try again.');
+        reject(err);
+      });
+  });
+};
+
+window.html2pdf = function () {
+  var opt = {}, el = null;
+  var api = {
+    set: function (o) { opt = o || {}; return api; },
+    from: function (node) { el = node; return api; },
+    toPdf: function () { return api; },
+    toCanvas: function () { return api; },
+    toContainer: function () { return api; },
+    outputPdf: function () { return api; },
+    save: function (name) { return window.ftRenderPdf(el, name || (opt && opt.filename) || 'report.pdf', opt); }
+  };
+  return api;
+};
+
+function ftMountHrMgmt() {
+  try {
+    var host = document.getElementById('hrMgmtMount');
+    if (!host) return;
+    ['ftMgmtSwitch', 'ftMgmtPanel-money', 'ftMgmtPanel-staff', 'monthClosingSection', 'openingBalSection', 'ftStaffSection', 'staffSalarySection', 'attendanceMgmtSection', 'staffReportSection', 'analyticsSection'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el && el.parentNode !== host) host.appendChild(el);
+    });
+  } catch (e) {}
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ftMountHrMgmt);
+setTimeout(ftMountHrMgmt, 500);
+setTimeout(ftMountHrMgmt, 2500);
+
+var __ftSwitchTab = window.switchTab;
+if (typeof __ftSwitchTab === 'function') {
+  window.switchTab = function (id, btn) {
+    __ftSwitchTab(id, btn);
+    if (id === 'hrMgmtTab') { try { if (typeof renderAdminTab === 'function') renderAdminTab(); } catch (e) {} }
+  };
+}
+
+(function () {
+  var STEPS = [["Welcome to FinTrack Business","Everything your shop needs is in the tabs above: collection, expenses, invoices, staff and reports. This short tour takes about a minute.",""],["Your five balances","Cash Drawer is the physical cash in the box. Bank / UPI is the money in your bank. Receivables is what customers still owe you. Admin Fund is money set aside for the owner. Total Balance adds all of them together.","dashboardTab"],["Today at a glance","The day overview shows what came in and went out today, so you can check the day before you close.","dashboardTab"],["Services and split payment","Set your service names and prices once in the Master Catalog. At billing time the amount can be split between your service charge and the department fee.",""],["Cashbook, shop expenses and bank ledger","Every rupee in and out is recorded here. Shop expenses are your running costs, and the bank transfer ledger keeps track of UPI and bank movements.",""],["Invoice","Create an invoice for a customer, print it, and the collection flows into your cashbook automatically.",""],["Financial reports","The daily and monthly reports download as PDF documents named after your business, ready to print or share.",""],["Admin Controls","Application Control holds the platform view, the Monthly Overview, the cashbook settings, month closing and opening balances.","adminTab"],["HR Management","Two groups live here. Money Management closes the month and sets opening balances. Staff Management adds staff, sets salary and incentives, marks attendance and builds staff reports.","hrMgmtTab"],["Staff Profile","Open any staff member to see their interactions, collection, incentive, attendance and total payable salary, and download that report as a branded PDF.","hrTab"],["Subscription","Your trial days and plan are shown on the subscription box. When access ends, adding and editing are locked until the subscription is renewed, while your records stay readable.",""]];
+  var seenKey = 'FT_BIZ_GUIDE_SEEN_V1';
+  var idx = 0, overlay = null, card = null;
+
+  function isAdminUi() {
+    var b = document.getElementById('btn-adminTab');
+    if (!b) return false;
+    return b.style.display !== 'none' && getComputedStyle(b).display !== 'none';
+  }
+  function goTab(tab) {
+    if (!tab) return;
+    var b = document.getElementById('btn-' + tab) || document.getElementById('drawer-' + tab);
+    if (b) { try { b.click(); } catch (e) {} }
+  }
+  function close(mark) {
+    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    overlay = null; card = null;
+    if (mark) { try { localStorage.setItem(seenKey, '1'); } catch (e) {} }
+  }
+  function build() {
+    if (overlay) return;
+    overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(247,246,243,.72);z-index:2147482000;display:flex;align-items:center;justify-content:center;padding:16px;';
+    card = document.createElement('div');
+    card.style.cssText = 'width:100%;max-width:430px;background:#fff;border-radius:18px;box-shadow:0 24px 60px rgba(15,23,42,.25);padding:22px;';
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+  }
+  function render() {
+    var s = STEPS[idx];
+    var dots = STEPS.map(function (x, i) {
+      return '<span style="width:7px;height:7px;border-radius:50%;display:inline-block;background:' + (i === idx ? '#12203a' : '#d7dbe2') + ';"></span>';
+    }).join('');
+    var backStyle = 'padding:9px 16px;border-radius:10px;border:1px solid #d7dbe2;background:#fff;font-size:.82rem;font-weight:700;color:#374151;' + (idx === 0 ? 'opacity:.4;' : 'cursor:pointer;');
+    card.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+        '<span style="font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;color:#8a93a3;font-weight:800;">Step ' + (idx + 1) + ' of ' + STEPS.length + '</span>' +
+        '<button type="button" id="ftGuideSkip" style="background:none;border:0;color:#8a93a3;font-size:.76rem;cursor:pointer;">Skip tour</button>' +
+      '</div>' +
+      '<h3 style="font-size:1.05rem;font-weight:900;color:#12203a;margin-bottom:8px;">' + s[0] + '</h3>' +
+      '<p style="font-size:.86rem;line-height:1.6;color:#4b5563;">' + s[1] + '</p>' +
+      '<div style="display:flex;gap:5px;margin:16px 0 14px;">' + dots + '</div>' +
+      '<div style="display:flex;justify-content:space-between;gap:8px;">' +
+        '<button type="button" id="ftGuideBack" style="' + backStyle + '">Back</button>' +
+        '<button type="button" id="ftGuideNext" style="padding:9px 18px;border-radius:10px;border:0;background:#12203a;color:#fff;font-size:.82rem;font-weight:800;cursor:pointer;">' + (idx === STEPS.length - 1 ? 'Start using FinTrack' : 'Next') + '</button>' +
+      '</div>';
+    var skip = document.getElementById('ftGuideSkip');
+    if (skip) skip.onclick = function () { close(true); };
+    var back = document.getElementById('ftGuideBack');
+    if (back) back.onclick = function () { if (idx > 0) { idx--; render(); } };
+    var next = document.getElementById('ftGuideNext');
+    if (next) next.onclick = function () {
+      if (idx === STEPS.length - 1) { close(true); return; }
+      idx++; render();
+    };
+    goTab(s[2]);
+  }
+  function showNow() { build(); idx = 0; render(); }
+  window.ftStartOnboarding = function (force) {
+    if (force === true) { showNow(); return; }
+    try { if (localStorage.getItem(seenKey)) return; } catch (e) {}
+    setTimeout(function () { if (isAdminUi()) { try { if (!localStorage.getItem(seenKey)) showNow(); } catch (e) {} } }, 1600);
+  };
+
+  var chipCheck = setInterval(function () {
+    if (!isAdminUi()) return;
+    clearInterval(chipCheck);
+    if (document.getElementById('ftGuideChip')) return;
+    var b = document.createElement('button');
+    b.id = 'ftGuideChip';
+    b.type = 'button';
+    b.title = 'Quick guide';
+    b.textContent = '?';
+    b.style.cssText = 'position:fixed;right:16px;bottom:88px;z-index:1500;width:40px;height:40px;border-radius:50%;border:1px solid #d7dbe2;background:#fff;color:#12203a;font-weight:900;font-size:.95rem;box-shadow:0 8px 20px rgba(15,23,42,.14);cursor:pointer;';
+    b.onclick = function () { window.ftStartOnboarding(true); };
+    document.body.appendChild(b);
+  }, 2500);
+})();
 </script>
 </body>
 </html>
