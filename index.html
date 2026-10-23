@@ -645,6 +645,7 @@ html, body { background-color: transparent !important; background-image: none !i
 .ftg-box span{line-height:1.25}
 @media(max-width:640px){.ftg-btn{flex:1 1 100%}}
 </style>
+<style>html.ft-no-scroll, html.ft-no-scroll body{overflow:hidden !important;height:100%;overscroll-behavior:none;}</style>
 </head>
 <body>
 <div id="ftbBootSplash" style="position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:#F6F3ED;opacity:1;transition:opacity .35s ease">
@@ -3519,7 +3520,7 @@ const FIREBASE_CONFIG = {
         acc[m] = {};
         Object.keys(appData.monthlySalaries[m]).forEach(st => {
           var s = appData.monthlySalaries[m][st];
-          acc[m][st] = { basic: s.basic, incentivePct: s.incentivePct !== undefined ? s.incentivePct : 20, attAdjustment: s.attAdjustment || 0, finalized: s.finalized || false, finalizedAmount: s.finalizedAmount || 0 };
+          acc[m][st] = { basic: s.basic, incentivePct: s.incentivePct !== undefined ? s.incentivePct : 0, attAdjustment: s.attAdjustment || 0, finalized: s.finalized || false, finalizedAmount: s.finalizedAmount || 0 };
         });
         return acc;
       }, {}),
@@ -4496,7 +4497,7 @@ const FIREBASE_CONFIG = {
         Object.keys(monthSal).forEach(st => {
           const v = monthSal[st];
           if (v && typeof v === 'object') {
-            ms[m][st] = { basic: parseFloat(v.basic) || 0, incentivePct: (v.incentivePct !== undefined) ? parseFloat(v.incentivePct) : 20, attAdjustment: parseFloat(v.attAdjustment || 0), finalized: !!v.finalized, finalizedAmount: parseFloat(v.finalizedAmount || 0) };
+            ms[m][st] = { basic: parseFloat(v.basic) || 0, incentivePct: (v.incentivePct !== undefined) ? parseFloat(v.incentivePct) : 0, attAdjustment: parseFloat(v.attAdjustment || 0), finalized: !!v.finalized, finalizedAmount: parseFloat(v.finalizedAmount || 0) };
           } else {
             ms[m][st] = { basic: parseFloat(v) || 0, incentivePct: 20, attAdjustment: 0, finalized: false };
           }
@@ -5128,6 +5129,7 @@ const FIREBASE_CONFIG = {
           var real = (appData.users || []).find(function (u) { return accountKey(u) === accountKey(user); });
           if (real) { currentUser = real; }
           try { if (currentUser) { logAttendance(currentUser); refreshAllViews(); } } catch (e) {}
+          try { if (window.ftRenderAccessLock) window.ftRenderAccessLock(); } catch (e) {}
           try { if (window.ftStartOnboarding) window.ftStartOnboarding(); } catch (e) {}
         }).catch(function () {});
       });
@@ -7384,7 +7386,7 @@ const FIREBASE_CONFIG = {
     staffUsers.forEach(u => {
       var sal = (appData.monthlySalaries[month] && appData.monthlySalaries[month][u.name]) || {};
       let basic = parseFloat(sal.basic || 0);
-      let incPct = parseFloat(sal.incentivePct !== undefined ? sal.incentivePct : 20);
+      let incPct = parseFloat(sal.incentivePct !== undefined ? sal.incentivePct : 0);
       if (incPct < 0) incPct = 0; if (incPct > 100) incPct = 100;
       let collection = 0;
       appData.serviceLog.filter(s => s.staff === u.name && s.date.substring(0, 7) === month).forEach(s => { collection += parseFloat(s.serviceCharge || 0); });
@@ -7532,7 +7534,7 @@ const FIREBASE_CONFIG = {
         }
 
         var salCfg = (appData.monthlySalaries[month] && appData.monthlySalaries[month][u.name]) || {};
-        var incPct = parseFloat(salCfg.incentivePct !== undefined ? salCfg.incentivePct : 20);
+        var incPct = parseFloat(salCfg.incentivePct !== undefined ? salCfg.incentivePct : 0);
         if (incPct < 0) incPct = 0; if (incPct > 100) incPct = 100;
         let incentive = collection > basic ? (incPct / 100) * (collection - basic) : 0;
         var attPct = getStaffAttendancePct(u.name, month);
@@ -7570,7 +7572,7 @@ const FIREBASE_CONFIG = {
     }
 
     var salCfg = (appData.monthlySalaries[month] && appData.monthlySalaries[month][staffName]) || {};
-    var incPct = parseFloat(salCfg.incentivePct !== undefined ? salCfg.incentivePct : 20);
+    var incPct = parseFloat(salCfg.incentivePct !== undefined ? salCfg.incentivePct : 0);
     if (incPct < 0) incPct = 0; if (incPct > 100) incPct = 100;
     let incentive = collection > basic ? (incPct / 100) * (collection - basic) : 0;
     var adjInfo = getStaffAttendanceAdjustment(staffName, month, basic + incentive);
@@ -7971,7 +7973,7 @@ const FIREBASE_CONFIG = {
     });
 
     var salCfg = (appData.monthlySalaries[month] && appData.monthlySalaries[month][staffName]) || {};
-    var incPct = parseFloat(salCfg.incentivePct !== undefined ? salCfg.incentivePct : 20);
+    var incPct = parseFloat(salCfg.incentivePct !== undefined ? salCfg.incentivePct : 0);
     if (incPct < 0) incPct = 0; if (incPct > 100) incPct = 100;
     let incentive = collection > basic ? (incPct / 100) * (collection - basic) : 0;
     var profDedInfo = getAttendanceDeductionDetails(staffName, month, basic);
@@ -8109,7 +8111,7 @@ const FIREBASE_CONFIG = {
     var incPct = 20;
     if (appData.monthlySalaries[month] && appData.monthlySalaries[month][staffName]) {
       basic = parseFloat(appData.monthlySalaries[month][staffName].basic || 0);
-      incPct = parseFloat(appData.monthlySalaries[month][staffName].incentivePct !== undefined ? appData.monthlySalaries[month][staffName].incentivePct : 20);
+      incPct = parseFloat(appData.monthlySalaries[month][staffName].incentivePct !== undefined ? appData.monthlySalaries[month][staffName].incentivePct : 0);
     }
     if (incPct < 0) incPct = 0; if (incPct > 100) incPct = 100;
 
@@ -8169,7 +8171,7 @@ const FIREBASE_CONFIG = {
       var collection = 0; logs.forEach(function(s) { collection += parseFloat(s.serviceCharge || 0); });
       var salCfg = (appData.monthlySalaries[month] && appData.monthlySalaries[month][u.name]) || {};
       var basic = parseFloat(salCfg.basic || 0);
-      var incPct = parseFloat(salCfg.incentivePct !== undefined ? salCfg.incentivePct : 20);
+      var incPct = parseFloat(salCfg.incentivePct !== undefined ? salCfg.incentivePct : 0);
       var incentive = collection > basic ? (incPct / 100) * (collection - basic) : 0;
       var attPct = getStaffAttendancePct(u.name, month);
       var adjInfo = getStaffAttendanceAdjustment(u.name, month, basic + incentive);
@@ -8199,7 +8201,7 @@ const FIREBASE_CONFIG = {
     logs.forEach(function(s) { collection += parseFloat(s.serviceCharge || 0); });
     var salCfg = (appData.monthlySalaries[month] && appData.monthlySalaries[month][staffName]) || {};
     var basic = parseFloat(salCfg.basic || 0);
-    var incPct = parseFloat(salCfg.incentivePct !== undefined ? salCfg.incentivePct : 20);
+    var incPct = parseFloat(salCfg.incentivePct !== undefined ? salCfg.incentivePct : 0);
     if (incPct < 0) incPct = 0; if (incPct > 100) incPct = 100;
     var incentive = collection > basic ? (incPct / 100) * (collection - basic) : 0;
     var adjInfo = getStaffAttendanceAdjustment(staffName, month, basic + incentive);
@@ -8272,8 +8274,8 @@ const FIREBASE_CONFIG = {
     logs.forEach(function (x) { collection += parseFloat(x.serviceCharge || 0); });
     var salCfg = (appData.monthlySalaries[month] && appData.monthlySalaries[month][staffName]) || {};
     var basic = parseFloat(salCfg.basic || 0);
-    var incPct = parseFloat(salCfg.incentivePct !== undefined ? salCfg.incentivePct : 20);
-    if (isNaN(incPct)) incPct = 20;
+    var incPct = parseFloat(salCfg.incentivePct !== undefined ? salCfg.incentivePct : 0);
+    if (isNaN(incPct)) incPct = 0;
     if (incPct < 0) incPct = 0;
     if (incPct > 100) incPct = 100;
     var incentive = collection > basic ? (incPct / 100) * (collection - basic) : 0;
@@ -12169,9 +12171,8 @@ function renderSubLockBanner() {
 }
 
 function showSubLockNotice() {
-  if (window.__ftLockNoticeAt && Date.now() - window.__ftLockNoticeAt < 2500) return;
-  window.__ftLockNoticeAt = Date.now();
-  alert('Subscription required.\n\nKindly subscribe to any of our plans to get the seamless opportunity to explore our features.\n\nNothing was saved or changed. Your existing records are safe.');
+  /* No browser alert: the blocking subscription screen is shown instead. */
+  try { if (window.ftRenderAccessLock) window.ftRenderAccessLock(); } catch (e) {}
 }
 
 /* Every action that would record, change, delete, print or download operational
@@ -12183,6 +12184,8 @@ function subscriptionBlocks(el) {
   try {
     if (!(currentUser && !platformAdminUser && getSubscriptionState().registered && getSubscriptionState().locked)) return false;
   } catch (e) { return false; }
+  /* the blocking screen and the top bar stay usable while the account is locked */
+  if (el && el.closest && (el.closest('#ftAccessLock') || el.closest('nav'))) return false;
   var node = el;
   while (node && node !== document.body) {
     var oc = node.getAttribute ? node.getAttribute('onclick') : null;
@@ -12217,55 +12220,163 @@ function checkSubscriptionLock() {
 
 /* Full-screen access lock. Appears the moment a trial or the 3 day grace
    period is over and stays until the platform administrator verifies payment. */
+/* ---- subscription gate: permanent lock + one reminder per day ---- */
+function ftSubTodayIST() {
+  try { return new Date(Date.now() + 19800000).toISOString().slice(0, 10); } catch (e) { return 'day'; }
+}
+function ftSubBizKey() {
+  try { var b = getCurrentBizRecord(); return (b && (b.displayId || b.id)) || 'biz'; } catch (e) { return 'biz'; }
+}
+function ftSubIsAdmin() {
+  try { return String((currentUser && currentUser.role) || '').toLowerCase() === 'admin'; } catch (e) { return false; }
+}
+function ftSubModel() {
+  if (!currentUser || platformAdminUser) return null;
+  var st = null; try { st = getSubscriptionState(); } catch (e) { return null; }
+  if (!st || !st.registered) return null;
+  var m = { st: st, admin: ftSubIsAdmin(), mode: 'ok', color: '#15803D', days: Number(st.daysLeft) || 0, title: '', msg: '', on: st.expiryText || '' };
+  if (st.status === 'blocked') { m.mode = 'blocked'; m.color = '#8B0000'; m.title = 'Account Blocked'; m.msg = st.message; }
+  else if (st.status === 'expired' || st.locked) { m.mode = 'blocked'; m.color = '#8B0000'; m.title = 'Subscription Not Renewed'; m.msg = st.message; }
+  else if (st.status === 'grace') {
+    m.mode = 'grace'; m.color = '#B91C1C'; m.days = Number(st.graceLeft) || 0;
+    m.title = 'Subscription Ended - Grace Period';
+    m.msg = 'Your subscription has ended and you are inside the ' + SUB_GRACE_DAYS + ' day grace period with ' + m.days + ' day(s) left. Renew now so nothing stops when the grace period closes.';
+  }
+  else if (st.status === 'trial') {
+    m.mode = 'trial'; m.color = '#6B21A8';
+    m.title = m.days <= 0 ? 'Free Trial Ended' : 'Free Trial';
+    m.msg = m.days <= 0 ? 'Your free trial has ended. Kindly subscribe to continue.' : 'Your free trial has ' + m.days + ' day(s) remaining. Subscribe any time to keep everything running without a break.';
+  }
+  else if (st.status === 'active') {
+    m.mode = m.days <= 5 ? 'ending' : 'ok';
+    m.color = m.days <= 5 ? '#C2410C' : '#15803D';
+    m.title = 'Subscription Ending Soon';
+    m.msg = 'Your subscription ends in ' + m.days + ' day(s). Renew now to avoid any interruption to your work.';
+  }
+  return m;
+}
+function ftSubScrollLock(on) {
+  try {
+    if (on) { document.documentElement.classList.add('ft-no-scroll'); document.body.classList.add('ft-no-scroll'); }
+    else { document.documentElement.classList.remove('ft-no-scroll'); document.body.classList.remove('ft-no-scroll'); }
+  } catch (e) {}
+}
+function ftSubNavBottom() {
+  var el = document.querySelector('nav.no-print') || document.querySelector('nav');
+  if (!el) return 0;
+  var r = el.getBoundingClientRect();
+  return Math.max(0, Math.round(r.bottom));
+}
+function ftSubAnyModalOpen() {
+  var open = false;
+  try {
+    document.querySelectorAll('.modal').forEach(function (mm) {
+      if (mm.id === 'subLockModal') return;
+      if (getComputedStyle(mm).display !== 'none') open = true;
+    });
+  } catch (e) {}
+  return open;
+}
 function ftRenderAccessLock() {
   var el = document.getElementById('ftAccessLock');
-  var st = null;
-  try { st = (currentUser && !platformAdminUser) ? getSubscriptionState() : null; } catch (e) { st = null; }
-  if (!st || !st.registered || !st.locked) { if (el) el.remove(); return; }
-  var anyModal = false;
-  document.querySelectorAll('.modal').forEach(function (m) {
-    var d = m.style.display;
-    if (m.id !== 'subLockModal' && d && d !== 'none') anyModal = true;
-  });
-  if (anyModal) { if (el) el.remove(); return; }
-  var isTrial = st.status === 'trial';
-  var blocked = st.status === 'blocked';
-  var col = isTrial ? '#800080' : '#8B0000';
-  var title = blocked ? 'Account Blocked' : (isTrial ? 'Free Trial Ended' : 'Subscription Not Renewed');
+  var m = ftSubModel();
+  var show = false, key = '', seen = false;
+  if (m) {
+    if (m.mode === 'blocked') show = true;
+    else if (m.mode !== 'ok') {
+      key = 'FT_SUB_NOTICE_' + ftSubBizKey() + '_' + ftSubTodayIST() + '_' + m.mode;
+      try { seen = localStorage.getItem(key) === '1'; } catch (e) {}
+      show = !seen;
+    }
+  }
+  if (!show || (m && m.mode === 'blocked' && ftSubAnyModalOpen())) {
+    if (el) el.remove();
+    return;
+  }
+  var sig = m.mode + '|' + m.days + '|' + (m.admin ? 'a' : 's') + '|' + ftSubTodayIST() + '|' + (m.on || '');
+  if (el && el.getAttribute('data-sig') === sig) { ftSubScrollLock(true); return; }
   var pending = false;
-  try { pending = hasPendingPayment(); } catch (e) {}
-  var when = (st.expiryText && st.expiryText !== '—') ? '<div style="font-size:.72rem;color:var(--text-muted);margin-top:6px">Ended on ' + st.expiryText + '</div>' : '';
-  var body = ''
-    + '<div style="background:#fff;border-radius:18px;padding:24px;max-width:420px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(11,30,45,.35);border-top:6px solid ' + col + '">'
-    + '<div style="font-size:.68rem;font-weight:900;letter-spacing:1.2px;color:#0B1E2D;text-transform:uppercase">FinTrack Business</div>'
-    + '<div style="font-size:.62rem;font-weight:800;letter-spacing:.8px;color:#6B7A8F;text-transform:uppercase;margin-bottom:12px">Business Management Platform</div>'
-    + '<h3 style="font-size:1.12rem;font-weight:900;color:' + col + ';margin:0 0 8px">' + title + '</h3>'
-    + '<div style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg,#f6f8fb);border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:12px 22px;margin-bottom:10px">'
-    + '<div style="font-size:2rem;font-weight:900;color:' + col + ';line-height:1">' + (st.status === 'grace' ? (st.graceLeft || 0) : (st.daysLeft || 0)) + '</div>'
-    + '<div style="font-size:.64rem;font-weight:900;color:' + col + ';text-transform:uppercase;letter-spacing:.4px;margin-top:3px">days left</div>'
+  try { pending = m.admin && hasPendingPayment(); } catch (e) {}
+  var count = m.mode === 'blocked' ? 0 : m.days;
+  var when = (m.on && m.on !== '\u2014')
+    ? '<div style="font-size:.72rem;color:#6B7787;margin-top:5px">' + (m.mode === 'blocked' ? 'Ended on ' : 'Ends on ') + m.on + '</div>'
+    : '';
+  var motto = '';
+  try { var bz = getCurrentBizRecord(); motto = (bz && ((bz.businessProfile && bz.businessProfile.motto) || bz.motto)) || ''; } catch (e) {}
+  var payBtn;
+  if (m.mode === 'blocked') {
+    if (m.admin) {
+      payBtn = pending
+        ? '<div style="background:#FFF7ED;border:1px solid #FDBA74;color:#9A3412;border-radius:10px;padding:10px 12px;font-size:.75rem;font-weight:800;line-height:1.45">Payment submitted. Waiting for the Platform Administrator to verify it.</div>'
+        : '<button type="button" onclick="ftLockPay()" style="width:100%;border:0;border-radius:12px;padding:14px 18px;background:' + m.color + ';color:#FFFFFF;font-size:.86rem;font-weight:900;cursor:pointer"><i class="fa-solid fa-qrcode" style="margin-right:8px"></i>Pay / Renew Subscription</button>';
+    } else {
+      payBtn = '<div style="background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;border-radius:10px;padding:11px 12px;font-size:.76rem;font-weight:800;line-height:1.5">Only your business administrator can renew this subscription. Please contact your administrator to restore access.</div>';
+    }
+  } else {
+    payBtn = '<button type="button" onclick="ftCloseSubNotice()" style="width:100%;border:0;border-radius:12px;padding:13px 18px;background:#0B1E2D;color:#FFFFFF;font-size:.84rem;font-weight:900;cursor:pointer">Close</button>';
+  }
+  var footer = m.mode === 'blocked'
+    ? '<div style="font-size:.66rem;color:#7C8899;margin-top:12px;line-height:1.5">Records, reports, edits, deletions and downloads are paused until the Platform Administrator verifies your payment.</div><div style="font-size:.62rem;color:#9AA6B5;margin-top:6px">Access is restored automatically after verification.</div>'
+    : '<div style="font-size:.66rem;color:#7C8899;margin-top:12px;line-height:1.5">This reminder appears once a day. Close it and carry on with your work.</div>';
+  var html = ''
+    + '<div style="position:relative;background:#FFFFFF;border-radius:18px;padding:26px 22px;max-width:420px;width:100%;text-align:center;box-shadow:0 26px 64px rgba(11,30,45,.28);border-top:6px solid ' + m.color + '">'
+    + (m.mode === 'blocked' ? '' : '<button type="button" onclick="ftCloseSubNotice()" title="Close" style="position:absolute;top:8px;right:12px;border:0;background:transparent;color:#94A3B8;font-size:1.2rem;line-height:1;cursor:pointer">&times;</button>')
+    + '<div style="font-size:.68rem;font-weight:900;letter-spacing:.16em;color:#0B1E2D;text-transform:uppercase">FinTrack Business</div>'
+    + '<div style="font-size:.6rem;font-weight:900;letter-spacing:.16em;color:#1A4785;text-transform:uppercase;margin:3px 0 14px">Business Management Platform</div>'
+    + (motto ? '<div style="font-size:.66rem;font-weight:800;color:#8B7355;letter-spacing:.14em;text-transform:uppercase;margin:0 0 12px">' + motto + '</div>' : '')
+    + '<div style="font-size:1.16rem;font-weight:900;color:' + m.color + ';margin-bottom:12px;line-height:1.3">' + m.title + '</div>'
+    + '<div style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;background:#F8FAFC;border:1px solid #E5E7EB;border-radius:12px;padding:12px 24px;margin-bottom:14px;min-width:124px">'
+    + '<div style="font-size:2.1rem;font-weight:900;color:' + m.color + ';line-height:1">' + count + '</div>'
+    + '<div style="font-size:.62rem;font-weight:900;color:#64748B;letter-spacing:.12em;text-transform:uppercase;margin-top:4px">' + (m.mode === 'grace' ? 'grace days left' : 'days left') + '</div>'
     + when + '</div>'
-    + '<p style="font-size:.83rem;font-weight:700;color:#334155;margin:10px 0 14px;line-height:1.5">' + (st.message || 'Kindly renew your subscription to continue.') + '</p>'
-    + (pending
-        ? '<div style="background:#fff7ed;border:1px solid #fdba74;color:#9a3412;border-radius:10px;padding:10px 12px;font-size:.76rem;font-weight:800;margin-bottom:10px">Payment submitted. Waiting for the FinTrack Platform Administrator to verify it.</div>'
-        : '<button class="btn-admin" onclick="ftLockPay()" style="width:100%;justify-content:center"><i class="fa-solid fa-qrcode"></i> Pay / Renew Subscription</button>')
-    + '<div style="font-size:.66rem;color:#7c8899;margin-top:12px;line-height:1.5">Records, reports, edits, deletions and downloads are paused until the Platform Administrator verifies your payment.</div>'
-    + '<div style="font-size:.62rem;color:#9aa6b5;margin-top:8px">Access is restored automatically after verification.</div>'
+    + '<p style="font-size:.85rem;color:#334155;line-height:1.55;margin:0 0 16px">' + (m.msg || '') + '</p>'
+    + payBtn + footer
     + '</div>';
   if (!el) {
     el = document.createElement('div');
     el.id = 'ftAccessLock';
-    el.style.cssText = 'position:fixed;inset:0;z-index:2147483200;background:rgba(11,30,45,.62);display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto';
+    el.setAttribute('role', 'dialog');
+    el.setAttribute('aria-modal', 'true');
     document.body.appendChild(el);
   }
-  el.innerHTML = body;
+  el.style.cssText = 'position:fixed;left:0;right:0;bottom:0;top:' + ftSubNavBottom() + 'px;z-index:2147483200;background:rgba(252,251,248,.95);display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto';
+  el.innerHTML = html;
+  el.setAttribute('data-sig', sig);
+  ftSubScrollLock(true);
+  if (key) { try { localStorage.setItem(key, '1'); } catch (e) {} }
 }
-function ftLockPay() {
+function ftCloseSubNotice() {
   var el = document.getElementById('ftAccessLock');
   if (el) el.remove();
+  var m = null; try { m = ftSubModel(); } catch (e) {}
+  if (!(m && m.mode === 'blocked')) ftSubScrollLock(false);
+}
+function ftLockPay() {
+  var m = null; try { m = ftSubModel(); } catch (e) {}
+  if (!m || !m.admin) return;
+  var el = document.getElementById('ftAccessLock');
+  if (el) el.remove();
+  ftSubScrollLock(false);
   try { openPaSubmitPayment(); } catch (e) {}
 }
 window.ftRenderAccessLock = ftRenderAccessLock;
 window.ftLockPay = ftLockPay;
+window.ftCloseSubNotice = ftCloseSubNotice;
+
+/* Freeze the page behind any subscription screen or dialog. */
+setInterval(function () {
+  try {
+    var any = ftSubAnyModalOpen();
+    var lock = !!document.getElementById('ftAccessLock');
+    ftSubScrollLock(lock || any);
+    ftRenderAccessLock();
+  } catch (e) {}
+}, 1200);
+
+document.addEventListener('submit', function (e) {
+  var m = null; try { m = ftSubModel(); } catch (e) {}
+  if (m && m.mode === 'blocked') { e.preventDefault(); e.stopPropagation(); ftRenderAccessLock(); }
+}, true);
 
 function toggleIntroOffer() {
     if (!platformData.introductoryOffer) platformData.introductoryOffer = {};
@@ -12682,8 +12793,7 @@ if (typeof __ftSwitchTab === 'function') {
 
 (function () {
   var STEPS = [["Welcome to FinTrack Business","Everything your shop needs is in the tabs above: collection, expenses, invoices, staff and reports. This short tour takes about a minute.",""],["Your five balances","Cash Drawer is the physical cash in the box. Bank / UPI is the money in your bank. Receivables is what customers still owe you. Admin Fund is money set aside for the owner. Total Balance adds all of them together.","dashboardTab"],["Today at a glance","The day overview shows what came in and went out today, so you can check the day before you close.","dashboardTab"],["Services and split payment","Set your service names and prices once in the Master Catalog. At billing time the amount can be split between your service charge and the department fee.",""],["Cashbook, shop expenses and bank ledger","Every rupee in and out is recorded here. Shop expenses are your running costs, and the bank transfer ledger keeps track of UPI and bank movements.",""],["Invoice","Create an invoice for a customer, print it, and the collection flows into your cashbook automatically.",""],["Financial reports","The daily and monthly reports download as PDF documents named after your business, ready to print or share.",""],["Admin Controls","Application Control holds the platform view, the Monthly Overview, the cashbook settings, month closing and opening balances.","adminTab"],["HR Management","Two groups live here. Money Management closes the month and sets opening balances. Staff Management adds staff, sets salary and incentives, marks attendance and builds staff reports.","hrMgmtTab"],["Staff Profile","Open any staff member to see their interactions, collection, incentive, attendance and total payable salary, and download that report as a branded PDF.","hrTab"],["Subscription","Your trial days and plan are shown on the subscription box. When access ends, adding and editing are locked until the subscription is renewed, while your records stay readable.",""]];
-  var seenKey = 'FT_BIZ_GUIDE_SEEN_V1';
-  var idx = 0, overlay = null, card = null;
+  var idx = 0, mode = 'checklist', overlay = null, card = null;
 
   function isAdminUi() {
     var b = document.getElementById('btn-adminTab');
@@ -12692,57 +12802,151 @@ if (typeof __ftSwitchTab === 'function') {
   }
   function goTab(tab) {
     if (!tab) return;
-    var b = document.getElementById('btn-' + tab) || document.getElementById('drawer-' + tab);
+    var b = document.getElementById('drawer-' + tab) || document.getElementById('btn-' + tab);
     if (b) { try { b.click(); } catch (e) {} }
   }
+  function openSection(sec) {
+    if (!sec) return;
+    try { if (typeof showAdminSection === 'function') { showAdminSection(sec); return; } } catch (e) {}
+    goTab('adminTab');
+  }
+  function staffList() {
+    try { return (appData.users || []).filter(function (u) { return String(u.role || '').toLowerCase() !== 'admin'; }); } catch (e) { return []; }
+  }
+  function hasSalary() {
+    try {
+      var ms = appData.monthlySalaries || {};
+      return Object.keys(ms).some(function (mo) {
+        var row = ms[mo] || {};
+        return Object.keys(row).some(function (st) {
+          var v = row[st];
+          return v && typeof v === 'object' && parseFloat(v.basic || 0) > 0;
+        });
+      });
+    } catch (e) { return false; }
+  }
+  function ftGuideTasks() {
+    var svc = 0, logs = 0, att = 0;
+    try { svc = (appData.masterServices || []).length; } catch (e) {}
+    try { logs = (appData.serviceLog || []).length; } catch (e) {}
+    try { att = Object.keys(appData.attendance || {}).length; } catch (e) {}
+    return [
+      { k: 'staff', done: staffList().length > 0, t: 'Add your staff members',
+        b: 'Admin Controls, then Staff Management, then Add Staff. Enter the name and mobile number so they can sign in on their own phone.',
+        sec: 'ftStaffSection' },
+      { k: 'salary', done: hasSalary(), t: 'Set each staff salary',
+        b: 'In Staff Management open Salary & Incentives and enter the basic salary. The incentive stays at 0% until you type a percentage.',
+        sec: 'staffSalarySection' },
+      { k: 'catalog', done: svc > 0, t: 'Add your services',
+        b: 'In Analytics & Catalog add the service names and prices you sell, so billing is one tap at the counter.',
+        sec: 'analyticsSection' },
+      { k: 'collection', done: logs > 0, t: 'Record your first collection',
+        b: 'Open the Services tab, pick the service and save the entry. It goes straight into the cashbook.',
+        tab: 'servicesTab' },
+      { k: 'attendance', done: att > 0, t: 'Mark today\u2019s attendance',
+        b: 'In Attendance Management mark who is present, late or on leave; salary deductions use these marks.',
+        sec: 'attendanceMgmtSection' }
+    ];
+  }
+  function pendingTasks() {
+    return ftGuideTasks().filter(function (t) { return !t.done; });
+  }
+
   function close(mark) {
     if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
     overlay = null; card = null;
-    if (mark) { try { localStorage.setItem(seenKey, '1'); } catch (e) {} }
   }
   function build() {
     if (overlay) return;
     overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(247,246,243,.72);z-index:2147482000;display:flex;align-items:center;justify-content:center;padding:16px;';
     card = document.createElement('div');
-    card.style.cssText = 'width:100%;max-width:430px;background:#fff;border-radius:18px;box-shadow:0 24px 60px rgba(15,23,42,.25);padding:22px;';
+    card.style.cssText = 'width:100%;max-width:450px;max-height:88vh;overflow-y:auto;background:#fff;border-radius:18px;box-shadow:0 24px 60px rgba(15,23,42,.25);padding:22px;';
     overlay.appendChild(card);
     document.body.appendChild(overlay);
   }
-  function render() {
+  function head() {
+    return '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
+      + '<div><div style="font-size:.66rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#0B1E2D">FinTrack Business</div>'
+      + '<div style="font-size:.6rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#1A4785;margin-top:2px">Business Management Platform</div></div>'
+      + '<button type="button" class="ftg-close" style="border:0;background:transparent;color:#94A3B8;font-size:1.2rem;line-height:1;cursor:pointer">&times;</button>'
+      + '</div>';
+  }
+  function renderChecklist() {
+    var tasks = ftGuideTasks();
+    var left = tasks.filter(function (t) { return !t.done; }).length;
+    var rows = tasks.map(function (t) {
+      return '<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-top:1px solid #EEF2F6">'
+        + '<span style="flex:0 0 20px;width:20px;height:20px;border-radius:50%;margin-top:1px;display:inline-flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:900;color:#fff;background:' + (t.done ? '#15803D' : '#CBD5E1') + '">' + (t.done ? '\u2713' : '') + '</span>'
+        + '<div style="flex:1 1 auto;text-align:left">'
+        + '<div style="font-size:.83rem;font-weight:800;color:' + (t.done ? '#94A3B8' : '#12203A') + ';text-decoration:' + (t.done ? 'line-through' : 'none') + '">' + t.t + '</div>'
+        + '<div style="font-size:.72rem;color:#64748B;line-height:1.45;margin-top:2px">' + t.b + '</div>'
+        + '</div>'
+        + (t.done ? '' : '<button type="button" data-task="' + t.k + '" style="flex:0 0 auto;border:1px solid #CBD5E1;background:#fff;color:#12203A;border-radius:9px;padding:6px 10px;font-size:.72rem;font-weight:800;cursor:pointer">Open</button>')
+        + '</div>';
+    }).join('');
+    card.innerHTML = head()
+      + '<h3 style="font-size:1.04rem;font-weight:900;color:#12203A;margin:8px 0 2px;text-align:left">Finish setting up your business</h3>'
+      + '<p style="font-size:.78rem;color:#64748B;margin:0 0 6px;text-align:left">' + (left ? left + ' step(s) still to do. This list comes back on every sign-in until they are done.' : 'All steps are done.') + '</p>'
+      + '<div>' + rows + '</div>'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:14px">'
+      + '<button type="button" class="ftg-close" style="border:1px solid #D7DBE2;background:#fff;border-radius:10px;padding:9px 16px;font-size:.8rem;font-weight:800;color:#374151;cursor:pointer">Continue later</button>'
+      + '<button type="button" class="ftg-tour" style="border:0;background:#12203A;border-radius:10px;padding:9px 16px;font-size:.8rem;font-weight:800;color:#fff;cursor:pointer">Full tour</button>'
+      + '</div>';
+    bind();
+  }
+  function renderTour() {
     var s = STEPS[idx];
     var dots = STEPS.map(function (x, i) {
-      return '<span style="width:7px;height:7px;border-radius:50%;display:inline-block;background:' + (i === idx ? '#12203a' : '#d7dbe2') + ';"></span>';
+      return '<span style="width:7px;height:7px;border-radius:50%;display:inline-block;background:' + (i === idx ? '#12203A' : '#D7DBE2') + ';"></span>';
     }).join('');
-    var backStyle = 'padding:9px 16px;border-radius:10px;border:1px solid #d7dbe2;background:#fff;font-size:.82rem;font-weight:700;color:#374151;' + (idx === 0 ? 'opacity:.4;' : 'cursor:pointer;');
-    card.innerHTML =
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-        '<span style="font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;color:#8a93a3;font-weight:800;">Step ' + (idx + 1) + ' of ' + STEPS.length + '</span>' +
-        '<button type="button" id="ftGuideSkip" style="background:none;border:0;color:#8a93a3;font-size:.76rem;cursor:pointer;">Skip tour</button>' +
-      '</div>' +
-      '<h3 style="font-size:1.05rem;font-weight:900;color:#12203a;margin-bottom:8px;">' + s[0] + '</h3>' +
-      '<p style="font-size:.86rem;line-height:1.6;color:#4b5563;">' + s[1] + '</p>' +
-      '<div style="display:flex;gap:5px;margin:16px 0 14px;">' + dots + '</div>' +
-      '<div style="display:flex;justify-content:space-between;gap:8px;">' +
-        '<button type="button" id="ftGuideBack" style="' + backStyle + '">Back</button>' +
-        '<button type="button" id="ftGuideNext" style="padding:9px 18px;border-radius:10px;border:0;background:#12203a;color:#fff;font-size:.82rem;font-weight:800;cursor:pointer;">' + (idx === STEPS.length - 1 ? 'Start using FinTrack' : 'Next') + '</button>' +
-      '</div>';
-    var skip = document.getElementById('ftGuideSkip');
-    if (skip) skip.onclick = function () { close(true); };
-    var back = document.getElementById('ftGuideBack');
-    if (back) back.onclick = function () { if (idx > 0) { idx--; render(); } };
-    var next = document.getElementById('ftGuideNext');
-    if (next) next.onclick = function () {
-      if (idx === STEPS.length - 1) { close(true); return; }
-      idx++; render();
-    };
+    var backStyle = 'padding:9px 16px;border-radius:10px;border:1px solid #D7DBE2;background:#fff;font-size:.82rem;font-weight:700;color:#374151;' + (idx === 0 ? 'opacity:.4;' : 'cursor:pointer;');
+    card.innerHTML = head()
+      + '<div style="font-size:.64rem;letter-spacing:.09em;text-transform:uppercase;color:#8A93A3;font-weight:800;text-align:left;margin:6px 0 6px">Step ' + (idx + 1) + ' of ' + STEPS.length + '</div>'
+      + '<h3 style="font-size:1.02rem;font-weight:900;color:#12203A;margin:0 0 8px;text-align:left">' + s[0] + '</h3>'
+      + '<p style="font-size:.84rem;line-height:1.6;color:#4B5563;text-align:left">' + s[1] + '</p>'
+      + '<div style="display:flex;gap:5px;margin:14px 0 12px;">' + dots + '</div>'
+      + '<div style="display:flex;justify-content:space-between;gap:8px;">'
+      + '<button type="button" class="ftg-back" style="' + backStyle + '">Back</button>'
+      + '<button type="button" class="ftg-next" style="padding:9px 18px;border-radius:10px;border:0;background:#12203A;color:#fff;font-size:.82rem;font-weight:800;cursor:pointer;">' + (idx === STEPS.length - 1 ? 'Finish tour' : 'Next') + '</button>'
+      + '</div>';
+    bind();
     goTab(s[2]);
   }
-  function showNow() { build(); idx = 0; render(); }
+  function bind() {
+    if (!card) return;
+    Array.prototype.forEach.call(card.querySelectorAll('.ftg-close'), function (b) { b.onclick = function () { close(true); }; });
+    Array.prototype.forEach.call(card.querySelectorAll('[data-task]'), function (b) {
+      b.onclick = function () {
+        var k = b.getAttribute('data-task');
+        var t = ftGuideTasks().filter(function (x) { return x.k === k; })[0];
+        close(true);
+        if (!t) return;
+        if (t.sec) openSection(t.sec); else goTab(t.tab);
+      };
+    });
+    var tour = card.querySelector('.ftg-tour');
+    if (tour) tour.onclick = function () { mode = 'tour'; idx = 0; renderTour(); };
+    var back = card.querySelector('.ftg-back');
+    if (back) back.onclick = function () { if (idx > 0) { idx--; renderTour(); } };
+    var next = card.querySelector('.ftg-next');
+    if (next) next.onclick = function () {
+      if (idx === STEPS.length - 1) { close(true); return; }
+      idx++; renderTour();
+    };
+  }
+  function openGuide(force) {
+    build();
+    if (!force && pendingTasks().length === 0) { close(true); return; }
+    mode = 'checklist';
+    renderChecklist();
+  }
   window.ftStartOnboarding = function (force) {
-    if (force === true) { showNow(); return; }
-    try { if (localStorage.getItem(seenKey)) return; } catch (e) {}
-    setTimeout(function () { if (isAdminUi()) { try { if (!localStorage.getItem(seenKey)) showNow(); } catch (e) {} } }, 1600);
+    if (force === true) { openGuide(true); return; }
+    setTimeout(function () {
+      if (!isAdminUi()) return;
+      if (pendingTasks().length) openGuide(true);
+    }, 1600);
   };
 
   var chipCheck = setInterval(function () {
@@ -12752,7 +12956,7 @@ if (typeof __ftSwitchTab === 'function') {
     var b = document.createElement('button');
     b.id = 'ftGuideChip';
     b.type = 'button';
-    b.title = 'Quick guide';
+    b.title = 'Setup guide';
     b.textContent = '?';
     b.style.cssText = 'position:fixed;right:16px;bottom:88px;z-index:1500;width:40px;height:40px;border-radius:50%;border:1px solid #d7dbe2;background:#fff;color:#12203a;font-weight:900;font-size:.95rem;box-shadow:0 8px 20px rgba(15,23,42,.14);cursor:pointer;';
     b.onclick = function () { window.ftStartOnboarding(true); };
