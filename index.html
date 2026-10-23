@@ -10,6 +10,10 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- html2pdf.js for Financial Reports & Invoice Exporting -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- html2canvas + jsPDF on their own, so a report never depends on the bundle exposing them -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>.ft-pdf-stage{position:fixed !important;left:-20000px !important;top:0 !important;margin:0 !important;}</style>
   <!-- QR Code generator for UPI payment QR codes -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <!-- Firebase Compatibility Libraries for Real-Time Cross-Device Live Sync -->
@@ -2035,7 +2039,7 @@ html, body { background-color: transparent !important; background-image: none !i
       <button type="button" class="ftg-box" onclick="showAdminSection('staffSalarySection')"><i class="fa-solid fa-money-check-dollar" style="color:var(--accent-purple)"></i><span>2 &middot; Salary &amp; Incentives</span></button>
       <button type="button" class="ftg-box" onclick="showAdminSection('attendanceMgmtSection')"><i class="fa-solid fa-user-clock" style="color:var(--atmos-red)"></i><span>3 &middot; Attendance Management</span></button>
       <button type="button" class="ftg-box" onclick="showAdminSection('staffReportSection')"><i class="fa-solid fa-file-lines" style="color:var(--accent-amber)"></i><span>4 &middot; Staff Reports</span></button>
-      <button type="button" class="ftg-box" onclick="showAdminSection('ftStaffAnnounceSection')"><i class="fa-solid fa-bullhorn" style="color:var(--accent-rose)"></i><span>Staff Announcements</span></button>
+      <button type="button" class="ftg-box" onclick="showAdminSection('ftStaffAnnounceSection')"><i class="fa-solid fa-envelope-open-text" style="color:var(--atmos-navy)"></i><span>Staff Announcements</span></button>
       <button type="button" class="ftg-box" onclick="showAdminSection('analyticsSection')"><i class="fa-solid fa-chart-pie" style="color:var(--primary)"></i><span>Analytics &amp; Catalog</span></button>
     </div>
 
@@ -4151,7 +4155,7 @@ const FIREBASE_CONFIG = {
       if ((now - ftFactsAt) < 15000) return;
       ftFactsAt = now;
       var staff = 0;
-      (appData.users || []).forEach(function (u) { if (u && u.role === 'Staff') staff++; });
+      (appData.users || []).forEach(function (u) { if (u && u.role && String(u.role).toLowerCase() !== 'admin') staff++; });
       firebase.database().ref('atmos_platform_admin/businesses/' + authBusinessId + '/staffCount').set(staff).catch(function () {});
     } catch (e) {}
   }
@@ -5726,6 +5730,7 @@ const FIREBASE_CONFIG = {
     var container = document.createElement('div');
     container.style.width = '730px'; container.style.background = '#ffffff';
     container.innerHTML = ftBrandHtml(html, 'DAILY FINANCIAL STATEMENT');
+    container.className = container.className ? container.className + ' ft-pdf-stage' : 'ft-pdf-stage';
     document.body.appendChild(container);
     var opt = { margin: 8, filename: ftPdfFileName('Daily Report', date), image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
     html2pdf().set(opt).from(container).save().then(function(){ document.body.removeChild(container); }).catch(function(){ if (container.parentNode) document.body.removeChild(container); });
@@ -8320,8 +8325,9 @@ const FIREBASE_CONFIG = {
     var container = document.createElement('div');
     container.style.width = '800px'; container.style.background = '#ffffff';
     container.innerHTML = htmlContent;
+    container.className = container.className ? container.className + ' ft-pdf-stage' : 'ft-pdf-stage';
     document.body.appendChild(container);
-    var opt = { margin: 0.5, filename: 'ATMOS_Staff_Report_' + month + '.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+    var opt = { margin: 0.5, filename: ftPdfFileName('Staff Report', month), image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
     html2pdf().set(opt).from(container).save().then(function() { document.body.removeChild(container); });
   }
 
@@ -8389,8 +8395,9 @@ const FIREBASE_CONFIG = {
     var container = document.createElement('div');
     container.style.width = '730px'; container.style.background = '#ffffff';
     container.innerHTML = htmlContent;
+    container.className = container.className ? container.className + ' ft-pdf-stage' : 'ft-pdf-stage';
     document.body.appendChild(container);
-    var opt = { margin: 0.5, filename: 'ATMOS_Staff_Report_' + staffName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + month + '.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+    var opt = { margin: 0.5, filename: ftPdfFileName('Staff Report', staffName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + month), image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
     html2pdf().set(opt).from(container).save().then(function() { document.body.removeChild(container); }).catch(function() { if (container.parentNode) document.body.removeChild(container); });
   }
 
@@ -8486,6 +8493,7 @@ const FIREBASE_CONFIG = {
     container.style.width = '730px';
     container.style.background = '#ffffff';
     container.innerHTML = html;
+    container.className = container.className ? container.className + ' ft-pdf-stage' : 'ft-pdf-stage';
     document.body.appendChild(container);
     var opt = {
       margin: 8,
@@ -8729,6 +8737,22 @@ var platformData = {
   branding: { logoDataUrl: '', name: 'FinTrack Business', motto: 'Business Management Platform', description: '', trialDays: 7 }
 };
 var platformAdminUser = null;
+
+/* True while this browser holds a verified platform-administrator identity.
+   Re-checks the identity after a background session reset, so a genuine
+   Platform Administrator is never told they lack permission. */
+function ftIsPlatformAdmin() {
+  if (platformAdminUser) return true;
+  try {
+    var uid = null;
+    try { var a = firebaseAuth(); uid = a && a.currentUser ? a.currentUser.uid : null; } catch (e) {}
+    if (!uid) return false;
+    var cred = (platformData && platformData.credentials) || null;
+    var ownerUid = (cred && cred.uid) ? cred.uid : ((typeof ftBootstrap !== 'undefined' && ftBootstrap && ftBootstrap.uid) ? ftBootstrap.uid : '');
+    if (ownerUid && ownerUid === uid) { platformAdminUser = cred || { uid: uid }; return true; }
+  } catch (e) {}
+  return false;
+}
 var platformDbRef = null;
 var platformSyncActive = false;
 var platformFirstLoadDone = false;
@@ -9262,6 +9286,7 @@ function platformAdminEmail() {
 /* SAVE PLATFORM DATA TO FIREBASE */
 function savePlatformData() {
   /* The shared node is written only by the Main Platform Administrator. */
+  if (!platformAdminUser) { try { ftIsPlatformAdmin(); } catch (e) {} }
   if (platformAdminUser && platformDbRef && platformSyncActive) {
     mirrorPublicPlatformSlice();
     return platformDbRef.set(platformData).catch(function(err) { console.error('Platform sync error:', err); });
@@ -9654,10 +9679,37 @@ function initPACharts(bizArr, statusCounts) {
 }
 
 /* ===== BUSINESS DIRECTORY ===== */
+/* The staff number is published by each business, so a business that added
+   staff before publishing, or whose write failed, would show 0. The platform
+   reads each business's own user list and corrects the number. */
+var ftStaffSyncAt = 0, ftStaffSyncing = false;
+function ftSyncStaffCounts() {
+  var r = db(); if (!r || !isPA()) return;
+  if (ftStaffSyncing || (Date.now() - ftStaffSyncAt) < 60000) return;
+  ftStaffSyncing = true; ftStaffSyncAt = Date.now();
+  var pd = PD(), ids = Object.keys(pd.businesses || {}).slice(0, 20), changed = false;
+  var jobs = ids.map(function (id) {
+    return r.ref('businesses/' + id + '/data/users').get().then(function (snap) {
+      var v = snap && snap.val(); if (!v) return;
+      var list = Array.isArray(v) ? v : Object.keys(v).map(function (k) { return v[k]; });
+      var n = list.filter(function (u) { return u && u.role && String(u.role).toLowerCase() !== 'admin'; }).length;
+      var b = pd.businesses[id]; if (!b) return;
+      if (Number(b.staffCount || 0) !== n) { b.staffCount = n; changed = true; }
+    }).catch(function () {});
+  });
+  Promise.all(jobs).then(function () {
+    ftStaffSyncing = false;
+    if (!changed) return;
+    try { savePlatformData(); } catch (e) {}
+    try { renderPABusinesses(); } catch (e) {}
+  });
+}
+
 function renderPABusinesses() {
   var search = (document.getElementById('paBizSearch')?.value || '').toLowerCase();
   var businesses = platformData.businesses || {};
   try { ensureDisplayIds(); } catch (e) {}
+  try { ftSyncStaffCounts(); } catch (e) {}
   var tbody = document.getElementById('paBusinessTableBody');
   if (!tbody) return;
   tbody.innerHTML = '';
@@ -9677,6 +9729,8 @@ function renderPABusinesses() {
     var lastAct = presence.lastActive || b.lastActivity || 0;
     var isActive = lastAct > sevenDaysAgo;
     var subStatus = getBizSubscriptionStatus(b);
+    /* The expiry always follows the trial length saved in Platform Settings today. */
+    if (b.subscriptionStatus === 'trial') { var __te = trialEndFor(b); if (__te && Number(b.trialEndDate || 0) !== __te) b.trialEndDate = __te; }
     var usage = calculateBizDataUsage(b);
     var tr = document.createElement('tr');
     tr.className = 'pa-business-row';
@@ -9929,7 +9983,7 @@ function upsertCurrentBusinessRecord() {
   rec.adminName = admin ? admin.name : ((existing && existing.adminName) || 'Admin');
   rec.adminContact = admin ? (admin.mobile || '') : ((existing && existing.adminContact) || '');
   rec.adminEmail = admin ? (admin.email || '') : ((existing && existing.adminEmail) || '');
-  rec.staffCount = appData.users.filter(function(u) { return u.role === 'Staff'; }).length;
+  rec.staffCount = appData.users.filter(function(u) { return u && u.role && String(u.role).toLowerCase() !== 'admin'; }).length;
   rec.lastActivity = Date.now();
   rec.isCurrentBusiness = true;
   if (!bizId) {
@@ -10467,8 +10521,9 @@ function exportPAReport() {
   var container = document.createElement('div');
   container.style.width = '800px'; container.style.background = '#fff';
   container.innerHTML = rows;
+  container.className = 'ft-pdf-stage';
   document.body.appendChild(container);
-  html2pdf().set({margin:8,filename:'ATMOS_Platform_'+period+'_Report.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}}).from(container).save().then(function(){ document.body.removeChild(container); }).catch(function(){ if(container.parentNode) document.body.removeChild(container); });
+  html2pdf().set({margin:8,filename:ftPdfFileName('Platform Report', period),image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}}).from(container).save().then(function(){ document.body.removeChild(container); }).catch(function(){ if(container.parentNode) document.body.removeChild(container); });
 }
 
 /* ===== PLATFORM BRANDING SETTINGS ===== */
@@ -10496,7 +10551,7 @@ function renderPlatformBrandingSettings() {
 function handlePlatformLogoUpload(e) {
   var file = e.target.files[0];
   if (!file) return;
-  if (!platformAdminUser) { alert('Only the Main Platform Administrator can change platform branding.'); return; }
+  if (!ftIsPlatformAdmin()) { alert('Only the Main Platform Administrator can change platform branding.'); return; }
   var reader = new FileReader();
   reader.onload = function(evt) {
     if (!platformData.branding) platformData.branding = {};
@@ -10510,7 +10565,7 @@ function handlePlatformLogoUpload(e) {
 }
 
 function removePlatformLogo() {
-  if (!platformAdminUser) { alert('Only the Main Platform Administrator can change platform branding.'); return; }
+  if (!ftIsPlatformAdmin()) { alert('Only the Main Platform Administrator can change platform branding.'); return; }
   if (!platformData.branding || !platformData.branding.logoDataUrl) return alert('No platform logo is currently set.');
   if (!confirm('Remove the current platform logo? The default mark will be used.')) return;
   platformData.branding.logoDataUrl = '';
@@ -10520,8 +10575,22 @@ function removePlatformLogo() {
 }
 
 function savePlatformBranding() {
-    try { if (!platformAdminUser && platformData.credentials) { var _paId = firebaseAuth().currentUser; if (_paId && platformData.credentials.uid === _paId.uid) platformAdminUser = platformData.credentials; } } catch (e) {}
-  if (!platformAdminUser) { alert('Only the Main Platform Administrator can change platform branding.'); return; }
+  if (!ftIsPlatformAdmin()) {
+    /* Confirm the identity against the platform registry before refusing, so a
+       long-open Platform Settings panel still saves for the owner. */
+    var _uid = null;
+    try { var _a = firebaseAuth(); _uid = _a && _a.currentUser ? _a.currentUser.uid : null; } catch (e) {}
+    if (_uid && typeof firebase !== 'undefined') {
+      firebase.database().ref('atmos_platform_admin/credentials').once('value').then(function (snap) {
+        var cred = snap.val() || {};
+        if (cred.uid === _uid) { platformAdminUser = cred; platformData.credentials = cred; savePlatformBranding(); return; }
+        alert('Only the Main Platform Administrator can change platform branding.');
+      }).catch(function () { alert('The platform database could not be reached. Please try saving again in a few seconds.'); });
+      return;
+    }
+    alert('Only the Main Platform Administrator can change platform branding.');
+    return;
+  }
   var name = (document.getElementById('paBrandName').value || '').trim();
   var motto = (document.getElementById('paBrandMotto').value || '').trim();
   var desc = (document.getElementById('paBrandDescription').value || '').trim();
@@ -11982,9 +12051,9 @@ window.addEventListener('DOMContentLoaded', function() {
       var sec = document.createElement('div');
       sec.id = 'ftStaffAnnounceSection';
       sec.className = 'app-card';
-      sec.style.cssText = 'display:none;border-left:5px solid var(--accent-amber)';
+      sec.style.cssText = 'display:none;border-left:5px solid var(--atmos-navy)';
       var staff = (appData && Array.isArray(appData.users)) ? appData.users.filter(function (u) { return u.role !== 'Admin'; }) : [];
-      sec.innerHTML = '<h3 style="font-size:1rem;font-weight:900;color:var(--atmos-navy);margin-bottom:12px"><i class="fa-solid fa-bullhorn" style="color:var(--accent-amber)"></i> Staff Announcements</h3>' +
+      sec.innerHTML = '<h3 style="font-size:1rem;font-weight:900;color:var(--atmos-navy);margin-bottom:12px"><i class="fa-solid fa-envelope-open-text" style="color:var(--atmos-navy)"></i> Staff Announcements</h3>' +
         '<div class="form-group"><label>Target Staff</label><select id="ftSaTarget" onchange="document.getElementById(\'ftSaStaffWrap\').style.display=this.value===\'selected\'?\'block\':\'none\'"><option value="all">All Staff</option><option value="selected">Selected Staff</option></select><div id="ftSaStaffWrap" style="display:none;margin-top:8px;max-height:160px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px">' + (staff.map(function (u) { var id = (u.id !== undefined && u.id !== null && u.id !== '') ? String(u.id) : String(u.email || u.name); return '<label style="display:flex;gap:8px;align-items:center;padding:4px 2px;font-size:.8rem"><input type="checkbox" class="ftSaStaff" value="' + id + '"> ' + escapeHtml(u.name || id) + '</label>'; }).join('') || '<div style="color:var(--text-muted);font-size:.8rem">No staff added yet.</div>') + '</div></div>' +
         '<div class="form-group"><label>Subject</label><input type="text" id="ftSaSubject"></div>' +
         '<div class="form-group"><label>Message</label><textarea id="ftSaMessage" rows="4"></textarea></div>' +
@@ -11992,15 +12061,6 @@ window.addEventListener('DOMContentLoaded', function() {
         '<button class="btn-primary" onclick="ftSendStaffAnnouncement()" style="width:auto;background:var(--accent-amber)"><i class="fa-solid fa-paper-plane"></i> Send to Staff</button>' +
         '<div style="margin-top:14px"><div style="font-size:.7rem;font-weight:900;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Recently Sent (last 5)</div><div id="ftSaHistory"></div></div>';
       adminTab.appendChild(sec);
-      var btnHost = document.querySelector('[onclick="showAdminSection(\'analyticsSection\')"]');
-      if (btnHost && btnHost.parentNode) {
-        var b2 = document.createElement('button');
-        b2.className = 'btn-primary';
-        b2.style.cssText = 'width:auto;padding:7px 13px;font-size:.8rem;background:var(--accent-amber)';
-        b2.setAttribute('onclick', "showAdminSection('ftStaffAnnounceSection')");
-        b2.innerHTML = '5 &middot; Staff Announcements';
-        btnHost.parentNode.insertBefore(b2, btnHost);
-      }
     }
     var bizBtn = document.querySelector('[onclick="switchPATab(\'paBusinessesTab\')"]');
     if (bizBtn && bizBtn.parentNode && !document.getElementById('ftLiveStatusNavBtn')) {
@@ -12947,19 +13007,48 @@ window.ftExpiryCell = window.ftExpiryCell || function (b, state) {
   return window.ftFmtDate(b.subscriptionEnd || b.subscriptionExpiry || b.trialEndDate);
 };
 
-window.ftRenderPdf = function (node, filename, opt) {
-  return new Promise(function (resolve, reject) {
+/* The PDF engine is fetched on demand when the copy in the page is not ready,
+   so a report never fails just because a CDN script was slow. */
+window.ftGetPdfEngine = function () {
+  function get() {
     var h2c = window.html2canvas;
     var J = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+    return (h2c && J) ? { h2c: h2c, J: J } : null;
+  }
+  var ready = get();
+  if (ready) return Promise.resolve(ready);
+  function load(src) {
+    return new Promise(function (res) {
+      var s = document.createElement('script');
+      s.src = src; s.async = true;
+      s.onload = function () { res(true); };
+      s.onerror = function () { res(false); };
+      document.head.appendChild(s);
+    });
+  }
+  var jobs = [];
+  if (!window.html2canvas) jobs.push(load('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'));
+  if (!((window.jspdf && window.jspdf.jsPDF) || window.jsPDF)) jobs.push(load('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'));
+  return Promise.all(jobs).then(function () { return get(); });
+};
+
+window.ftRenderPdf = function (node, filename, opt) {
+  return new Promise(function (resolve, reject) {
     if (!node) { reject(new Error('No report content')); return; }
-    if (!h2c || !J) {
-      alert('The PDF engine could not be loaded. Check the internet connection and try again.');
-      reject(new Error('engine missing')); return;
-    }
+    window.ftGetPdfEngine().then(function (engine) {
+      if (!engine) {
+        alert('The PDF engine could not be loaded. Check the internet connection and try again.');
+        reject(new Error('engine missing')); return;
+      }
+      renderWith(engine);
+    });
+    function renderWith(engine) {
+    var h2c = engine.h2c;
+    var J = engine.J;
     try { if (typeof window.ftApplyPdfBrand === 'function') window.ftApplyPdfBrand(node, ''); } catch (e) {}
     var width = parseInt(node.style.width, 10) || 760;
     var holder = document.createElement('div');
-    holder.setAttribute('style', 'position:fixed;left:0;top:0;z-index:2147483000;background:#ffffff;width:' + width + 'px;padding:0;margin:0;');
+    holder.setAttribute('style', 'position:fixed;left:-20000px;top:0;z-index:2147483000;background:#ffffff;width:' + width + 'px;padding:0;margin:0;');
     var clone = node.cloneNode(true);
     clone.style.width = width + 'px';
     clone.style.margin = '0';
@@ -12987,6 +13076,7 @@ window.ftRenderPdf = function (node, filename, opt) {
         alert('The PDF could not be created. Please try again.');
         reject(err);
       });
+    }
   });
 };
 
@@ -13191,9 +13281,9 @@ if (typeof __ftSwitchTab === 'function') {
     var b = document.createElement('button');
     b.id = 'ftGuideChip';
     b.type = 'button';
-    b.title = 'Setup guide';
-    b.textContent = '?';
-    b.style.cssText = 'position:fixed;right:16px;bottom:88px;z-index:1500;width:40px;height:40px;border-radius:50%;border:1px solid #d7dbe2;background:#fff;color:#12203a;font-weight:900;font-size:.95rem;box-shadow:0 8px 20px rgba(15,23,42,.14);cursor:pointer;';
+    b.title = 'Setup Guide';
+    b.innerHTML = '<span style="font-size:1rem;font-weight:900;line-height:1">?</span><span style="font-size:.62rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase">Setup Guide</span>';
+    b.style.cssText = 'position:fixed;right:16px;bottom:88px;z-index:1500;display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;border:1px solid #d7dbe2;background:#fff;color:#12203a;box-shadow:0 8px 20px rgba(15,23,42,.14);cursor:pointer;';
     b.onclick = function () { window.ftStartOnboarding(true); };
     document.body.appendChild(b);
   }, 2500);
