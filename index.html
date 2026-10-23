@@ -296,7 +296,7 @@
     }
 
     /* Modal */
-     .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(246,243,237,0.55); backdrop-filter: none; display: flex; justify-content: center; align-items: center; z-index: 1000; overscroll-behavior: contain; }
+     .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.97); backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px); display: flex; justify-content: center; align-items: center; z-index: 1000; overscroll-behavior: contain; }
     .modal::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 200px; height: 200px; background: url('https://media.base44.com/images/public/6ad20c8082d97b3bd37417ae/266afcba3_IMG_2552.jpg') center/contain no-repeat; opacity: .5; pointer-events: none; }
     .modal::after { content: var(--ft-veil-name, 'FinTrack Business'); position: absolute; top: calc(50% + 118px); left: 50%; transform: translateX(-50%); font-size: 1.1rem; font-weight: 900; letter-spacing: .4px; color: #0B1E2D; opacity: .5; pointer-events: none; white-space: nowrap; }
     .modal-card { position: relative; z-index: 1; }
@@ -305,6 +305,9 @@
     .modal-card { background: white; padding: 28px; border-radius: var(--radius-lg); width: 90%; max-width: 480px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
     /* Auth screens must fully hide the private dashboard behind them. */
     #bizRegisterModal, #paLoginModal, #paSetupModal, #paForgotModal, #forgotPasswordModal, #adminResetLinkModal { background: #F6F3ED !important; backdrop-filter: none; }
+    #loginModal { background: rgba(246,243,237,0.55) !important; backdrop-filter: none; -webkit-backdrop-filter: none; }
+    .ftg-overlay { background: rgba(255,255,255,.97) !important; backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px); }
+    .ftg-overlay::before, .ftg-overlay::after { display: none !important; }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -8389,7 +8392,7 @@ const FIREBASE_CONFIG = {
       '<div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #0B1E2D; padding-bottom:10px; margin-bottom:14px;"><div><h1 style="font-size:18px; color:#0B1E2D; margin:0;">' + shopName + '</h1><p style="font-size:10px; color:#334155; margin:3px 0 0 0;">' + bizAddress + (bizPhone ? ' &nbsp;|&nbsp; Contact: ' + bizPhone : '') + '</p><p style="font-size:11px; color:#EE2B2E; font-weight:bold; margin:3px 0 0 0;">INDIVIDUAL STAFF REPORT</p></div><div style="text-align:right; font-size:10px; color:#64748b; white-space:nowrap; min-width:150px;"><p style="font-size:12px; font-weight:bold; color:#0B1E2D; margin:0;">Month: ' + month + '</p><p style="margin:3px 0 0 0;">Generated: ' + getISTDateTimeStr() + '</p></div></div>' +
       '<p style="font-size:10px; font-weight:bold; color:#0B1E2D; margin:0 0 6px 0;">STAFF DETAILS</p>' +
       '<div>' + detailsHtml + '</div>' +
-      '<div style="margin-top:14px; padding:10px 12px; border:2px solid #0B1E2D; border-radius:8px; background:#fff;"><span style="font-size:11px; color:#64748b; text-transform:uppercase;">Total Payable Salary</span><div style="font-size:18px; font-weight:900; color:#0B1E2D;">₹' + totalPayable.toFixed(2) + '</div></div>' +
+      '<div style="margin-top:14px; padding:10px 12px; border:2px solid #0B1E2D; border-radius:8px; background:#fff; text-align:right;"><span style="font-size:11px; color:#64748b; text-transform:uppercase;">Total Payable Salary</span><div style="font-size:18px; font-weight:900; color:#0B1E2D;">₹' + totalPayable.toFixed(2) + '</div></div>' +
       '<div style="margin-top:30px; display:flex; justify-content:flex-end;"><div style="text-align:right; border-top:2px dashed #64748b; width:220px; padding-top:6px;"><p style="font-size:12px; color:#64748b; margin:0;">Verified by Admin</p><p style="font-size:13px; font-weight:bold; color:#0B1E2D; margin:4px 0 0 0;">' + adminName + '</p></div></div>' +
       '</div>';
     var container = document.createElement('div');
@@ -8485,7 +8488,7 @@ const FIREBASE_CONFIG = {
       '<table style="width:100%; border-collapse:collapse; margin-bottom:8px;"><tbody>' + details + '</tbody></table>' +
       '<p style="font-size:10px; font-weight:bold; color:#0B1E2D; margin:12px 0 5px 0; text-transform:uppercase;">Attendance Summary</p>' +
       '<table style="width:100%; border-collapse:collapse;"><tbody>' + attendance + '</tbody></table>' +
-      '<div style="margin-top:14px; padding:10px 12px; border:2px solid #0B1E2D; border-radius:8px; background:#f8fafc;"><span style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase;">Total Payable Salary</span><div style="font-size:20px; font-weight:900; color:#0B1E2D;">\u20b9' + totalPayable.toFixed(2) + '</div></div>' +
+      '<div style="margin-top:14px; padding:10px 12px; border:2px solid #0B1E2D; border-radius:8px; background:#f8fafc; text-align:right;"><span style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase;">Total Payable Salary</span><div style="font-size:20px; font-weight:900; color:#0B1E2D;">\u20b9' + totalPayable.toFixed(2) + '</div></div>' +
       '<div style="margin-top:34px; display:flex; justify-content:flex-end;"><div style="text-align:center; border-top:2px dashed #64748b; width:220px; padding-top:6px;"><p style="font-size:10px; color:#64748b; margin:0; text-transform:uppercase;">Verified by Admin</p><p style="font-size:13px; font-weight:bold; color:#0B1E2D; margin:4px 0 0 0;">' + adminName + '</p></div></div>' +
       '</div>';
     var safeName = String(staffName).replace(/[^A-Za-z0-9]+/g, '_');
@@ -12483,6 +12486,14 @@ function checkSubscriptionLock() {
 /* Full-screen access lock. Appears the moment a trial or the 3 day grace
    period is over and stays until the platform administrator verifies payment. */
 /* ---- subscription gate: permanent lock + one reminder per day ---- */
+var ftSubNoticeKey = '';
+function ftSubUserTag() {
+  try {
+    var u = currentUser || {};
+    var raw = String(u.authUid || u.email || u.mobile || ((u.name || '') + (u.role || '')) || 'user');
+    return raw.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40) || 'user';
+  } catch (e) { return 'user'; }
+}
 function ftSubTodayIST() {
   try { return new Date(Date.now() + 19800000).toISOString().slice(0, 10); } catch (e) { return 'day'; }
 }
@@ -12546,7 +12557,7 @@ function ftRenderAccessLock() {
   if (m) {
     if (m.mode === 'blocked') show = true;
     else if (m.mode !== 'ok') {
-      key = 'FT_SUB_NOTICE_' + ftSubBizKey() + '_' + ftSubTodayIST() + '_' + m.mode;
+      key = 'FT_SUB_NOTICE_' + ftSubBizKey() + '_' + ftSubTodayIST() + '_' + m.mode + '_' + ftSubUserTag();
       try { seen = localStorage.getItem(key) === '1'; } catch (e) {}
       show = !seen;
     }
@@ -12609,19 +12620,20 @@ function ftRenderAccessLock() {
     el.setAttribute('aria-modal', 'true');
     document.body.appendChild(el);
   }
-  el.style.cssText = 'position:fixed;left:0;right:0;bottom:0;top:' + ftSubNavBottom() + 'px;z-index:2400;background:' + (m && m.mode === 'blocked' ? 'rgba(255,255,255,.97)' : 'rgba(252,251,248,.92)') + ';backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto';
+  el.style.cssText = 'position:fixed;left:0;right:0;bottom:0;top:' + ftSubNavBottom() + 'px;z-index:2400;background:' + (m && m.mode === 'blocked' ? 'rgba(255,255,255,.97)' : 'rgba(255,255,255,.97)') + ';backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto';
   el.innerHTML = html;
   try {
     if (m && m.mode === 'blocked') document.body.classList.add('ft-sub-locked');
     else document.body.classList.remove('ft-sub-locked');
   } catch (e) {}
   el.setAttribute('data-sig', sig);
+  ftSubNoticeKey = key;
   ftSubScrollLock(true);
-  if (key) { try { localStorage.setItem(key, '1'); } catch (e) {} }
 }
 function ftCloseSubNotice() {
   var el = document.getElementById('ftAccessLock');
   if (el) el.remove();
+  if (ftSubNoticeKey) { try { localStorage.setItem(ftSubNoticeKey, '1'); } catch (e) {} ftSubNoticeKey = ''; }
   var m = null; try { m = ftSubModel(); } catch (e) {}
   if (!(m && m.mode === 'blocked')) ftSubScrollLock(false);
 }
@@ -13184,7 +13196,8 @@ if (typeof __ftSwitchTab === 'function') {
   function build() {
     if (overlay) return;
     overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(247,246,243,.72);z-index:2147482000;display:flex;align-items:center;justify-content:center;padding:16px;';
+    overlay.className = 'modal ftg-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:2147482000;display:flex;align-items:center;justify-content:center;padding:16px;';
     card = document.createElement('div');
     card.style.cssText = 'width:100%;max-width:450px;max-height:88vh;overflow-y:auto;background:#fff;border-radius:18px;box-shadow:0 24px 60px rgba(15,23,42,.25);padding:22px;';
     overlay.appendChild(card);
