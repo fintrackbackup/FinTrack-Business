@@ -152,6 +152,7 @@
       background: #0B1E2D; z-index: 1090; display: none;
     }
     .drawer-overlay.active { display: block; }
+    body.ft-sub-locked .side-drawer, body.ft-sub-locked .drawer-overlay { display: none !important; }
     .drawer-header {
       display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -758,12 +759,12 @@ html, body { background-color: transparent !important; background-image: none !i
 4. The Main Platform Administrator verifies and restores full access.
 </div>
 <div id="subLockPendingNote" style="display:none;background:var(--accent-amber-bg);border:1px solid var(--accent-amber);border-radius:var(--radius-md);padding:14px;margin-bottom:12px;text-align:center"><i class="fa-solid fa-hourglass-half" style="color:var(--accent-amber);font-size:1.4rem"></i><div style="font-weight:800;margin-top:6px;color:#92400e">Payment submitted — pending verification</div><div style="font-size:.75rem;color:#92400e;margin-top:4px">Full access will be restored automatically once the Main Platform Administrator verifies your payment. Please keep this screen open.</div></div><button class="btn-primary" id="subLockPayBtn" onclick="openPaSubmitPaymentFromLock()" style="width:100%"><i class="fa-solid fa-qrcode"></i> Complete Payment</button>
-<a href="https://wa.me/918089278115?text=Hi%2C%20I%20need%20help%20with%20my%20ATMOS%20subscription." target="_blank" style="display:block;margin-top:12px;font-size:.8rem;color:var(--text-muted);text-decoration:none;font-weight:700"><i class="fa-brands fa-whatsapp"></i> Contact support on WhatsApp</a>
+<a href="https://wa.me/918089278115?text=Hi%2C%20I%20need%20help%20with%20my%20FinTrack%20Business%20subscription." target="_blank" style="display:block;margin-top:12px;font-size:.8rem;color:var(--text-muted);text-decoration:none;font-weight:700"><i class="fa-brands fa-whatsapp"></i> Contact support on WhatsApp</a>
 </div>
 </div>
 
 <!-- FLOATING WHATSAPP SUPPORT -->
-<a href="https://wa.me/918089278115?text=Hi%2C%20ATMOS%20Digital%20Solutions.%20I%20need%20operational%20support." target="_blank" class="floating-support no-print">
+<a href="https://wa.me/918089278115?text=Hi%2C%20FinTrack%20Business%20Application.%20I%20need%20operational%20support." target="_blank" class="floating-support no-print">
   <i class="fa-brands fa-whatsapp" style="font-size: 1.2rem;"></i> WhatsApp Support
 </a>
 
@@ -773,7 +774,7 @@ html, body { background-color: transparent !important; background-image: none !i
 <!-- SIDE DRAWER NAVIGATION -->
 <div id="sideDrawer" class="side-drawer">
   <div class="drawer-header">
-    <div id="drawerBrandLogoBox" class="brand-logo-box">Business</div>
+    <div id="drawerBrandLogoBox" class="brand-logo-box has-logo"><img src="https://media.base44.com/images/public/6acf90c0138cd5df73588169/2881a5748_IMG_2552.jpg" alt="FinTrack Business" style="max-height:38px;max-width:120px;object-fit:contain"></div>
     <div style="flex:1;min-width:0;margin-left:10px">
       <div id="drawerBizName" style="font-size:.85rem;font-weight:900;color:#fff;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:none"></div>
       <div id="drawerBizMotto" style="font-size:.68rem;color:#EE2B2E;font-weight:700;display:none"></div>
@@ -907,7 +908,7 @@ html, body { background-color: transparent !important; background-image: none !i
 <div id="paSetupModal" class="modal" style="display:none">
 <div class="modal-card" style="max-width:520px">
 <div style="text-align:center;margin-bottom:18px">
-<div class="brand-logo-box" id="paSetupLogoBox" style="font-size:1.3rem;padding:8px 16px;margin-bottom:8px">FinTrack Business</div>
+<div class="brand-logo-box has-logo" id="paSetupLogoBox" style="padding:8px 16px;margin-bottom:8px"><img src="https://media.base44.com/images/public/6acf90c0138cd5df73588169/2881a5748_IMG_2552.jpg" alt="FinTrack Business" style="max-height:44px;max-width:170px;object-fit:contain"></div>
 <h2 style="font-size:1.05rem;font-weight:900;color:var(--atmos-navy);text-transform:uppercase">Main Platform Administrator Setup</h2>
 <p style="font-size:.75rem;color:var(--text-muted);margin-top:4px">One-time secure setup. After creation, this option is permanently disabled.</p>
 </div>
@@ -925,7 +926,7 @@ html, body { background-color: transparent !important; background-image: none !i
 <div id="paLoginModal" class="modal" style="display:none">
 <div class="modal-card" style="max-width:420px">
 <div style="text-align:center;margin-bottom:18px">
-<div class="brand-logo-box" id="paLoginLogoBox" style="font-size:1.3rem;padding:8px 16px;margin-bottom:8px">FinTrack Business</div>
+<div class="brand-logo-box has-logo" id="paLoginLogoBox" style="padding:8px 16px;margin-bottom:8px"><img src="https://media.base44.com/images/public/6acf90c0138cd5df73588169/2881a5748_IMG_2552.jpg" alt="FinTrack Business" style="max-height:44px;max-width:170px;object-fit:contain"></div>
 <h2 style="font-size:1.05rem;font-weight:900;color:var(--atmos-navy);text-transform:uppercase">Platform Admin Login</h2>
 </div>
 <div id="paLoginCredView">
@@ -1029,7 +1030,7 @@ html, body { background-color: transparent !important; background-image: none !i
     <button class="menu-toggle-btn" onclick="openDrawer()" title="Open Menu">
       <i class="fa-solid fa-bars"></i>
     </button>
-    <div id="navBrandLogoBox" class="brand-logo-box">FinTrack Business</div>
+    <div id="navBrandLogoBox" class="brand-logo-box has-logo"><img src="https://media.base44.com/images/public/6acf90c0138cd5df73588169/2881a5748_IMG_2552.jpg" alt="FinTrack Business" style="max-height:36px;max-width:140px;object-fit:contain"></div>
     <div>
       <div class="brand-title" id="navBrandTitle">FinTrack Business</div>
       <div class="brand-subtitle" id="navBrandSubtitle">Business Management Platform</div>
@@ -2026,6 +2027,7 @@ html, body { background-color: transparent !important; background-image: none !i
     <div class="ftg-panel" id="ftMgmtPanel-money" role="tabpanel" style="display:none">
       <button type="button" class="ftg-box" onclick="showAdminSection('monthClosingSection')"><i class="fa-solid fa-calendar-check" style="color:var(--primary)"></i><span>Month Closing</span></button>
       <button type="button" class="ftg-box" onclick="showAdminSection('openingBalSection')"><i class="fa-solid fa-scale-balanced" style="color:var(--accent-green)"></i><span>Opening Balances</span></button>
+      <button type="button" class="ftg-box" onclick="showAdminSection('masterCatalogSection')"><i class="fa-solid fa-layer-group" style="color:var(--accent-purple)"></i><span>Master Catalog</span></button>
     </div>
 
     <div class="ftg-panel" id="ftMgmtPanel-staff" role="tabpanel" style="display:none">
@@ -2298,6 +2300,55 @@ html, body { background-color: transparent !important; background-image: none !i
 
     </div>
 
+    <!-- MASTER SERVICE CATALOG (Money Management) -->
+    <div id="masterCatalogSection" style="margin-bottom: 24px; display: none;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+        
+        <!-- ADD / EDIT SERVICE -->
+        <div class="app-card">
+          <h3 style="font-size: 1.05rem; font-weight: 800; margin-bottom: 16px;">Add / Edit Service Catalog</h3>
+          <form onsubmit="saveMasterService(event)">
+            <input type="hidden" id="editServiceId" value="">
+            <div class="form-group">
+              <label>Service Category</label>
+              <select id="newServiceCategory" onchange="updateAdminDeptFeeVisibility()">
+                <option value="Standard Services">Standard Services</option>
+                <option value="Custom Utility & Bill Services">Custom Utility & Bill Services (KSEB, KWA, etc.)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Service Name</label>
+              <input type="text" id="newServiceName" placeholder="Enter the service name" required>
+            </div>
+            <div class="form-group">
+              <label>Standard Service Charge (₹)</label>
+              <input type="number" id="newServicePrice" min="0" placeholder="Enter the amount" required>
+            </div>
+            <div class="form-group" id="adminDeptFeeGroup" style="display: none;">
+              <label>Default Department Fee (₹)</label>
+              <input type="number" id="newServiceDeptFee" min="0" value="0" placeholder="Enter the amount">
+            </div>
+            <button type="submit" class="btn-admin" id="saveServiceBtn">Add to Master Catalog</button>
+          </form>
+        </div>
+
+        <!-- MASTER CATALOG TABLE -->
+        <div class="app-card">
+          <h3 style="font-size: 1.05rem; font-weight: 800; margin-bottom: 16px;">Master Service Catalog</h3>
+          <div class="catalog-scroll" id="masterCatalogScroll" tabindex="0" role="region" aria-label="Master service catalog. Five entries are shown; scroll inside the list for more.">
+            <table>
+              <thead>
+                <tr><th>Category</th><th>Service Name</th><th>Price</th><th>Actions</th></tr>
+              </thead>
+              <tbody id="masterServicesTable"></tbody>
+            </table>
+          </div>
+          <p class="catalog-hint"><i class="fa-solid fa-arrows-up-down"></i> Five entries fit here — scroll the list to see the rest.</p>
+        </div>
+
+      </div>
+    </div>
+
     <!-- 5. ANALYTICS & CATALOG SECTION -->
     <div id="analyticsSection">
       
@@ -2344,53 +2395,6 @@ html, body { background-color: transparent !important; background-image: none !i
             <div class="chart-canvas-container"><canvas id="staffChart"></canvas></div>
           </div>
         </div>
-      </div>
-
-      <!-- MASTER SERVICES CATALOG MANAGEMENT -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 24px;">
-        
-        <!-- ADD / EDIT SERVICE -->
-        <div class="app-card">
-          <h3 style="font-size: 1.05rem; font-weight: 800; margin-bottom: 16px;">Add / Edit Service Catalog</h3>
-          <form onsubmit="saveMasterService(event)">
-            <input type="hidden" id="editServiceId" value="">
-            <div class="form-group">
-              <label>Service Category</label>
-              <select id="newServiceCategory" onchange="updateAdminDeptFeeVisibility()">
-                <option value="Standard Services">Standard Services</option>
-                <option value="Custom Utility & Bill Services">Custom Utility & Bill Services (KSEB, KWA, etc.)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Service Name</label>
-              <input type="text" id="newServiceName" placeholder="Enter the service name" required>
-            </div>
-            <div class="form-group">
-              <label>Standard Service Charge (₹)</label>
-              <input type="number" id="newServicePrice" min="0" placeholder="Enter the amount" required>
-            </div>
-            <div class="form-group" id="adminDeptFeeGroup" style="display: none;">
-              <label>Default Department Fee (₹)</label>
-              <input type="number" id="newServiceDeptFee" min="0" value="0" placeholder="Enter the amount">
-            </div>
-            <button type="submit" class="btn-admin" id="saveServiceBtn">Add to Master Catalog</button>
-          </form>
-        </div>
-
-        <!-- MASTER CATALOG TABLE -->
-        <div class="app-card">
-          <h3 style="font-size: 1.05rem; font-weight: 800; margin-bottom: 16px;">Master Service Catalog</h3>
-          <div class="catalog-scroll" id="masterCatalogScroll" tabindex="0" role="region" aria-label="Master service catalog. Five entries are shown; scroll inside the list for more.">
-            <table>
-              <thead>
-                <tr><th>Category</th><th>Service Name</th><th>Price</th><th>Actions</th></tr>
-              </thead>
-              <tbody id="masterServicesTable"></tbody>
-            </table>
-          </div>
-          <p class="catalog-hint"><i class="fa-solid fa-arrows-up-down"></i> Five entries fit here — scroll the list to see the rest.</p>
-        </div>
-
       </div>
 
       <!-- FIREBASE REALTIME CLOUD SYNC CONFIGURATION -->
@@ -2821,7 +2825,7 @@ html, body { background-color: transparent !important; background-image: none !i
   <div style="flex:1;min-width:260px">
     <div class="form-group"><label>Platform Name</label><input type="text" id="paBrandName" placeholder="FinTrack Business"></div>
     <div class="form-group"><label>Motto / Caption</label><input type="text" id="paBrandMotto" placeholder="Business Management Platform"></div>
-    <div class="form-group"><label>Free-Trial Duration (days)</label><input type="number" id="paBrandTrialDays" min="0" max="365" value="7"></div>
+    <div class="form-group"><label>Free-Trial Duration (days)</label><input type="number" id="paBrandTrialDays" min="0" max="365"></div>
   </div>
 </div>
 <div class="form-group"><label>Application Description (shown on the welcome screen)</label><textarea id="paBrandDescription" rows="3" placeholder="Describe the platform..."></textarea></div>
@@ -2882,7 +2886,7 @@ html, body { background-color: transparent !important; background-image: none !i
 </div>
 <!-- FOOTER -->
   <footer class="no-print" style="text-align: center; margin-top: 40px; color: var(--text-muted); font-size: 0.8rem; font-weight: 600;">
-    <p>© 2026 <strong>ATMOS Digital Solutions</strong>. All Rights Reserved.</p>
+    <p>© 2026 <strong>FinTrack Business</strong>. All Rights Reserved.</p>
   </footer>
 
 </div>
@@ -3209,7 +3213,7 @@ html, body { background-color: transparent !important; background-image: none !i
 </div>
 
 <!-- SUBMIT PAYMENT MODAL (for business admins) -->
-<div id="paSubmitPaymentModal" class="modal" style="display:none;z-index:1600">
+<div id="paSubmitPaymentModal" class="modal" style="display:none;z-index:2600;background:rgba(255,255,255,.97);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)">
 <div class="modal-card" style="max-width:540px;max-height:92vh;overflow-y:auto">
 <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:6px">Submit UPI Payment</h3>
 <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:12px">Select a subscription plan, then scan the QR below with any UPI app. The amount is set automatically from your plan. Submit your payment details for verification.</p>
@@ -3354,7 +3358,7 @@ html, body { background-color: transparent !important; background-image: none !i
     attendanceRules: { reportingTime: '09:25', graceMinutes: 0, noonCutoff: '12:00', timezone: 'Asia/Kolkata', halfDayDeductionPct: 50 },
     attendanceAuditLog: [],
     /* Business branding for the existing (pre multi-tenant) business — aligned with the new registration flow */
-    businessProfile: { shopName: 'ATMOS Digital Solutions', motto: 'Fast. Secure. Seamless.', category: 'Akshaya Center', customCategory: '' }
+    businessProfile: { shopName: 'FinTrack Business', motto: 'Gateway of Opportunities', category: 'Akshaya Center', customCategory: '' }
   };
 
   let currentUser = null;
@@ -7154,7 +7158,7 @@ const FIREBASE_CONFIG = {
      7. ADMIN CONTROLS & MONTH CLOSING
   --------------------------------------------------- */
   function showAdminSection(secId) {
-    ['monthClosingSection', 'ftStaffSection', 'staffSalarySection', 'openingBalSection', 'staffReportSection', 'analyticsSection', 'attendanceMgmtSection'].forEach(function (id) {
+    ['monthClosingSection', 'ftStaffSection', 'staffSalarySection', 'openingBalSection', 'staffReportSection', 'analyticsSection', 'attendanceMgmtSection', 'masterCatalogSection'].forEach(function (id) {
       var el = document.getElementById(id);
       if (el) el.style.display = (id === secId) ? 'block' : 'none';
     });
@@ -7165,6 +7169,7 @@ const FIREBASE_CONFIG = {
         var hostBtn = document.getElementById('btn-' + host.id);
         if (hostBtn) hostBtn.click();
       }
+      if (secId === 'masterCatalogSection') { try { renderMasterCatalogTable(); } catch (e) {} }
       try { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
     }
   }
@@ -7856,6 +7861,21 @@ const FIREBASE_CONFIG = {
       `;
       tbody.appendChild(tr);
     });
+    /* Exactly five entries are visible; the rest scroll inside the box. */
+    var box = document.getElementById('masterCatalogScroll');
+    if (box) {
+      var headRow = box.querySelector('thead tr');
+      var rows = box.querySelectorAll('tbody tr');
+      if (rows.length > 5) {
+        var hh = headRow ? headRow.getBoundingClientRect().height : 0;
+        var rh = rows[0].getBoundingClientRect().height || 0;
+        /* Heights are zero while the section is closed; the box is measured again when it opens. */
+        if (hh > 0 && rh > 0) box.style.maxHeight = Math.ceil(hh + rh * 5 + 2) + 'px';
+        else box.style.maxHeight = '';
+      } else {
+        box.style.maxHeight = 'none';
+      }
+    }
   }
 
   /* Show/hide the Department Fee field in the Admin catalog form
@@ -8776,14 +8796,25 @@ function applyPlatformBranding() {
   if (loginName) loginName.innerText = br.name;
   var loginMotto = document.getElementById('loginPlatformMotto');
   if (loginMotto) loginMotto.innerText = br.motto;
-  ['paSetupLogoBox', 'paLoginLogoBox', 'navBrandLogoBox'].forEach(function(bid) {
+  var ftNavIsBusiness = false;
+  try { ftNavIsBusiness = !!currentUser && !platformAdminUser && !document.body.classList.contains('pa-mode'); } catch (err) {}
+  ['paSetupLogoBox', 'paLoginLogoBox'].forEach(function(bid) {
     var box = document.getElementById(bid);
     if (box) box.innerHTML = br.logoDataUrl ? '<img src="' + br.logoDataUrl + '" alt="Platform Logo" style="max-height:40px;max-width:150px;object-fit:contain">' : br.name;
   });
-  var navTitle = document.getElementById('navBrandTitle');
-  if (navTitle) navTitle.innerText = br.name;
-  var navSub = document.getElementById('navBrandSubtitle');
-  if (navSub) navSub.innerText = br.motto;
+  /* The FinTrack logo sits in the header of every area, business or platform. */
+  var navBoxOnly = document.getElementById('navBrandLogoBox');
+  if (navBoxOnly) {
+    if (br.logoDataUrl) { navBoxOnly.classList.add('has-logo'); navBoxOnly.innerHTML = '<img src="' + br.logoDataUrl + '" alt="FinTrack Business" style="max-height:36px;max-width:140px;object-fit:contain">'; }
+    else { navBoxOnly.classList.remove('has-logo'); navBoxOnly.innerText = br.name; }
+  }
+  /* The business title beside it belongs to the signed-in business. */
+  if (!ftNavIsBusiness) {
+    var navTitle = document.getElementById('navBrandTitle');
+    if (navTitle) navTitle.innerText = br.name;
+    var navSub = document.getElementById('navBrandSubtitle');
+    if (navSub) navSub.innerText = br.motto;
+  }
   try { document.title = br.name + ' - ' + br.motto; } catch (e) {}
   updateBusinessBrandingDisplays();
 }
@@ -8847,8 +8878,9 @@ function updateBusinessBrandingDisplays() {
   var bizLogo = (typeof appData !== 'undefined' && appData && appData.logoDataUrl) || '';
   var drawerLogo = document.getElementById('drawerBrandLogoBox');
   if (drawerLogo) {
-    if (bizLogo) drawerLogo.innerHTML = '<img src="' + bizLogo + '" alt="Business Logo" style="max-height:38px;max-width:120px;object-fit:contain">';
-    else drawerLogo.innerHTML = prof.shopName || 'Business';
+    var drawerLogoSrc = getPlatformBranding().logoDataUrl || '';
+    if (drawerLogoSrc) { drawerLogo.classList.add('has-logo'); drawerLogo.innerHTML = '<img src="' + drawerLogoSrc + '" alt="FinTrack Business" style="max-height:38px;max-width:120px;object-fit:contain">'; }
+    else { drawerLogo.classList.remove('has-logo'); drawerLogo.innerText = getPlatformBranding().name; }
   }
   var drawerName = document.getElementById('drawerBizName');
   if (drawerName) {
@@ -8870,12 +8902,12 @@ function updateBusinessBrandingDisplays() {
   if (navTitle) navTitle.innerText = prof.shopName || platform.name;
   if (navSub) navSub.innerText = prof.motto || platform.motto;
   if (navBox) {
-    if (bizLogo) {
+    if (platform.logoDataUrl) {
       navBox.classList.add('has-logo');
-      navBox.innerHTML = '<img src="' + bizLogo + '" alt="Business Logo" style="max-height:34px;max-width:130px;object-fit:contain">';
+      navBox.innerHTML = '<img src="' + platform.logoDataUrl + '" alt="FinTrack Business" style="max-height:34px;max-width:130px;object-fit:contain">';
     } else {
       navBox.classList.remove('has-logo');
-      navBox.innerText = prof.shopName || platform.name;
+      navBox.innerText = platform.name;
     }
   }
   try { document.title = (prof.shopName || platform.name) + (prof.motto ? ' - ' + prof.motto : ''); } catch (e) {}
@@ -9035,6 +9067,8 @@ function ftPublicChanged() {
   platformData.setupCompleted = platformHasAdmin();
   updatePlatformAdminLoginUI();
   ftbBootBranding();
+  /* Keep the Platform Settings boxes identical to the saved copy. */
+  try { if (document.getElementById('paBrandTrialDays') && typeof renderPlatformBrandingSettings === 'function') renderPlatformBrandingSettings(); } catch (e) {}
 }
 /* A registry refresh must never roll the branding back to an older copy. */
 function ftKeepSavedBranding() {
@@ -10724,23 +10758,37 @@ function submitPayment() {
 function doSubmitPayment(plan, pricingType, txnId, amount, screenshotUrl, mobile) {
   if (window.__ftPayBusy) return;
   window.__ftPayBusy = true;
+  try {
     var bizId = null;
-    try { bizId = getCurrentPlatformBusinessId(); } catch (e) { bizId = null; }
-    if (!bizId) return alert('This business is not registered with the platform. Please contact the platform administrator.');
+    try { bizId = getCurrentPlatformBusinessId(); } catch (err) { bizId = null; }
+    if (!bizId) { alert('This business is not registered with the platform. Please contact the platform administrator.'); return; }
     var b = (platformData.businesses || {})[bizId] || {};
     var paymentId = 'PAY-' + Date.now().toString(36);
-    if (!platformData.payments) platformData.payments = {};
-    platformData.payments[paymentId] = {
-      businessId: bizId, plan: plan, pricingType: pricingType,
+    var record = {
+      businessId: bizId,
+      businessName: b.name || '',
+      businessDisplayId: b.displayId || '',
+      plan: plan, pricingType: pricingType,
       txnId: txnId, mobile: mobile, amount: amount, screenshotUrl: screenshotUrl,
       status: 'pending', submittedAt: Date.now(), verifiedAt: 0,
       rejectionReason: '', verifiedBy: ''
     };
-    savePlatformData();
+    /* The request has to reach the Platform Administrator, so the payment is
+       written straight into the platform payments node: the rules allow a
+       business administrator to add a pending payment for their own business.
+       savePlatformData() only ever writes this business's registry record, which
+       is why a submitted payment used to disappear. */
+    if (!platformData.payments) platformData.payments = {};
+    platformData.payments[paymentId] = record;
+    try {
+      firebase.database().ref('atmos_platform_admin/payments/' + paymentId).set(record)
+        .then(function () { try { renderBizSubscriptionCard(); } catch (err) {} })
+        .catch(function (err) { console.error('Payment sync error:', err); });
+    } catch (err) { console.error('Payment sync error:', err); }
     var msg = 'PAYMENT VERIFICATION REQUEST\n'
       + '--------------------------------\n'
       + 'Business: ' + (b.name || '-') + '\n'
-      + 'Business ID: ' + bizId + '\n'
+      + 'Business ID: ' + (b.displayId || bizId) + '\n'
       + 'Plan: ' + (PLAN_LABELS[plan] || plan) + '\n'
       + 'Pricing Type: ' + (pricingType === 'introductory' ? 'Introductory Pricing' : 'Normal Pricing') + '\n'
       + 'Amount Paid: Rs ' + amount + '\n'
@@ -10749,12 +10797,24 @@ function doSubmitPayment(plan, pricingType, txnId, amount, screenshotUrl, mobile
       + 'Screenshot: ' + (screenshotUrl ? 'Uploaded in the platform dashboard' : 'Not uploaded') + '\n'
       + '--------------------------------\n'
       + 'Please verify and activate my subscription.';
-    try { window.open('https://wa.me/' + SUPPORT_WHATSAPP + '?text=' + encodeURIComponent(msg), '_blank'); } catch (e) {}
-    alert('Payment submitted for verification!\n\nStatus: Pending Verification\n\nYour details have been sent to platform support on WhatsApp. The Main Platform Administrator will verify and activate your subscription.');
+    var waUrl = 'https://wa.me/' + SUPPORT_WHATSAPP + '?text=' + encodeURIComponent(msg);
+    var opened = null;
+    try { opened = window.open(waUrl, '_blank'); } catch (err) { opened = null; }
+    if (opened) {
+      alert('Payment submitted for verification!\n\nStatus: Pending Verification\n\nYour details have reached the Platform Administrator and a copy has been opened in WhatsApp. Access is restored once the payment is verified.');
+    } else {
+      alert('Payment submitted for verification!\n\nStatus: Pending Verification\n\nYour details have reached the Platform Administrator. WhatsApp is opening so you can send the same request as a message.');
+      try { window.location.href = waUrl; } catch (err) {}
+    }
     closePaSubmitPayment();
-    document.getElementById('paPayTxnId').value = '';
-    document.getElementById('paPayScreenshot').value = '';
+    var txEl = document.getElementById('paPayTxnId'); if (txEl) txEl.value = '';
+    var scEl = document.getElementById('paPayScreenshot'); if (scEl) scEl.value = '';
+    try { if (window.ftRenderAccessLock) window.ftRenderAccessLock(); } catch (err) {}
+  } finally {
+    /* always release the guard, so a second attempt is never ignored */
+    window.__ftPayBusy = false;
   }
+}
 
 /* ===== PRESENCE TRACKING ===== */
 function setupPlatformPresence() {
@@ -11680,7 +11740,7 @@ window.addEventListener('DOMContentLoaded', function() {
     var el = document.createElement('div');
     el.id = 'ftNotifOverlay';
     el.className = 'modal';
-    el.style.cssText = 'z-index:3200;padding:16px';
+    el.style.cssText = 'z-index:3200;padding:16px;background:rgba(255,255,255,.96);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)';
     el.onclick = function (e) { if (e.target === el) window.ftCloseNotifPanel(); };
     el.innerHTML = '<div style="background:#ffffff;color:var(--text);position:relative;z-index:1;width:min(560px,100%);max-height:min(82vh,640px);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(11,30,45,.35);border:1px solid var(--border)">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)"><strong style="font-size:.95rem;color:var(--atmos-navy)"><i class="fa-solid fa-bell" style="color:var(--accent-amber)"></i> Notifications</strong><button type="button" onclick="ftCloseNotifPanel()" style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;color:var(--text-muted)"><i class="fa-solid fa-xmark"></i></button></div>' +
@@ -12300,20 +12360,10 @@ function ensureSubLockBanner() {
 }
 
 function renderSubLockBanner() {
-  var el = ensureSubLockBanner();
-  if (!el) return;
-  var show = !!(currentUser && !platformAdminUser && getSubscriptionState().registered && getSubscriptionState().locked);
-  if (!show) { el.style.display = 'none'; return; }
-  var br = getPlatformBranding();
-  var logo = br.logoDataUrl
-    ? '<img src="' + br.logoDataUrl + '" alt="Platform logo" style="max-height:38px;max-width:130px;object-fit:contain">'
-    : '<span style="font-weight:900;font-size:1rem;color:var(--atmos-navy)">' + (br.name || 'FinTrack Business') + '</span>';
-  var pending = hasPendingPayment();
-  el.style.display = 'flex';
-  el.innerHTML = logo
-    + '<span>Kindly subscribe to any of our plans to get the seamless opportunity to explore our features</span>'
-    + (pending ? '<span style="font-weight:800;color:var(--accent-amber)">Your payment is with the Platform Administrator for verification.</span>' : '')
-    + '<button onclick="openPaSubmitPayment()" style="background:var(--atmos-red);color:#fff;border:none;padding:9px 18px;border-radius:20px;font-weight:800;font-size:.8rem;cursor:pointer"><i class="fa-solid fa-qrcode"></i> Pay / Renew Subscription</button>';
+  /* The blocking subscription screen already carries this message, so the extra
+     strip above the header is permanently withdrawn. */
+  var el = document.getElementById('subLockBanner');
+  if (el) { el.style.display = 'none'; el.innerHTML = ''; }
 }
 
 function showSubLockNotice() {
@@ -12324,14 +12374,20 @@ function showSubLockNotice() {
 /* Every action that would record, change, delete, print or download operational
    information is refused while access is restricted. Navigation, viewing and the
    subscription/payment area keep working. */
-var SUB_BLOCKED_FN = /^(save|add|submit|delete|remove|finalize|unfinalize|record|create|update|import|apply|edit|export|download|generate|print|transfer|settle|closeMonth|reopenMonth)/i;
-var SUB_ALLOWED_FN = /^(openPaSubmitPayment|closePaSubmitPayment|refreshPaymentQr|syncPayAmount|switchTab|navigateFromDrawer|setStaffReportTab|toggleAttendanceMoreDetails|logout|showPasswordLogin)/i;
+var SUB_BLOCKED_FN = /^(save|add|submit|delete|remove|finalize|unfinalize|record|create|update|import|apply|edit|export|download|generate|print|transfer|settle|closeMonth|reopenMonth|openDrawer|closeDrawer|toggleDrawer|switchTab|navigateFromDrawer|ftOpenNotifPanel)/i;
+var SUB_ALLOWED_FN = /^(openPaSubmitPayment|closePaSubmitPayment|refreshPaymentQr|syncPayAmount|setStaffReportTab|toggleAttendanceMoreDetails|logout|showPasswordLogin|submitPayment)/i;
 function subscriptionBlocks(el) {
   try {
     if (!(currentUser && !platformAdminUser && getSubscriptionState().registered && getSubscriptionState().locked)) return false;
   } catch (e) { return false; }
-  /* the blocking screen and the top bar stay usable while the account is locked */
-  if (el && el.closest && (el.closest('#ftAccessLock') || el.closest('nav'))) return false;
+  /* While access is restricted only the blocking screen, the payment screen, the
+     notification panel, the notification bell and the logout button stay usable.
+     The navigation menu and every tab are refused. */
+  if (el && el.closest) {
+    if (el.closest('#ftAccessLock') || el.closest('#subLockModal') || el.closest('#paSubmitPaymentModal') || el.closest('#ftNotifOverlay')) return false;
+    if (el.closest('#ftNotifBell')) return false;
+    if (el.closest('[onclick*="appLogout"]')) return false;
+  }
   var node = el;
   while (node && node !== document.body) {
     var oc = node.getAttribute ? node.getAttribute('onclick') : null;
@@ -12435,20 +12491,27 @@ function ftRenderAccessLock() {
       show = !seen;
     }
   }
-  if (!show || (m && m.mode === 'blocked' && ftSubAnyModalOpen())) {
+  if (!show) {
     if (el) el.remove();
+    try { document.body.classList.remove('ft-sub-locked'); } catch (e) {}
     return;
   }
-  var sig = m.mode + '|' + m.days + '|' + (m.admin ? 'a' : 's') + '|' + ftSubTodayIST() + '|' + (m.on || '');
+  var pendingNow = false;
+  try { pendingNow = m.admin && hasPendingPayment(); } catch (e) {}
+  var sig = m.mode + '|' + m.days + '|' + (m.admin ? 'a' : 's') + '|' + ftSubTodayIST() + '|' + (m.on || '') + '|' + (pendingNow ? 'p' : '');
   if (el && el.getAttribute('data-sig') === sig) { ftSubScrollLock(true); return; }
-  var pending = false;
-  try { pending = m.admin && hasPendingPayment(); } catch (e) {}
+  var pending = pendingNow;
   var count = m.mode === 'blocked' ? 0 : m.days;
   var when = (m.on && m.on !== '\u2014')
     ? '<div style="font-size:.72rem;color:#6B7787;margin-top:5px">' + (m.mode === 'blocked' ? 'Ended on ' : 'Ends on ') + m.on + '</div>'
     : '';
-  var motto = '';
-  try { var bz = getCurrentBizRecord(); motto = (bz && ((bz.businessProfile && bz.businessProfile.motto) || bz.motto)) || ''; } catch (e) {}
+  var motto = '', bizLine = '';
+  try {
+    var bz = getCurrentBizRecord();
+    motto = (bz && ((bz.businessProfile && bz.businessProfile.motto) || bz.motto)) || '';
+    bizLine = (bz && (bz.name || '')) || '';
+    if (bz && bz.displayId) bizLine = bizLine ? bizLine + ' \u00b7 ' + bz.displayId : bz.displayId;
+  } catch (e) {}
   var payBtn;
   if (m.mode === 'blocked') {
     if (m.admin) {
@@ -12467,9 +12530,10 @@ function ftRenderAccessLock() {
   var html = ''
     + '<div style="position:relative;background:#FFFFFF;border-radius:18px;padding:26px 22px;max-width:420px;width:100%;text-align:center;box-shadow:0 26px 64px rgba(11,30,45,.28);border-top:6px solid ' + m.color + '">'
     + (m.mode === 'blocked' ? '' : '<button type="button" onclick="ftCloseSubNotice()" title="Close" style="position:absolute;top:8px;right:12px;border:0;background:transparent;color:#94A3B8;font-size:1.2rem;line-height:1;cursor:pointer">&times;</button>')
-    + '<div style="font-size:.68rem;font-weight:900;letter-spacing:.16em;color:#0B1E2D;text-transform:uppercase">FinTrack Business</div>'
-    + '<div style="font-size:.6rem;font-weight:900;letter-spacing:.16em;color:#1A4785;text-transform:uppercase;margin:3px 0 14px">Business Management Platform</div>'
-    + (motto ? '<div style="font-size:.66rem;font-weight:800;color:#8B7355;letter-spacing:.14em;text-transform:uppercase;margin:0 0 12px">' + motto + '</div>' : '')
+    + '<div style="font-size:1.34rem;font-weight:900;color:#0B1E2D;line-height:1.2">FinTrack Business</div>'
+    + '<div style="font-size:.62rem;font-weight:900;letter-spacing:.16em;color:#1A4785;text-transform:uppercase;margin:4px 0 16px">Business Management Platform</div>'
+    + (bizLine ? '<div style="font-size:.92rem;font-weight:900;color:#0B1E2D;line-height:1.3">' + bizLine + '</div>' : '')
+    + (motto ? '<div style="font-size:.64rem;font-weight:800;color:#8B7355;letter-spacing:.14em;text-transform:uppercase;margin:4px 0 14px">' + motto + '</div>' : '<div style="height:14px"></div>')
     + '<div style="font-size:1.16rem;font-weight:900;color:' + m.color + ';margin-bottom:12px;line-height:1.3">' + m.title + '</div>'
     + '<div style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;background:#F8FAFC;border:1px solid #E5E7EB;border-radius:12px;padding:12px 24px;margin-bottom:14px;min-width:124px">'
     + '<div style="font-size:2.1rem;font-weight:900;color:' + m.color + ';line-height:1">' + count + '</div>'
@@ -12485,8 +12549,12 @@ function ftRenderAccessLock() {
     el.setAttribute('aria-modal', 'true');
     document.body.appendChild(el);
   }
-  el.style.cssText = 'position:fixed;left:0;right:0;bottom:0;top:' + ftSubNavBottom() + 'px;z-index:2147483200;background:rgba(252,251,248,.95);display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto';
+  el.style.cssText = 'position:fixed;left:0;right:0;bottom:0;top:' + ftSubNavBottom() + 'px;z-index:2400;background:' + (m && m.mode === 'blocked' ? 'rgba(255,255,255,.97)' : 'rgba(252,251,248,.92)') + ';backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto';
   el.innerHTML = html;
+  try {
+    if (m && m.mode === 'blocked') document.body.classList.add('ft-sub-locked');
+    else document.body.classList.remove('ft-sub-locked');
+  } catch (e) {}
   el.setAttribute('data-sig', sig);
   ftSubScrollLock(true);
   if (key) { try { localStorage.setItem(key, '1'); } catch (e) {} }
@@ -12500,9 +12568,7 @@ function ftCloseSubNotice() {
 function ftLockPay() {
   var m = null; try { m = ftSubModel(); } catch (e) {}
   if (!m || !m.admin) return;
-  var el = document.getElementById('ftAccessLock');
-  if (el) el.remove();
-  ftSubScrollLock(false);
+  /* The white blocking screen stays in place behind the payment screen. */
   try { openPaSubmitPayment(); } catch (e) {}
 }
 window.ftRenderAccessLock = ftRenderAccessLock;
@@ -12942,7 +13008,7 @@ function ftMountHrMgmt() {
   try {
     var host = document.getElementById('hrMgmtMount');
     if (!host) return;
-    ['ftMgmtSwitch', 'ftMgmtPanel-money', 'ftMgmtPanel-staff', 'monthClosingSection', 'openingBalSection', 'ftStaffSection', 'staffSalarySection', 'attendanceMgmtSection', 'staffReportSection', 'analyticsSection'].forEach(function (id) {
+    ['ftMgmtSwitch', 'ftMgmtPanel-money', 'ftMgmtPanel-staff', 'monthClosingSection', 'openingBalSection', 'ftStaffSection', 'staffSalarySection', 'attendanceMgmtSection', 'staffReportSection', 'analyticsSection', 'masterCatalogSection'].forEach(function (id) {
       var el = document.getElementById(id);
       if (el && el.parentNode !== host) host.appendChild(el);
     });
@@ -12995,27 +13061,27 @@ if (typeof __ftSwitchTab === 'function') {
     } catch (e) { return false; }
   }
   function ftGuideTasks() {
-    var svc = 0, logs = 0, att = 0;
+    var svc = 0;
     try { svc = (appData.masterServices || []).length; } catch (e) {}
-    try { logs = (appData.serviceLog || []).length; } catch (e) {}
-    try { att = Object.keys(appData.attendance || {}).length; } catch (e) {}
     return [
       { k: 'staff', done: staffList().length > 0, t: 'Add your staff members',
-        b: 'Admin Controls, then Staff Management, then Add Staff. Enter the name and mobile number so they can sign in on their own phone.',
-        sec: 'ftStaffSection' },
+        b: 'Admin Controls, then Staff Management, then Add Staff. Enter the name and mobile number so they can sign in on their own phone.', sec: 'ftStaffSection' },
       { k: 'salary', done: hasSalary(), t: 'Set each staff salary',
-        b: 'In Staff Management open Salary & Incentives and enter the basic salary. The incentive stays at 0% until you type a percentage.',
-        sec: 'staffSalarySection' },
-      { k: 'catalog', done: svc > 0, t: 'Add your services',
-        b: 'In Analytics & Catalog add the service names and prices you sell, so billing is one tap at the counter.',
-        sec: 'analyticsSection' },
-      { k: 'collection', done: logs > 0, t: 'Record your first collection',
-        b: 'Open the Services tab, pick the service and save the entry. It goes straight into the cashbook.',
-        tab: 'servicesTab' },
-      { k: 'attendance', done: att > 0, t: 'Mark today\u2019s attendance',
-        b: 'In Attendance Management mark who is present, late or on leave; salary deductions use these marks.',
-        sec: 'attendanceMgmtSection' }
+        b: 'In Staff Management open Salary & Incentives and enter the basic salary and incentive for each staff member.', sec: 'staffSalarySection' },
+      { k: 'catalog', done: svc > 0, t: 'Add your master catalog services',
+        b: 'In Money Management open Master Catalog and add the service names and charges you sell, so billing is one tap at the counter.', sec: 'masterCatalogSection' },
+      { k: 'opening', done: hasOpeningBalance(), t: 'Record your monthly opening balance',
+        b: 'In Money Management open Opening Balances and enter the starting cash drawer, bank/UPI and credit amounts for the month.', sec: 'openingBalSection' }
     ];
+  }
+  function hasOpeningBalance() {
+    try {
+      var ob = appData.openingBalances || {};
+      return Object.keys(ob).some(function (m) {
+        var r = ob[m] || {};
+        return Math.abs(parseFloat(r.cash || 0)) > 0 || Math.abs(parseFloat(r.bank || 0)) > 0 || Math.abs(parseFloat(r.credit || 0)) > 0;
+      });
+    } catch (e) { return false; }
   }
   function pendingTasks() {
     return ftGuideTasks().filter(function (t) { return !t.done; });
