@@ -9940,9 +9940,6 @@ function ftWelcomeScan(force) {
 /* The one-time send for businesses registered before the welcome existed. It is
    offered in Pending Actions, with the message shown, until it has arrived. */
 function sendWelcomeToAllExistingBusinesses() {
-  if (platformData.welcomeCampaignSentAt) {
-    return alert('The welcome message has already been sent to the existing businesses once. New businesses receive it automatically, in the same format, when their administrator first signs in.');
-  }
   var ids = ftWelcomeScanState.ready ? ftWelcomeScanState.due.slice() : Object.keys(platformData.businesses || {});
   if (!ids.length) {
     return alert('Every registered business already has the welcome message in its administrator notification area.');
@@ -10014,7 +10011,9 @@ function renderPADashboard() {
   var pa = '';
   /* the welcome message: a one-time send that stays on offer, with the message
      shown, until every registered business has actually received it */
-  if (!platformData.welcomeCampaignSentAt) {
+  /* kept on offer until every business has really received it; the campaign
+     flag is only a record and no longer hides this row */
+  {
     var welcomePreview = '<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;font-size:.78rem;color:var(--primary)">View the message kept for this send</summary>' +
       '<div style="margin-top:6px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;max-height:190px;overflow:auto">' +
       '<div style="font-weight:800;font-size:.8rem;margin-bottom:6px">' + FT_WELCOME_SUBJECT + '</div>' +
@@ -12380,6 +12379,21 @@ window.addEventListener('DOMContentLoaded', function() {
     var m = document.getElementById('ftAnnMessage'); if (m) m.value = '';
   };
 
+  window.ftSendWelcomeAnnouncement = async function () {
+    if (!confirm('Send the welcome message to every registered business administrator?\n\nSubject: ' + FT_WELCOME_SUBJECT + '\n\nEach administrator sees it once in the notification bell. Staff members never see it.')) return;
+    var t = document.getElementById('ftAnnTarget'); if (t) t.value = 'all';
+    var a = document.getElementById('ftAnnAudience'); if (a) a.value = 'admin';
+    var w = document.getElementById('ftAnnBizWrap'); if (w) w.style.display = 'none';
+    var s = document.getElementById('ftAnnSubject'); if (s) s.value = FT_WELCOME_SUBJECT;
+    var m = document.getElementById('ftAnnMessage'); if (m) m.value = FT_WELCOME_MESSAGE;
+    await window.ftSendAnnouncement();
+    var pd = PD(), stamp = Date.now();
+    pd.welcomeCampaignSentAt = stamp;
+    Object.keys(pd.businesses || {}).forEach(function (k) { pd.businesses[k].welcomeSentAt = stamp; });
+    try { await savePlatformData(); } catch (e) {}
+    try { if (typeof ftWelcomeScan === 'function') ftWelcomeScan(true); } catch (e) {}
+  };
+
   window.ftSendStaffAnnouncement = function () {
     if (!currentUser || currentUser.role !== 'Admin') return alert('Only the Business Administrator can send announcements.');
     try { if (typeof getSubscriptionState === 'function' && getSubscriptionState().locked) return alert('Your subscription access is restricted, so announcements cannot be sent right now.'); } catch (e) {}
@@ -12541,6 +12555,7 @@ window.addEventListener('DOMContentLoaded', function() {
         '<div class="form-group"><label>Message</label><textarea id="ftAnnMessage" rows="5" placeholder="Enter announcement message"></textarea></div>' +
         '<div style="display:flex;gap:12px;flex-wrap:wrap"><div class="form-group" style="flex:1"><label>Publish Date (optional)</label><input type="date" id="ftAnnPublish"></div><div class="form-group" style="flex:1"><label>Expiry Date (optional)</label><input type="date" id="ftAnnExpiry"></div></div>' +
         '<button class="btn-primary" onclick="ftSendAnnouncement()" style="width:auto;background:var(--accent-green)"><i class="fa-solid fa-bullhorn"></i> Send Announcement</button>' +
+        '<button type="button" onclick="ftSendWelcomeAnnouncement()" style="margin-top:10px;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-weight:800;cursor:pointer"><i class="fa-solid fa-envelope-open-text"></i> Send Welcome Message to All Businesses</button>' +
         '<p style="font-size:.7rem;color:var(--text-muted);margin-top:8px">History keeps the five most recent announcements. Recipients keep their own copy until it expires or is deleted.</p>';
       if (legacyCard && legacyCard.parentNode) legacyCard.parentNode.insertBefore(c, legacyCard); else tab.appendChild(c);
     }
