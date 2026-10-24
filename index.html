@@ -153,7 +153,9 @@
     .side-drawer.open { left: 0; }
     .drawer-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: #0B1E2D; z-index: 1090; display: none;
+      /* Invisible click-catcher: an outside tap still closes the menu, while the
+         page behind it keeps its normal appearance. */
+      background: transparent; z-index: 1090; display: none;
     }
     .drawer-overlay.active { display: block; }
     body.ft-sub-locked .side-drawer, body.ft-sub-locked .drawer-overlay { display: none !important; }
@@ -407,6 +409,28 @@
         margin: 0 !important;
       }
     }
+
+    /* ===== HEADER: brand spacing and feature search ===== */
+    nav { gap: 18px; }
+    .ft-brand-text { min-width: 0; }
+    .ft-brand-text .brand-title, .ft-brand-text .brand-subtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ft-brand-text .brand-subtitle { margin-top: 3px; line-height: 1.2; }
+    .ft-search { position: relative; display: flex; align-items: center; flex: 0 1 210px; min-width: 104px; }
+    .ft-search .ft-search-icon { position: absolute; left: 11px; font-size: .78rem; color: var(--text-muted); pointer-events: none; }
+    .ft-search input { width: 100%; padding: 8px 12px 8px 30px; border-radius: 20px; border: 1px solid var(--border); background: white; font-size: .8rem; font-weight: 600; color: var(--atmos-navy); }
+    .ft-search input::placeholder { color: var(--text-muted); font-weight: 600; }
+    .ft-search-results { position: absolute; top: calc(100% + 8px); left: 0; width: 268px; max-height: 320px; overflow-y: auto; background: white; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 18px 40px rgba(11,23,42,.18); padding: 6px; z-index: 1200; display: none; }
+    .ft-search-results.open { display: block; }
+    .ft-search-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: transparent; border: none; border-radius: 8px; padding: 9px 10px; font-size: .82rem; font-weight: 700; color: var(--atmos-navy); }
+    .ft-search-item i { width: 16px; font-size: .85rem; color: var(--atmos-red); }
+    .ft-search-item:hover, .ft-search-item.active { background: var(--bg); }
+    .ft-search-empty { padding: 14px 10px; text-align: center; font-size: .8rem; font-weight: 700; color: var(--text-muted); }
+    @media (max-width: 1100px) { .ft-search { flex: 0 1 158px; } }
+
+    /* ===== FINANCIAL REPORTS: monthly and daily controls, side by side ===== */
+    .ft-report-controls { flex: 1 1 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: stretch; }
+    .ft-report-controls .month-picker-box { width: 100%; }
+    @media (max-width: 720px) { .ft-report-controls { grid-template-columns: 1fr; } }
 
     #pdfReportTemplate { display: none; }
   </style>
@@ -1056,12 +1080,17 @@ html, body { background-color: transparent !important; background-image: none !i
       <i class="fa-solid fa-bars"></i>
     </button>
     <div id="navBrandLogoBox" class="brand-logo-box has-logo"><img src="https://media.base44.com/images/public/6acf90c0138cd5df73588169/2881a5748_IMG_2552.jpg" alt="FinTrack Business" style="max-height:36px;max-width:140px;object-fit:contain"></div>
-    <div>
+    <div class="ft-brand-text">
       <div class="brand-title" id="navBrandTitle">FinTrack Business</div>
       <div class="brand-subtitle" id="navBrandSubtitle">Business Management Platform</div>
     </div>
   </div>
   <div class="nav-actions">
+    <div class="ft-search" id="ftFeatureSearchWrap">
+      <i class="fa-solid fa-magnifying-glass ft-search-icon"></i>
+      <input type="text" id="ftFeatureSearchInput" placeholder="Search features" autocomplete="off" spellcheck="false" aria-label="Search application features" aria-expanded="false">
+      <div class="ft-search-results" id="ftFeatureSearchResults" role="listbox"></div>
+    </div>
     <button id="ftNotifBell" type="button" class="nav-icon-btn" title="Notifications" onclick="ftOpenNotifPanel()" style="position:relative;margin-right:6px"><i class="fa-solid fa-bell"></i><span id="ftNotifBadge" style="display:none;position:absolute;top:-5px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:#FACC15;color:#0B1E2D;font-size:.62rem;font-weight:900;line-height:16px;text-align:center;box-shadow:0 0 0 1px #fff">0</span></button><span id="cloudSyncStatusBadge" class="sync-badge sync-local"><i class="fa-solid fa-cloud"></i> Sync to Cloud</span>
     <span id="activeUserBadge" class="user-pill">Guest</span>
     <button class="nav-icon-btn" onclick="appLogout()" title="Sign Out"><i class="fa-solid fa-power-off"></i></button>
@@ -1865,7 +1894,7 @@ html, body { background-color: transparent !important; background-image: none !i
           </div>
           <div style="border-top: 1px dashed var(--text-muted); width: 160px; text-align: center; font-size: 0.75rem; color: var(--text-muted); padding-top: 4px; margin-left: auto;">
             Authorized Signature<br>
-            <strong id="authSignatureName" style="color: var(--atmos-navy);">Admin</strong>
+            <strong id="authSignatureName" style="color: var(--atmos-navy);"></strong>
           </div>
         </div>
       </div>
@@ -1890,19 +1919,19 @@ html, body { background-color: transparent !important; background-image: none !i
           <h3 style="font-size: 1.1rem; font-weight: 900; color: var(--atmos-navy);">Monthly Financial Statement</h3>
         </div>
 
-        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <div class="ft-report-controls">
           <div class="month-picker-box">
             <i class="fa-solid fa-calendar-days" style="color: var(--atmos-navy);"></i>
             <label>Select Month:</label>
             <input type="month" id="reportMonthPicker" onchange="generateFinancialReport()">
+            <button class="btn-pdf" onclick="exportReportPDF('monthly')" style="background: var(--atmos-navy); margin-left: auto;"><i class="fa-solid fa-file-pdf"></i> Monthly PDF</button>
           </div>
-          <div class="month-picker-box" style="margin-left:auto;">
+          <div class="month-picker-box">
             <i class="fa-solid fa-calendar-day" style="color: var(--atmos-navy);"></i>
             <label>Daily Date:</label>
             <input type="date" id="dailyPdfDate">
-            <button class="btn-pdf" onclick="exportDailyPDF()"><i class="fa-solid fa-file-pdf"></i> Daily PDF</button>
+            <button class="btn-pdf" onclick="exportDailyPDF()" style="margin-left: auto;"><i class="fa-solid fa-file-pdf"></i> Daily PDF</button>
           </div>
-          <button class="btn-pdf" onclick="exportReportPDF('monthly')" style="background: var(--atmos-navy);"><i class="fa-solid fa-file-pdf"></i> Monthly PDF</button>
         </div>
       </div>
 
@@ -2062,7 +2091,7 @@ html, body { background-color: transparent !important; background-image: none !i
       <button type="button" class="ftg-box" onclick="showAdminSection('attendanceMgmtSection')"><i class="fa-solid fa-user-clock" style="color:var(--atmos-red)"></i><span>3 &middot; Attendance Management</span></button>
       <button type="button" class="ftg-box" onclick="showAdminSection('staffReportSection')"><i class="fa-solid fa-file-lines" style="color:var(--accent-amber)"></i><span>4 &middot; Staff Reports</span></button>
       <button type="button" class="ftg-box" onclick="showAdminSection('ftStaffAnnounceSection')"><i class="fa-solid fa-envelope-open-text" style="color:var(--atmos-navy)"></i><span>Staff Announcements</span></button>
-      <button type="button" class="ftg-box" onclick="showAdminSection('analyticsSection')"><i class="fa-solid fa-chart-pie" style="color:var(--primary)"></i><span>Analytics &amp; Catalog</span></button>
+      <button type="button" class="ftg-box" onclick="showAdminSection('analyticsSection')"><i class="fa-solid fa-chart-pie" style="color:var(--primary)"></i><span>Business Analytics</span></button>
     </div>
 
     <!-- 1b. ATTENDANCE MANAGEMENT PORTAL (ADMIN ONLY) -->
@@ -7213,6 +7242,31 @@ const FIREBASE_CONFIG = {
       var nd = document.getElementById('invNumDisplay');
       if (nd) nd.innerText = getInvoicePrefix() + '-' + (1000 + (appData.invoices ? appData.invoices.length : 0) + 1);
     }
+    updateInvoiceSignature(null);
+  }
+
+  /* The Authorized Signature is the account that raised the invoice. The name is
+     saved on the invoice record; when only the creator's id is present the name
+     is resolved from that saved account record. Only an older invoice that
+     carries no creator information at all falls back to the account signed in. */
+  function getInvoiceCreatorName(inv) {
+    if (inv) {
+      if (inv.createdByName) return inv.createdByName;
+      if (inv.createdById && Array.isArray(appData.users)) {
+        var creator = appData.users.find(function (x) { return x.id === inv.createdById; });
+        if (creator && creator.name) return creator.name;
+      }
+    }
+    return (currentUser && currentUser.name) ? currentUser.name : '';
+  }
+
+  function updateInvoiceSignature(inv) {
+    var el = document.getElementById('authSignatureName');
+    if (!el) return;
+    if (!inv && editingInvoiceId && Array.isArray(appData.invoices)) {
+      inv = appData.invoices.find(function (x) { return x.id === editingInvoiceId; });
+    }
+    el.innerText = getInvoiceCreatorName(inv);
   }
   function saveInvoiceToHistory(isUpdate) {
     if (staffMobileBlocked()) return alert("Mobile View-Only Mode: saving invoices is disabled on this device.");
@@ -7234,6 +7288,10 @@ const FIREBASE_CONFIG = {
       invNum = invPrefix + "-" + n;
     }
 
+    /* The invoice records who raised it, so the printed Authorized Signature
+       always shows the real creator - a staff member's own saved name when a
+       staff member raised the invoice, the administrator's when they did. */
+    const previous = (isUpdate && editingInvoiceId) ? appData.invoices.find(x => x.id === editingInvoiceId) : null;
     const invObj = {
       id: invNum,
       date: date,
@@ -7241,7 +7299,9 @@ const FIREBASE_CONFIG = {
       customerPhone: phone,
       payMode: mode,
       items: [...currentInvoiceItems],
-      total: parseFloat(document.getElementById('invTotalVal').innerText || 0)
+      total: parseFloat(document.getElementById('invTotalVal').innerText || 0),
+      createdById: (previous && previous.createdById) || (currentUser ? currentUser.id : ''),
+      createdByName: (previous && previous.createdByName) || (currentUser ? currentUser.name : '')
     };
 
     if (isUpdate && editingInvoiceId) {
@@ -7250,6 +7310,7 @@ const FIREBASE_CONFIG = {
     } else {
       appData.invoices.unshift(invObj);
     }
+    updateInvoiceSignature(invObj);
 
     saveData();
     alert("Invoice saved successfully!");
@@ -7287,6 +7348,7 @@ const FIREBASE_CONFIG = {
 
     currentInvoiceItems = [...inv.items];
     renderInvoiceTable();
+    updateInvoiceSignature(inv);
 
     document.getElementById('invoiceActionArea').style.display = 'flex';
   }
@@ -7298,6 +7360,7 @@ const FIREBASE_CONFIG = {
     document.getElementById('invCustomerPhone').value = '';
     currentInvoiceItems = [];
     renderInvoiceTable();
+    updateInvoiceSignature(null);
     document.getElementById('savedInvoiceSelect').value = '';
     document.getElementById('invoiceActionArea').style.display = 'none';
   }
@@ -9316,6 +9379,10 @@ function updateBusinessBrandingDisplays() {
       navBox.innerText = brand.name || '';
     }
   }
+  /* The top header belongs to this business: its own saved name and motto are
+     shown here, never the platform's. */
+  if (navTitle) { navTitle.innerText = brand.name || ''; navTitle.style.display = brand.name ? '' : 'none'; }
+  if (navSub) { navSub.innerText = brand.motto || ''; navSub.style.display = brand.motto ? '' : 'none'; }
   if (brand.name) { try { document.title = brand.name + (brand.motto ? ' - ' + brand.motto : ''); } catch (e) {} }
 }
 
@@ -14166,5 +14233,148 @@ if (typeof __ftSwitchTab === 'function') {
   try { new MutationObserver(plan).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
 })();
 </script>
+<script>
+/* HEADER FEATURE SEARCH - offers only the areas the signed-in account can
+   already open, and navigates through the application's own navigation
+   functions, so every existing permission check stays in force. */
+(function () {
+  var input = document.getElementById('ftFeatureSearchInput');
+  var panel = document.getElementById('ftFeatureSearchResults');
+  var wrap = document.getElementById('ftFeatureSearchWrap');
+  if (!input || !panel || !wrap) return;
+
+  function signedIn() { try { return !!(currentUser || platformAdminUser); } catch (e) { return false; } }
+  function isPlatform() { try { return !!platformAdminUser; } catch (e) { return false; } }
+  function isAdmin() { try { return !!(currentUser && currentUser.role === 'Admin'); } catch (e) { return false; } }
+
+  function goTab(tabId) {
+    return function () { navigateFromDrawer(tabId); };
+  }
+  function goPa(tabId) {
+    return function () { closeDrawer(); switchPATab(tabId, document.getElementById('btn-' + tabId)); };
+  }
+  function openAdminArea() {
+    var b = document.getElementById('btn-adminTab');
+    if (b) b.click();
+    try { setAdminGroup('administration', document.getElementById('admGroupBtn-administration')); } catch (e) {}
+  }
+  function goSection(secId) {
+    return function () {
+      closeDrawer();
+      openAdminArea();
+      try { showAdminSection(secId); } catch (e) {}
+    };
+  }
+  function goStaffGroup() {
+    return function () {
+      closeDrawer();
+      openAdminArea();
+      try { ftSetMgmtGroup('staff', document.getElementById('ftMgmtBtn-staff')); } catch (e) {}
+    };
+  }
+
+  /* Every destination is an existing area of the application. */
+  var FEATURES = [
+    { label: 'Dashboard Summary', kw: 'dashboard home summary balances overview', go: goTab('dashboardTab') },
+    { label: 'Services', kw: 'service collection billing entry department fee', go: goTab('servicesTab') },
+    { label: 'Shop Expenses', kw: 'shop expense overhead spending ledger', go: goTab('expenseTab') },
+    { label: 'Bank & Drawer Transfer Ledger', kw: 'bank drawer transfer ledger cash upi', go: goTab('transferTab') },
+    { label: 'Invoice', kw: 'invoice bill generator customer print', go: goTab('invoiceTab') },
+    { label: 'Financial Reports', kw: 'financial report statement monthly daily pdf', go: goTab('reportsTab') },
+    { label: 'Staff Profile', kw: 'staff profile employee record salary attendance', go: goTab('hrTab') },
+    { label: 'Admin Controls', kw: 'admin controls administration application', go: goTab('adminTab'), admin: true },
+    { label: 'HR Management', kw: 'hr human resource management staff', go: goTab('hrMgmtTab'), admin: true },
+    { label: 'Staff Management', kw: 'staff management add salary attendance reports', go: goStaffGroup(), admin: true },
+    { label: 'Business Analytics', kw: 'business analytics chart graph trend', go: goSection('analyticsSection'), admin: true },
+    { label: 'Master Catalog', kw: 'master catalog catalogue service price', go: goSection('masterCatalogSection'), admin: true },
+    { label: 'Month Closing', kw: 'month closing close reopen transfer', go: goSection('monthClosingSection'), admin: true },
+    { label: 'Opening Balances', kw: 'opening balance cash bank receivables', go: goSection('openingBalSection'), admin: true },
+    { label: 'Cashbook', kw: 'cashbook cash book daily ledger', go: goSection('cashbookSection'), admin: true },
+    { label: 'Add Staff', kw: 'add staff new employee sign-in credential', go: goSection('ftStaffSection'), admin: true },
+    { label: 'Salary & Incentives', kw: 'salary incentive payroll staff pay monthly', go: goSection('staffSalarySection'), admin: true },
+    { label: 'Attendance Management', kw: 'attendance management present leave shift', go: goSection('attendanceMgmtSection'), admin: true },
+    { label: 'Staff Reports', kw: 'staff report performance collection', go: goSection('staffReportSection'), admin: true },
+    { label: 'Staff Announcements', kw: 'staff announcement message notice', go: goSection('ftStaffAnnounceSection'), admin: true },
+    { label: 'Platform Dashboard', kw: 'platform dashboard administrator overview', go: goPa('paDashboardTab'), platform: true },
+    { label: 'Businesses', kw: 'business directory registered tenants', go: goPa('paBusinessesTab'), platform: true },
+    { label: 'Subscriptions', kw: 'subscription plan payment renewal', go: goPa('paSubscriptionsTab'), platform: true },
+    { label: 'Notifications', kw: 'notification announcement message', go: goPa('paNotificationsTab'), platform: true },
+    { label: 'Reports & Limits', kw: 'report limit usage storage', go: goPa('paReportsTab'), platform: true },
+    { label: 'Settings', kw: 'settings platform branding configuration', go: goPa('paSettingsTab'), platform: true }
+  ];
+
+  /* Results follow the account: administrators see their own modules, staff only
+     the areas their role already opens. Nothing new is granted here. */
+  function allowed(f) {
+    if (!signedIn()) return false;
+    if (f.platform) return isPlatform();
+    if (isPlatform()) return false;
+    if (f.admin) return isAdmin();
+    return true;
+  }
+
+  function esc(t) {
+    return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function rank(f, q) {
+    var label = f.label.toLowerCase();
+    if (label.indexOf(q) === 0) return 0;
+    if (label.indexOf(q) !== -1) return 1;
+    return 2;
+  }
+  function matches(q) {
+    var list = FEATURES.filter(allowed).filter(function (f) {
+      return (f.label + ' ' + f.kw).toLowerCase().indexOf(q) !== -1;
+    });
+    list.sort(function (a, b) { var d = rank(a, q) - rank(b, q); return d !== 0 ? d : a.label.localeCompare(b.label); });
+    return list.slice(0, 8);
+  }
+
+  function close() {
+    panel.classList.remove('open');
+    panel.innerHTML = '';
+    input.setAttribute('aria-expanded', 'false');
+  }
+
+  function render(q) {
+    if (!q) { close(); return; }
+    var list = matches(q);
+    if (!list.length) {
+      panel.innerHTML = '<div class="ft-search-empty">No results available</div>';
+    } else {
+      panel.innerHTML = list.map(function (f, i) {
+        return '<button type="button" class="ft-search-item" data-i="' + i + '"><i class="fa-solid fa-arrow-right"></i><span>' + esc(f.label) + '</span></button>';
+      }).join('');
+      Array.prototype.forEach.call(panel.querySelectorAll('.ft-search-item'), function (b) {
+        b.addEventListener('click', function () {
+          var f = list[parseInt(b.getAttribute('data-i'), 10)];
+          if (!f) return;
+          input.value = '';
+          close();
+          f.go();
+        });
+      });
+    }
+    panel.classList.add('open');
+    input.setAttribute('aria-expanded', 'true');
+  }
+
+  function typed() { return input.value.trim().toLowerCase(); }
+  input.addEventListener('input', function () { render(typed()); });
+  input.addEventListener('focus', function () { if (typed()) render(typed()); });
+  input.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape') { input.value = ''; close(); input.blur(); return; }
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      var first = panel.querySelector('.ft-search-item');
+      if (first) first.click();
+    }
+  });
+  document.addEventListener('click', function (ev) {
+    if (!wrap.contains(ev.target)) close();
+  });
+})();
+</script>
+
 </body>
 </html>
