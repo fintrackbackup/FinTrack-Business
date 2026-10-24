@@ -813,7 +813,7 @@ html, body { background-color: transparent !important; background-image: none !i
   <a class="drawer-menu-item" id="drawer-invoiceTab" onclick="navigateFromDrawer('invoiceTab')"><i class="fa-solid fa-file-invoice"></i> Invoice Generator</a>
   <a class="drawer-menu-item" id="drawer-reportsTab" onclick="navigateFromDrawer('reportsTab')"><i class="fa-solid fa-file-invoice-dollar"></i> Financial Reports</a>
   <a class="drawer-menu-item" id="drawer-adminTab" style="display: none;" onclick="navigateFromDrawer('adminTab')"><i class="fa-solid fa-user-shield"></i> Admin Controls</a>
-  <a class="drawer-menu-item" id="drawer-hrMgmtTab" onclick="navigateFromDrawer('hrMgmtTab')"><i class="fa-solid fa-users-gear"></i> HR Management</a>
+  <a class="drawer-menu-item" id="drawer-hrMgmtTab" style="display: none;" onclick="navigateFromDrawer('hrMgmtTab')"><i class="fa-solid fa-users-gear"></i> HR Management</a>
   <a class="drawer-menu-item" id="drawer-hrTab" onclick="navigateFromDrawer('hrTab')"><i class="fa-solid fa-id-card-clip"></i> Staff Profile</a>
 <a class="drawer-menu-item" data-pa="1" id="drawer-paDashboardTab" onclick="navigateFromDrawer('paDashboardTab')" style="display:none"><i class="fa-solid fa-chart-line"></i> PA Dashboard</a>
 <a class="drawer-menu-item" data-pa="1" id="drawer-paBusinessesTab" onclick="navigateFromDrawer('paBusinessesTab')" style="display:none"><i class="fa-solid fa-building"></i> Businesses</a>
@@ -1080,7 +1080,7 @@ html, body { background-color: transparent !important; background-image: none !i
   <button class="tab-btn" id="btn-invoiceTab" onclick="switchTab('invoiceTab', this)">Invoice</button>
   <button class="tab-btn" id="btn-reportsTab" onclick="switchTab('reportsTab', this)">Financial Reports</button>
   <button class="tab-btn" id="btn-adminTab" style="display: none;" onclick="switchTab('adminTab', this)">Admin Controls</button>
-  <button class="tab-btn" id="btn-hrMgmtTab" onclick="switchTab('hrMgmtTab', this)">HR Management</button>
+  <button class="tab-btn" id="btn-hrMgmtTab" style="display: none;" onclick="switchTab('hrMgmtTab', this)">HR Management</button>
   <button class="tab-btn" id="btn-hrTab" onclick="switchTab('hrTab', this)">Staff Profile</button>
 <button class="tab-btn pa-tab-btn" id="btn-paDashboardTab" onclick="switchPATab('paDashboardTab',this)" style="display:none">PA Dashboard</button>
 <button class="tab-btn pa-tab-btn" id="btn-paBusinessesTab" onclick="switchPATab('paBusinessesTab',this)" style="display:none">Businesses</button>
@@ -1903,15 +1903,6 @@ html, body { background-color: transparent !important; background-image: none !i
             <button class="btn-pdf" onclick="exportDailyPDF()"><i class="fa-solid fa-file-pdf"></i> Daily PDF</button>
           </div>
           <button class="btn-pdf" onclick="exportReportPDF('monthly')" style="background: var(--atmos-navy);"><i class="fa-solid fa-file-pdf"></i> Monthly PDF</button>
-            <div class="month-picker-box">
-              <i class="fa-solid fa-book"></i>
-              <label>Cashbook:</label>
-              <select id="cashbookPdfRange" style="border:none; background:transparent; font-weight:800; color:var(--atmos-navy); outline:none; cursor:pointer;">
-                <option value="all">All-Time Data</option>
-                <option value="fy">Current Financial Year</option>
-              </select>
-              <button class="btn-pdf" onclick="exportCashbookPDF()"><i class="fa-solid fa-file-pdf"></i> Download</button>
-            </div>
         </div>
       </div>
 
@@ -2062,6 +2053,7 @@ html, body { background-color: transparent !important; background-image: none !i
       <button type="button" class="ftg-box" onclick="showAdminSection('monthClosingSection')"><i class="fa-solid fa-calendar-check" style="color:var(--primary)"></i><span>Month Closing</span></button>
       <button type="button" class="ftg-box" onclick="showAdminSection('openingBalSection')"><i class="fa-solid fa-scale-balanced" style="color:var(--accent-green)"></i><span>Opening Balances</span></button>
       <button type="button" class="ftg-box" onclick="showAdminSection('masterCatalogSection')"><i class="fa-solid fa-layer-group" style="color:var(--accent-purple)"></i><span>Master Catalog</span></button>
+      <button type="button" class="ftg-box" onclick="showAdminSection('cashbookSection')"><i class="fa-solid fa-book" style="color:var(--atmos-red)"></i><span>Cashbook</span></button>
     </div>
 
     <div class="ftg-panel" id="ftMgmtPanel-staff" role="tabpanel" style="display:none">
@@ -2334,6 +2326,23 @@ html, body { background-color: transparent !important; background-image: none !i
         </div>
       </div>
 
+    </div>
+
+    <!-- CASHBOOK (Money Management, administrator only) -->
+    <div id="cashbookSection" class="app-card" style="border-left: 5px solid var(--atmos-red); margin-bottom: 24px; display: none;">
+      <h3 style="font-size: 1.05rem; font-weight: 900; color: var(--atmos-navy); margin-bottom: 6px;">
+        <i class="fa-solid fa-book" style="color: var(--atmos-red); margin-right: 6px;"></i> Cashbook
+      </h3>
+      <p style="font-size: .82rem; color: var(--text-muted); margin-bottom: 14px;">Download the cashbook for all time or for the current financial year.</p>
+      <div class="month-picker-box">
+        <i class="fa-solid fa-book"></i>
+        <label>Cashbook:</label>
+        <select id="cashbookPdfRange" style="border:none; background:transparent; font-weight:800; color:var(--atmos-navy); outline:none; cursor:pointer;">
+          <option value="all">All-Time Data</option>
+          <option value="fy">Current Financial Year</option>
+        </select>
+        <button class="btn-pdf" onclick="exportCashbookPDF()"><i class="fa-solid fa-file-pdf"></i> Download</button>
+      </div>
     </div>
 
     <!-- MASTER SERVICE CATALOG (Money Management) -->
@@ -2642,7 +2651,7 @@ html, body { background-color: transparent !important; background-image: none !i
     </div>
 
     <!-- STAFF ATTENDANCE TRACKER (ADMIN VIEW / SUMMARY) -->
-    <div class="app-card" style="margin-bottom: 24px;">
+    <div class="app-card" id="adminLiveAttendanceCard" style="margin-bottom: 24px; display: none;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
         <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--atmos-navy);">
           <i class="fa-solid fa-user-clock" style="color: var(--atmos-red); margin-right: 6px;"></i> Live Attendance Records
@@ -5137,12 +5146,18 @@ const FIREBASE_CONFIG = {
     if (user.role === 'Admin') {
       document.getElementById('btn-adminTab').style.display = 'inline-block';
       document.getElementById('drawer-adminTab').style.display = 'flex';
+      document.getElementById('btn-hrMgmtTab').style.display = 'inline-block';
+      document.getElementById('drawer-hrMgmtTab').style.display = 'flex';
+      var __liveAtt = document.getElementById('adminLiveAttendanceCard'); if (__liveAtt) __liveAtt.style.display = 'block';
       document.getElementById('adminHrStaffSelectorCard').style.display = 'block';
       document.getElementById('adminPhotoUploadArea').style.display = 'block';
       document.getElementById('adminEditProfileBtnContainer').style.display = 'block';
     } else {
       document.getElementById('btn-adminTab').style.display = 'none';
       document.getElementById('drawer-adminTab').style.display = 'none';
+      document.getElementById('btn-hrMgmtTab').style.display = 'none';
+      document.getElementById('drawer-hrMgmtTab').style.display = 'none';
+      var __liveAttS = document.getElementById('adminLiveAttendanceCard'); if (__liveAttS) __liveAttS.style.display = 'none';
       document.getElementById('adminHrStaffSelectorCard').style.display = 'none';
       document.getElementById('adminPhotoUploadArea').style.display = 'none';
       document.getElementById('adminEditProfileBtnContainer').style.display = 'none';
@@ -5590,6 +5605,8 @@ const FIREBASE_CONFIG = {
 
   /* NAVIGATION & TAB SWITCHING */
   function switchTab(tabId, btnElem) {
+    /* HR Management belongs to the business administrator only. */
+    if (tabId === 'hrMgmtTab' && !(currentUser && currentUser.role === 'Admin')) return;
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.drawer-menu-item').forEach(el => el.classList.remove('active'));
@@ -7399,7 +7416,7 @@ const FIREBASE_CONFIG = {
      7. ADMIN CONTROLS & MONTH CLOSING
   --------------------------------------------------- */
   function showAdminSection(secId) {
-    ['monthClosingSection', 'ftStaffSection', 'staffSalarySection', 'openingBalSection', 'staffReportSection', 'analyticsSection', 'attendanceMgmtSection', 'masterCatalogSection'].forEach(function (id) {
+    ['monthClosingSection', 'ftStaffSection', 'staffSalarySection', 'openingBalSection', 'staffReportSection', 'analyticsSection', 'attendanceMgmtSection', 'masterCatalogSection', 'cashbookSection'].forEach(function (id) {
       var el = document.getElementById(id);
       if (el) el.style.display = (id === secId) ? 'block' : 'none';
     });
@@ -12124,7 +12141,7 @@ window.addEventListener('DOMContentLoaded', function() {
     window.__ftOpenAdminSection = id;
     var r;
     try { r = __ftSectionSwitch.apply(null, arguments); } catch (e) {}
-    ['monthClosingSection', 'staffSalarySection', 'openingBalSection', 'staffReportSection', 'analyticsSection', 'attendanceMgmtSection', 'ftStaffAnnounceSection', 'ftStaffSection'].forEach(function (x) {
+    ['monthClosingSection', 'staffSalarySection', 'openingBalSection', 'cashbookSection', 'staffReportSection', 'analyticsSection', 'attendanceMgmtSection', 'ftStaffAnnounceSection', 'ftStaffSection'].forEach(function (x) {
       var el = document.getElementById(x); if (el) el.style.display = (x === id) ? 'block' : 'none';
     });
     return r;
@@ -12148,25 +12165,27 @@ window.addEventListener('DOMContentLoaded', function() {
   var PD = function () { try { return platformData || {}; } catch (e) { return {}; } };
   var ftPendingWrites = 0, ftLastOk = 0, ftErr = null, ftConn = null;
 
+  /* While somebody is signed in the badge says one of two things: Synced to
+     Cloud, or Offline when the internet is really gone. A reconnecting Firebase
+     socket, a queued write or a refused write never knocks it out of Synced to
+     Cloud, so it no longer flickers the moment something is tapped. */
+  function ftSignedIn() {
+    try { if (typeof currentUser !== 'undefined' && currentUser) return true; } catch (e) {}
+    try { if (typeof platformAdminUser !== 'undefined' && platformAdminUser) return true; } catch (e) {}
+    return false;
+  }
   function ftPaint() {
     var b = document.getElementById('cloudSyncStatusBadge'); if (!b) return;
-    var state = ftConn === false ? 'offline' : (ftErr ? 'error' : (ftPendingWrites > 0 ? 'pending' : (ftLastOk ? 'synced' : 'idle')));
+    var state = (navigator.onLine === false) ? 'offline' : (ftSignedIn() ? 'synced' : 'idle');
     var m = {
-      synced: ['sync-badge sync-online', 'fa-cloud-arrow-up', 'Synced to Cloud', 'Connected to Firebase. Last confirmed write: ' + new Date(ftLastOk).toLocaleString()],
-      pending: ['sync-badge sync-pending', 'fa-arrows-rotate', 'Syncing...', ftPendingWrites + ' change(s) waiting for Firebase confirmation'],
-      offline: ['sync-badge sync-offline', 'fa-wifi', 'Offline', 'No Firebase connection. Changes stay on this device and sync when the connection returns.'],
-      error: ['sync-badge sync-error', 'fa-triangle-exclamation', 'Sync Error', 'Firebase rejected the last write: ' + ftErr],
+      synced: ['sync-badge sync-online', 'fa-cloud', 'Synced to Cloud', 'Connected to Firebase. Last confirmed write: ' + (ftLastOk ? new Date(ftLastOk).toLocaleString() : 'in progress')],
+      offline: ['sync-badge sync-offline', 'fa-wifi', 'Offline', 'No internet connection. Changes stay on this device and sync by themselves when the connection returns.'],
       idle: ['sync-badge sync-local', 'fa-cloud', 'Sync to Cloud', 'Sign in to a business to start cloud synchronisation.']
     }[state];
     b.className = m[0]; b.title = m[3];
     b.innerHTML = '<i class="fa-solid ' + m[1] + '"></i> ' + m[2];
   }
-  setSyncBadge = function (state) {
-    if (state === 'online') { ftLastOk = Date.now(); ftErr = null; if (ftConn === null) ftConn = true; }
-    else if (state === 'error') { ftErr = ftErr || 'write failed'; }
-    else if (state === 'offline') { ftConn = false; }
-    ftPaint();
-  };
+  setSyncBadge = function () { ftPaint(); };
   window.setSyncBadge = setSyncBadge;
 
   var ftConnHandler = null;
@@ -12194,6 +12213,8 @@ window.addEventListener('DOMContentLoaded', function() {
     } catch (e) {}
   }
   window.ftCheckConn = ftCheckConn;
+  window.addEventListener('online', ftPaint);
+  window.addEventListener('offline', ftPaint);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) ftCheckConn(); });
   window.addEventListener('focus', function () { ftCheckConn(); });
   window.addEventListener('online', function () { ftCheckConn(); });
@@ -13906,7 +13927,7 @@ function ftMountHrMgmt() {
   try {
     var host = document.getElementById('hrMgmtMount');
     if (!host) return;
-    ['ftMgmtSwitch', 'ftMgmtPanel-money', 'ftMgmtPanel-staff', 'monthClosingSection', 'openingBalSection', 'ftStaffSection', 'staffSalarySection', 'attendanceMgmtSection', 'staffReportSection', 'analyticsSection', 'masterCatalogSection'].forEach(function (id) {
+    ['ftMgmtSwitch', 'ftMgmtPanel-money', 'ftMgmtPanel-staff', 'monthClosingSection', 'openingBalSection', 'ftStaffSection', 'staffSalarySection', 'attendanceMgmtSection', 'staffReportSection', 'analyticsSection', 'masterCatalogSection', 'cashbookSection'].forEach(function (id) {
       var el = document.getElementById(id);
       if (el && el.parentNode !== host) host.appendChild(el);
     });
