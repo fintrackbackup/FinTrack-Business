@@ -3392,7 +3392,7 @@ html, body { background-color: transparent !important; background-image: none !i
     attendanceRules: { reportingTime: '09:25', graceMinutes: 0, noonCutoff: '12:00', timezone: 'Asia/Kolkata', halfDayDeductionPct: 50 },
     attendanceAuditLog: [],
     /* Business branding for the existing (pre multi-tenant) business — aligned with the new registration flow */
-    businessProfile: { shopName: 'FinTrack Business', motto: 'Gateway of Opportunities', category: 'Akshaya Center', customCategory: '' }
+    businessProfile: { shopName: '', motto: '', category: 'Akshaya Center', customCategory: '' }
   };
 
   let currentUser = null;
@@ -4887,17 +4887,19 @@ const FIREBASE_CONFIG = {
     }
     var poweredBy = document.getElementById('invoicePoweredBy');
     if (poweredBy) {
-      poweredBy.innerText = 'Powered by ' + (getBusinessProfile().shopName || getPlatformBranding().name);
+      var __brand = (typeof ftBizBrand === 'function') ? ftBizBrand() : { name: getBusinessProfile().shopName || '' };
+      poweredBy.innerText = 'Powered by ' + (__brand.name || 'this business');
     }
+    var __b = (typeof ftBizBrand === 'function') ? ftBizBrand() : { name: getBusinessProfile().shopName || '', logo: logoUrl };
     ['drawerBrandLogoBox', 'navBrandLogoBox'].forEach(function(boxId) {
       var box = document.getElementById(boxId);
       if (!box) return;
-      if (logoUrl) {
+      if (__b.logo) {
         box.classList.add('has-logo');
-        box.innerHTML = '<img src="' + logoUrl + '" alt="Business Logo">';
+        box.innerHTML = '<img src="' + __b.logo + '" alt="Business Logo">';
       } else {
         box.classList.remove('has-logo');
-        box.innerHTML = getBusinessProfile().shopName || 'Business';
+        box.innerHTML = __b.name || '';
       }
     });
   }
@@ -5026,7 +5028,7 @@ const FIREBASE_CONFIG = {
         template_params: {
           to_email: toEmail,
           admin_name: adminName,
-          business_name: (appData.businessProfile && appData.businessProfile.shopName) || 'FinTrack Business',
+          business_name: (typeof ftBizBrand === 'function' ? ftBizBrand().name : '') || (appData.businessProfile && appData.businessProfile.shopName) || '',
           reset_link: resetLink,
           expiry_minutes: expiryMinutes
         }
@@ -9170,6 +9172,46 @@ function applyPlatformBranding() {
 }
 
 /* ===== BUSINESS BRANDING (per business — independent of platform branding) ===== */
+/* The business's own name, motto and logo - the name its administrator gave at
+   registration. Read from the business's own records, then from the copy kept on
+   this device for this business id, then from its registry record in the cloud.
+   The platform's name and mark are never used for a business. */
+function ftBizBrandCacheKey() {
+  var b = '';
+  try { b = (typeof authBusinessId !== 'undefined' && authBusinessId) || ''; } catch (e) { b = ''; }
+  if (!b) { try { b = window.ftAuthBusinessId || ''; } catch (e) {} }
+  return b ? 'FT_BIZ_BRAND_' + b : '';
+}
+function ftBizBrandCached() {
+  try { var k = ftBizBrandCacheKey(); if (!k) return {}; return JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch (e) { return {}; }
+}
+function ftEscHtml(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function ftBizBrandIsPlatform(v) { return !v || String(v).trim() === '' || String(v).trim() === 'FinTrack Business'; }
+function ftBizBrand() {
+  var p = (typeof appData !== 'undefined' && appData && appData.businessProfile) || {};
+  var cached = ftBizBrandCached();
+  var rec = {};
+  try {
+    var id = ftBizBrandCacheKey().replace('FT_BIZ_BRAND_', '');
+    rec = ((typeof platformData !== 'undefined' && platformData && platformData.businesses) || {})[id] || {};
+  } catch (e) { rec = {}; }
+  var name = ftBizBrandIsPlatform(p.shopName) ? (ftBizBrandIsPlatform(cached.shopName) ? (ftBizBrandIsPlatform(rec.name) ? '' : rec.name) : cached.shopName) : p.shopName;
+  var motto = p.motto || cached.motto || rec.motto || '';
+  var logo = '';
+  try { logo = (typeof appData !== 'undefined' && appData && appData.logoDataUrl) || ''; } catch (e) { logo = ''; }
+  if (!logo) logo = cached.logo || '';
+  /* remembered for this business only, so another tab or a slow network can
+     never show a different name */
+  try {
+    var k = ftBizBrandCacheKey();
+    var next = { shopName: name || cached.shopName || '', motto: motto || cached.motto || '', logo: logo || cached.logo || '' };
+    if (k && (next.shopName || next.motto || next.logo) && JSON.stringify(next) !== JSON.stringify(cached)) {
+      localStorage.setItem(k, JSON.stringify(next));
+    }
+  } catch (e) {}
+  return { name: name, motto: motto, logo: logo };
+}
+
 function getBusinessProfile() {
   var p = (typeof appData !== 'undefined' && appData && appData.businessProfile) || {};
   return {
@@ -9225,41 +9267,39 @@ function updateBusinessBrandingDisplays() {
     return;
   }
   var prof = getBusinessProfile();
-  var bizLogo = (typeof appData !== 'undefined' && appData && appData.logoDataUrl) || '';
+  var brand = (typeof ftBizBrand === 'function') ? ftBizBrand() : { name: prof.shopName || '', motto: prof.motto || '', logo: '' };
+  var bizLogo = brand.logo || '';
   var drawerLogo = document.getElementById('drawerBrandLogoBox');
   if (drawerLogo) {
-    var drawerLogoSrc = bizLogo || getPlatformBranding().logoDataUrl || '';
-    if (drawerLogoSrc) { drawerLogo.classList.add('has-logo'); drawerLogo.innerHTML = '<img src="' + drawerLogoSrc + '" alt="FinTrack Business" style="max-height:38px;max-width:120px;object-fit:contain">'; }
-    else { drawerLogo.classList.remove('has-logo'); drawerLogo.innerText = getPlatformBranding().name; }
+    if (bizLogo) { drawerLogo.classList.add('has-logo'); drawerLogo.innerHTML = '<img src="' + bizLogo + '" alt="' + ftEscHtml(brand.name || 'Business') + '" style="max-height:38px;max-width:120px;object-fit:contain">'; }
+    else { drawerLogo.classList.remove('has-logo'); drawerLogo.innerText = brand.name || ''; }
   }
   var drawerName = document.getElementById('drawerBizName');
   if (drawerName) {
-    drawerName.innerText = prof.shopName;
-    drawerName.style.display = prof.shopName ? 'block' : 'none';
+    drawerName.innerText = brand.name || '';
+    drawerName.style.display = brand.name ? 'block' : 'none';
   }
   var drawerMotto = document.getElementById('drawerBizMotto');
   if (drawerMotto) {
-    drawerMotto.innerText = prof.motto || '';
-    drawerMotto.style.display = prof.motto ? 'block' : 'none';
+    drawerMotto.innerText = brand.motto || '';
+    drawerMotto.style.display = brand.motto ? 'block' : 'none';
   }
   /* The header belongs to the signed-in business - never to the platform. */
   var isBusinessUser = !!(typeof currentUser !== 'undefined' && currentUser) && !document.body.classList.contains('pa-mode');
   if (!isBusinessUser) return;
-  var platform = getPlatformBranding();
   var navTitle = document.getElementById('navBrandTitle');
   var navSub = document.getElementById('navBrandSubtitle');
   var navBox = document.getElementById('navBrandLogoBox');
   if (navBox) {
-    var headerLogoSrc = bizLogo || platform.logoDataUrl || '';
-    if (headerLogoSrc) {
+    if (bizLogo) {
       navBox.classList.add('has-logo');
-      navBox.innerHTML = '<img src="' + headerLogoSrc + '" alt="' + (prof.shopName || 'Business') + '" style="max-height:34px;max-width:130px;object-fit:contain">';
+      navBox.innerHTML = '<img src="' + bizLogo + '" alt="' + ftEscHtml(brand.name || 'Business') + '" style="max-height:34px;max-width:130px;object-fit:contain">';
     } else {
       navBox.classList.remove('has-logo');
-      navBox.innerText = prof.shopName || platform.name;
+      navBox.innerText = brand.name || '';
     }
   }
-  try { document.title = (prof.shopName || platform.name) + (prof.motto ? ' - ' + prof.motto : ''); } catch (e) {}
+  if (brand.name) { try { document.title = brand.name + (brand.motto ? ' - ' + brand.motto : ''); } catch (e) {} }
 }
 
 /* SUBSCRIPTION PLANS */
@@ -9938,6 +9978,8 @@ function paLogout() {
 function switchPATab(tabId, btnElem) {
   currentPATab = tabId;
   document.querySelectorAll('.pa-section').forEach(function(s) { s.classList.remove('active'); });
+  /* only the area in front is highlighted - never every area visited */
+  document.querySelectorAll('.drawer-menu-item').forEach(function(el) { el.classList.remove('active'); });
   document.querySelectorAll('.pa-tab-btn').forEach(function(b) { b.classList.remove('active'); });
   var sec = document.getElementById(tabId);
   if (sec) sec.classList.add('active');
@@ -10056,7 +10098,7 @@ function sendWelcomeToAllExistingBusinesses() {
 
 function renderPADashboard() {
   var businesses = platformData.businesses || {};
-  var bizArr = Object.keys(businesses).map(function(k) { return Object.assign({id:k}, businesses[k]); });
+  var bizArr = ftBizOrderIds(businesses).map(function(k) { return Object.assign({id:k}, businesses[k]); });
   var totalBiz = bizArr.length;
   var totalAdmins = 0, totalStaff = 0, onlineBiz = 0, activeBiz = 0, dormantBiz = 0;
   var trialBiz = 0, activeSubs = 0, expiredSubs = 0, blockedBiz = 0, pendingPayments = 0;
@@ -10261,7 +10303,7 @@ function renderPABusinesses() {
   var tbody = document.getElementById('paBusinessTableBody');
   if (!tbody) return;
   tbody.innerHTML = '';
-  var bizArr = Object.keys(businesses).map(function(k) { return Object.assign({id:k}, businesses[k]); });
+  var bizArr = ftBizOrderIds(businesses).map(function(k) { return Object.assign({id:k}, businesses[k]); });
   if (search) bizArr = bizArr.filter(function(b) {
     return (b.name||'').toLowerCase().includes(search) || (b.id||'').toLowerCase().includes(search) || (b.adminName||'').toLowerCase().includes(search);
   });
@@ -10937,7 +10979,7 @@ function renderPANotifications() {
   if (bizSelect) {
     bizSelect.innerHTML = '';
     var businesses = platformData.businesses || {};
-    Object.keys(businesses).forEach(function(k) {
+    ftBizOrderIds(businesses).forEach(function(k) {
       var b = businesses[k];
       var opt = document.createElement('option');
       opt.value = k; opt.innerText = b.name || k;
@@ -11689,7 +11731,7 @@ function ftbShowWelcomeSplash() {
   ftbHideBootSplash();
   var existing = document.getElementById('ftbWelcomeSplash'); if (existing) existing.remove();
   var logo = '';
-  try { logo = (getPlatformBranding && getPlatformBranding().logoDataUrl) || ''; } catch (e) {}
+  try { logo = (typeof ftBizBrand === 'function' ? ftBizBrand().logo : '') || (getPlatformBranding && getPlatformBranding().logoDataUrl) || ''; } catch (e) {}
   if (!logo) logo = 'https://media.base44.com/images/public/6ad20c8082d97b3bd37417ae/266afcba3_IMG_2552.jpg';
   var splash = document.createElement('div');
   splash.id = 'ftbWelcomeSplash';
@@ -12051,7 +12093,7 @@ window.addEventListener('DOMContentLoaded', function() {
   try { new MutationObserver(function () { window.ftSyncModalLock(); }).observe(document.documentElement, { attributes: true, subtree: true, attributeFilter: ['style', 'class'] }); } catch (e) {}
   setInterval(function () { window.ftSyncModalLock(); }, 700);
   function nameVeil() {
-    try { var p = getBusinessProfile() || {}, n = p.shopName || 'FinTrack Business'; document.documentElement.style.setProperty('--ft-veil-name', '"' + String(n).replace(/"/g, '') + '"'); } catch (e) {}
+    try { var b = (typeof ftBizBrand === 'function') ? ftBizBrand() : {}, n = b.name || ''; document.documentElement.style.setProperty('--ft-veil-name', '"' + String(n).replace(/"/g, '') + '"'); } catch (e) {}
   }
   setTimeout(nameVeil, 1200); setInterval(nameVeil, 8000);
 
@@ -12127,16 +12169,53 @@ window.addEventListener('DOMContentLoaded', function() {
   };
   window.setSyncBadge = setSyncBadge;
 
+  var ftConnHandler = null;
   function ftBindConn() {
     try {
       if (typeof firebase === 'undefined' || !firebase.database) return;
-      firebase.database().ref('.info/connected').on('value', function (s) {
-        ftConn = s.val() === true;
-        if (ftConn) ftErr = null;
-        ftPaint();
-      });
+      var cref = firebase.database().ref('.info/connected');
+      if (ftConnHandler) { try { cref.off('value', ftConnHandler); } catch (e) {} }
+      ftConnHandler = function (s) { ftConn = s.val() === true; if (ftConn) ftErr = null; ftPaint(); };
+      cref.on('value', ftConnHandler);
     } catch (e) {}
   }
+  /* Coming back to the laptop reconnects by itself: waking the page, focusing it,
+     the network returning, and a steady check while the page is open all re-open
+     the connection and beat again, so nothing has to be clicked to sync. */
+  function ftCheckConn() {
+    try {
+      if (typeof firebase === 'undefined' || !firebase.database) return;
+      var d = firebase.database();
+      try { d.goOnline(); } catch (e) {}
+      d.ref('.info/connected').get().then(function (s) {
+        ftConn = s.val() === true; if (ftConn) ftErr = null; ftPaint();
+      }).catch(function () { ftConn = false; ftPaint(); });
+      if (ftConn !== true) { try { if (typeof window.ftPresenceKick === 'function') window.ftPresenceKick(); } catch (e) {} }
+    } catch (e) {}
+  }
+  window.ftCheckConn = ftCheckConn;
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) ftCheckConn(); });
+  window.addEventListener('focus', function () { ftCheckConn(); });
+  window.addEventListener('online', function () { ftCheckConn(); });
+  setInterval(function () { if (!document.hidden) ftCheckConn(); }, 45000);
+  /* No network: say so plainly in the middle of the screen instead of dressing
+     the gap up as real data. Idle time alone never switches this on. */
+  function ftNetOverlay() {
+    var el = document.getElementById('ftNetOverlay');
+    if (navigator.onLine !== false) { if (el) el.remove(); return; }
+    if (el) return;
+    el = document.createElement('div');
+    el.id = 'ftNetOverlay';
+    el.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9000;pointer-events:none;background:#0B1E2D;color:#ffffff;border-radius:14px;padding:16px 22px;box-shadow:0 20px 50px rgba(11,30,45,.35);text-align:center;max-width:min(90vw,360px)';
+    el.innerHTML = '<div style="font-size:1.35rem;line-height:1"><i class="fa-solid fa-wifi"></i></div><div style="font-weight:800;font-size:.92rem;margin-top:8px">Network unavailable</div><div style="font-size:.76rem;opacity:.85;margin-top:4px">Only your own saved details are shown. It reconnects by itself.</div>';
+    document.body.appendChild(el);
+  }
+  window.ftNetOverlay = ftNetOverlay;
+  window.addEventListener('offline', ftNetOverlay);
+  window.addEventListener('online', ftNetOverlay);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) ftNetOverlay(); });
+  setInterval(ftNetOverlay, 3000);
+  ftNetOverlay();
   function ftHookWrites() {
     try {
       if (typeof firebase === 'undefined' || !firebase.database) return;
@@ -12188,6 +12267,7 @@ window.addEventListener('DOMContentLoaded', function() {
         var pref = db.ref('atmos_platform_admin/presence/platform_' + au.replace(/[^A-Za-z0-9_]/g, '_'));
         pref.onDisconnect().update({ online: false, lastActive: sv });
         pref.update({ online: true, role: 'Platform Administrator', name: 'Platform Administrator', at: Date.now(), lastActive: sv }).catch(function () {});
+        window.ftPresenceKick = function () { try { pref.update({ online: true, role: 'Platform Administrator', name: 'Platform Administrator', at: Date.now(), lastActive: firebase.database.ServerValue.TIMESTAMP }).catch(function () {}); } catch (e) {} };
         ftPresenceStarted = true; return;
       }
       var biz = ftBizId(); if (!biz) return;
@@ -12203,6 +12283,7 @@ window.addEventListener('DOMContentLoaded', function() {
         } catch (e) {}
       };
       beat();
+      window.ftPresenceKick = function () { try { beat(); } catch (e) {} };
       try { ftEnsureWelcomeOnce(biz); } catch (e) {}
       setInterval(beat, 45000);
       document.addEventListener('click', function () { var n = Date.now(); if (n - ftLastBeat < 60000) return; ftLastBeat = n; beat(); }, true);
@@ -12216,7 +12297,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
   initPACharts = function (bizArr) {
     var pd = PD(), businesses = pd.businesses || {};
-    var arr = (bizArr && bizArr.forEach) ? bizArr : Object.keys(businesses).map(function (k) { return Object.assign({ id: k }, businesses[k]); });
+    var arr = (bizArr && bizArr.forEach) ? bizArr : ftBizOrderIds(businesses).map(function (k) { return Object.assign({ id: k }, businesses[k]); });
     try {
       var months = {}, cum = 0;
       arr.forEach(function (b) { var m = String(b.joiningDate || '').substring(0, 7); if (m) months[m] = (months[m] || 0) + 1; });
@@ -12396,6 +12477,7 @@ window.addEventListener('DOMContentLoaded', function() {
         var n = inbox[id] || {};
         var rc = receiptOf(id);
         if (rc.deletedAt) return;
+        if (n.deletedBy && n.deletedBy[u.id]) return;
         var exp = Number(n.expiryAt) || dayMs(n.expiryDate);
         if (exp && t > exp) return;
         if (rc.readAt && t - rc.readAt > 4 * 86400000) return;
@@ -12450,7 +12532,10 @@ window.addEventListener('DOMContentLoaded', function() {
   function markDeleted(n) {
     var u = me(); if (!u) return;
     var t = Date.now();
-    if (n.scope === 'pa') writeReceipt(n.id, 'deletedAt');
+    if (n.scope === 'pa') {
+      writeReceipt(n.id, 'deletedAt');
+      try { var __rd = db(); if (__rd && u && u.id) __rd.ref('businesses/' + activeBiz() + '/meta/notifications/' + n.id + '/deletedBy/' + u.id).set(t).catch(function () {}); } catch (e) {}
+    }
     else if (n.scope === 'sa') {
       var list = (appData && Array.isArray(appData.staffAnnouncements)) ? appData.staffAnnouncements : [];
       list.forEach(function (a) { if (a && a.id === n.rawId) { a.deletedBy = a.deletedBy || {}; a.deletedBy[u.id] = t; } });
@@ -12458,22 +12543,28 @@ window.addEventListener('DOMContentLoaded', function() {
     } else setLocal('delsys_' + n.id, t);
   }
 
+  window.ftReadNotif = function (id) {
+    var n = collect().filter(function (x) { return String(x.id) === String(id); })[0];
+    if (n && !n.readAt) markRead(n);
+    refreshBell();
+    window.ftOpenNotifPanel();
+  };
   function itemHtml(n) {
     var unread = !n.readAt;
-    return '<div style="display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);' + (unread ? 'background:#fffbeb;' : '') + '">' +
+    return '<div onclick="ftReadNotif(\'' + n.id + '\')" title="' + (unread ? 'Open to mark as read' : 'Read') + '" style="display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;' + (unread ? 'background:#fffbeb;' : '') + '">' +
       '<span style="width:8px;height:8px;border-radius:50%;margin-top:6px;flex:0 0 8px;background:' + (unread ? '#FACC15' : 'transparent') + '"></span>' +
       '<div style="flex:1;min-width:0">' +
       '<div style="font-size:.84rem;font-weight:800;color:var(--atmos-navy);line-height:1.35">' + escapeHtml(n.subject) + '</div>' +
       '<div style="font-size:.79rem;color:var(--text);white-space:pre-wrap;line-height:1.5;margin-top:3px">' + ftBoldText(n.message) + '</div>' +
       '<div style="font-size:.68rem;color:var(--text-muted);margin-top:5px">' + escapeHtml(n.sender) + ' &middot; ' + fmt(n.at) + (unread ? '' : ' &middot; read') + '</div>' +
       '</div>' +
-      '<button type="button" title="Delete" onclick="ftDeleteNotif(\'' + n.id + '\')" style="border:none;background:transparent;color:var(--accent-rose);cursor:pointer;font-size:.9rem;align-self:flex-start"><i class="fa-solid fa-trash"></i></button>' +
+      '<button type="button" title="Delete" onclick="event.stopPropagation();ftDeleteNotif(\'' + n.id + '\')" style="border:none;background:transparent;color:var(--accent-rose);cursor:pointer;font-size:.9rem;align-self:flex-start"><i class="fa-solid fa-trash"></i></button>' +
       '</div>';
   }
 
   window.ftOpenNotifPanel = function () {
     var items = collect();
-    items.forEach(function (n) { if (!n.readAt) markRead(n); });
+    /* nothing is marked read here: a message is read only when it is opened */
     var old = document.getElementById('ftNotifOverlay'); if (old) old.remove();
     var list = items.length ? items.map(itemHtml).join('') : '<div style="padding:36px 16px;text-align:center;color:var(--text-muted);font-size:.85rem"><i class="fa-regular fa-bell-slash" style="font-size:1.5rem;opacity:.5"></i><p style="margin-top:8px">No notifications.</p></div>';
     var el = document.createElement('div');
