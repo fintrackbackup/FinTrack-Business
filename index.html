@@ -8990,6 +8990,60 @@ function ftIsPlatformAdmin() {
   } catch (e) {}
   return false;
 }
+/* Presence: a business is online only while its open session is still beating.
+   The beat runs every 45 seconds, so a record older than two minutes belongs to
+   a tab that has been closed and must read Offline. */
+function ftPresenceInfo(rec) {
+  rec = rec || {};
+  var now = Date.now(), FRESH = 120000, best = 0, online = false;
+  if (rec.accounts && typeof rec.accounts === 'object' && Object.keys(rec.accounts).length) {
+    Object.keys(rec.accounts).forEach(function (u) {
+      var a = rec.accounts[u] || {};
+      var seen = Math.max(Number(a.at) || 0, Number(a.lastActive) || 0);
+      if (seen > best) best = seen;
+      if (a.online && seen && (now - seen) < FRESH) online = true;
+    });
+    if (!best) best = Number(rec.lastActive) || 0;
+  } else {
+    best = Math.max(Number(rec.at) || 0, Number(rec.lastActive) || 0);
+    online = !!(rec.online && best && (now - best) < FRESH);
+  }
+  return { online: online, lastActive: best };
+}
+
+/* Delivery of a platform message into one business: the platform registry inbox
+   plus a mirror inside the business's own records, so the business bell receives
+   it the moment it is sent whichever path its database rules allow. */
+function ftDeliverToBusiness(bizId, item) {
+  return new Promise(function (resolve) {
+    if (!bizId || !item) return resolve(false);
+    var db = null;
+    try { db = firebase.database(); } catch (e) { return resolve(false); }
+    if (!db) return resolve(false);
+    var nid = item.id || ('pa_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+    var rec = {
+      id: nid,
+      subject: item.subject || '',
+      message: item.message || '',
+      senderName: item.senderName || 'Platform Administrator',
+      senderRole: item.senderRole || 'Platform Administrator',
+      audience: item.audience || 'admin',
+      sentAt: Number(item.sentAt) || Date.now(),
+      publishAt: Number(item.publishAt) || 0,
+      expiryAt: Number(item.expiryAt) || 0
+    };
+    var paths = [
+      'atmos_platform_admin/businesses/' + bizId + '/inbox/' + nid,
+      'businesses/' + bizId + '/meta/notifications/' + nid
+    ];
+    var left = paths.length, ok = 0;
+    paths.forEach(function (p) {
+      db.ref(p).update(rec).then(function () { ok++; left--; if (!left) resolve(ok > 0); },
+                                 function () { left--; if (!left) resolve(ok > 0); });
+    });
+  });
+}
+
 var platformDbRef = null;
 var platformSyncActive = false;
 var platformFirstLoadDone = false;
@@ -9066,7 +9120,10 @@ function applyPlatformBranding() {
   /* The FinTrack logo sits in the header of every area, business or platform. */
   var navBoxOnly = document.getElementById('navBrandLogoBox');
   if (navBoxOnly) {
-    if (br.logoDataUrl) { navBoxOnly.classList.add('has-logo'); navBoxOnly.innerHTML = '<img src="' + br.logoDataUrl + '" alt="FinTrack Business" style="max-height:36px;max-width:140px;object-fit:contain">'; }
+    var ftOwnLogo = '';
+    try { ftOwnLogo = ftNavIsBusiness ? ((typeof appData !== 'undefined' && appData && appData.logoDataUrl) || '') : ''; } catch (err) {}
+    var ftHeaderLogo = ftOwnLogo || br.logoDataUrl || '';
+    if (ftHeaderLogo) { navBoxOnly.classList.add('has-logo'); navBoxOnly.innerHTML = '<img src="' + ftHeaderLogo + '" alt="FinTrack Business" style="max-height:36px;max-width:140px;object-fit:contain">'; }
     else { navBoxOnly.classList.remove('has-logo'); navBoxOnly.innerText = br.name; }
   }
   /* The business title beside it belongs to the signed-in business. */
@@ -9139,7 +9196,7 @@ function updateBusinessBrandingDisplays() {
   var bizLogo = (typeof appData !== 'undefined' && appData && appData.logoDataUrl) || '';
   var drawerLogo = document.getElementById('drawerBrandLogoBox');
   if (drawerLogo) {
-    var drawerLogoSrc = getPlatformBranding().logoDataUrl || '';
+    var drawerLogoSrc = bizLogo || getPlatformBranding().logoDataUrl || '';
     if (drawerLogoSrc) { drawerLogo.classList.add('has-logo'); drawerLogo.innerHTML = '<img src="' + drawerLogoSrc + '" alt="FinTrack Business" style="max-height:38px;max-width:120px;object-fit:contain">'; }
     else { drawerLogo.classList.remove('has-logo'); drawerLogo.innerText = getPlatformBranding().name; }
   }
@@ -9160,15 +9217,14 @@ function updateBusinessBrandingDisplays() {
   var navTitle = document.getElementById('navBrandTitle');
   var navSub = document.getElementById('navBrandSubtitle');
   var navBox = document.getElementById('navBrandLogoBox');
-  if (navTitle) navTitle.innerText = prof.shopName || platform.name;
-  if (navSub) navSub.innerText = prof.motto || platform.motto;
   if (navBox) {
-    if (platform.logoDataUrl) {
+    var headerLogoSrc = bizLogo || platform.logoDataUrl || '';
+    if (headerLogoSrc) {
       navBox.classList.add('has-logo');
-      navBox.innerHTML = '<img src="' + platform.logoDataUrl + '" alt="FinTrack Business" style="max-height:34px;max-width:130px;object-fit:contain">';
+      navBox.innerHTML = '<img src="' + headerLogoSrc + '" alt="' + (prof.shopName || 'Business') + '" style="max-height:34px;max-width:130px;object-fit:contain">';
     } else {
       navBox.classList.remove('has-logo');
-      navBox.innerText = platform.name;
+      navBox.innerText = prof.shopName || platform.name;
     }
   }
   try { document.title = (prof.shopName || platform.name) + (prof.motto ? ' - ' + prof.motto : ''); } catch (e) {}
@@ -9889,21 +9945,11 @@ function ftSendWelcomeNotification(bizId) {
   if (!r) return Promise.resolve(false);
   var base = 'atmos_platform_admin/businesses/' + bizId;
   var nid = 'welcome_' + Date.now().toString(36);
-  var msg = {};
-  msg[nid] = {
-    id: nid,
-    subject: FT_WELCOME_SUBJECT,
-    message: FT_WELCOME_MESSAGE,
-    senderName: 'FinTrack Business Team',
-    senderRole: 'FinTrack Business',
-    audience: 'admin',
-    sentAt: Date.now(),
-    publishAt: 0,
-    expiryAt: 0
-  };
-  return r.ref(base + '/inbox').update(msg)
-    .then(function () { return r.ref(base + '/welcomeSentAt').set(Date.now()); })
-    .catch(function () { return false; });
+  return ftDeliverToBusiness(bizId, { id: nid, subject: FT_WELCOME_SUBJECT, message: FT_WELCOME_MESSAGE, senderName: 'FinTrack Business Team', senderRole: 'FinTrack Business', audience: 'admin', sentAt: Date.now() })
+    .then(function (sent) {
+      if (!sent) return false;
+      return r.ref(base + '/welcomeSentAt').set(Date.now()).then(function () { return true; }).catch(function () { return true; });
+    })    .catch(function () { return false; });
 }
 
 /* Who has really received the welcome message: each business's own inbox is
@@ -9970,7 +10016,7 @@ function renderPADashboard() {
   bizArr.forEach(function(b) {
     if (b.adminName) totalAdmins++;
     totalStaff += (b.staffCount || 0);
-    var presence = (platformData.presence || {})[b.id] || {};
+    var presence = ftPresenceInfo((platformData.presence || {})[b.id] || {});
     if (presence.online) onlineBiz++;
     if (b.blocked) { blockedBiz++; return; }
     var lastAct = presence.lastActive || b.lastActive || b.lastActivity || 0;
@@ -10027,7 +10073,7 @@ function renderPADashboard() {
         '<i class="fa-solid fa-envelope-open-text" style="color:var(--primary)"></i> <strong>' + ftWelcomeScanState.due.length + ' business(es) have not received the welcome message yet.</strong>' +
         '<div style="font-size:.76rem;color:var(--text-muted);margin-top:3px">One-time send to every existing business administrator. New businesses receive the same message automatically when their administrator first signs in.</div>' +
         welcomePreview +
-        '<div style="margin-top:8px"><a class="pa-link" style="cursor:pointer;font-weight:800" onclick="sendWelcomeToAllExistingBusinesses()">Send now &rarr;</a></div>' +
+        '<div style="margin-top:10px"><button type="button" id="ftWelcomeSendBtn" onclick="sendWelcomeToAllExistingBusinesses()" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-weight:800;cursor:pointer"><i class="fa-solid fa-envelope-open-text"></i> Send Welcome Message to All Businesses</button></div>' +
         '</div>';
     } else {
       pa += '<div style="background:var(--accent-green-bg);border:1px solid var(--accent-green);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:8px">' +
@@ -10186,7 +10232,7 @@ function renderPABusinesses() {
   var now = Date.now();
   var sevenDaysAgo = now - 7*24*60*60*1000;
   bizArr.forEach(function(b) {
-    var presence = (platformData.presence||{})[b.id] || {};
+    var presence = ftPresenceInfo((platformData.presence||{})[b.id] || {});
     var online = !!presence.online;
     var lastAct = presence.lastActive || b.lastActive || b.lastActivity || 0;
     var isActive = lastAct > sevenDaysAgo;
@@ -10277,7 +10323,7 @@ function openBusinessProfile(bizId) {
   paCurrentBizId = bizId;
   var b = (platformData.businesses||{})[bizId];
   if (!b) return;
-  var presence = (platformData.presence||{})[bizId] || {};
+  var presence = ftPresenceInfo((platformData.presence||{})[bizId] || {});
   var subStatus = getBizSubscriptionStatus(Object.assign({id:bizId}, b));
   var usage = calculateBizDataUsage(Object.assign({id:bizId}, b));
   var payments = Object.keys(platformData.payments||{}).filter(function(k) { return platformData.payments[k].businessId === bizId; }).map(function(k) { return Object.assign({id:k}, platformData.payments[k]); });
@@ -10866,7 +10912,10 @@ function sendIndividualNotification() {
     readBy: {}, publishDate: publishDate || '', expiryDate: expiryDate || '', totalTargets: 1
   };
   savePlatformData();
-  alert('Notification sent successfully!');
+  var pubAt = publishDate ? Date.parse(publishDate + 'T00:00:00+05:30') : 0;
+  var expAt = expiryDate ? Date.parse(expiryDate + 'T23:59:59+05:30') : 0;
+  ftDeliverToBusiness(bizId, { id: 'pa_' + notifId, subject: subject, message: message, senderName: 'Platform Administrator', senderRole: 'Platform Administrator', audience: 'admin', sentAt: Date.now(), publishAt: pubAt || 0, expiryAt: expAt || 0 })
+    .then(function (sent) { alert(sent ? 'Notification sent to the business administrator.' : 'The notification was saved, but it could not be delivered to that business.'); });
   document.getElementById('paNotifSubject').value = '';
   document.getElementById('paNotifMessage').value = '';
   document.getElementById('paNotifPublishDate').value = '';
@@ -10909,6 +10958,9 @@ function sendAnnouncement() {
     totalTargets: targetBizIds.length
   };
   savePlatformData();
+  targetBizIds.forEach(function (id) {
+    ftDeliverToBusiness(id, { id: 'pa_' + notifId, subject: subject, message: message, senderName: 'Platform Administrator', senderRole: 'Platform Administrator', audience: 'admin', sentAt: Date.now() }).catch(function () {});
+  });
   alert('Announcement sent to ' + targetBizIds.length + ' business(es)!');
   document.getElementById('paAnnounceSubject').value = '';
   document.getElementById('paAnnounceMessage').value = '';
@@ -10929,7 +10981,7 @@ function renderPAReports() {
   var activeBiz = 0, dormantBiz = 0, totalStorage = 0;
   var sevenDaysAgo = now - 7*24*60*60*1000;
   bizArr.forEach(function(b) {
-    var presence = (platformData.presence||{})[b.id] || {};
+    var presence = ftPresenceInfo((platformData.presence||{})[b.id] || {});
     if ((presence.lastActive || b.lastActive || b.lastActivity || 0) > sevenDaysAgo) activeBiz++; else dormantBiz++;
     totalStorage += calculateBizDataUsage(b).currentKB;
   });
@@ -10952,7 +11004,7 @@ function renderPAReports() {
       bizArr.forEach(function(b) {
         var usage = calculateBizDataUsage(b);
         var subStatus = getBizSubscriptionStatus(b);
-        var presence = (platformData.presence||{})[b.id] || {};
+        var presence = ftPresenceInfo((platformData.presence||{})[b.id] || {});
         var tr = document.createElement('tr');
         tr.innerHTML = '<td>'+(b.name||'-')+'</td><td>'+((Number(b.staffCount)||0)+1)+'</td><td>'+(b.staffCount||0)+'</td><td>'+(usage.estimated?'~':'')+(b.servicesLogged||'-')+'</td><td>'+(usage.estimated?'~':'')+(b.expensesLogged||'-')+'</td><td>'+usage.currentKB.toFixed(1)+'</td><td><span class="pa-badge pa-badge-'+subStatus+'">'+subStatus+'</span></td><td style="font-size:.78rem">'+(presence.lastActive?formatTimeAgo(presence.lastActive):'Never')+'</td>';
         rtbody.appendChild(tr);
@@ -12053,7 +12105,7 @@ window.addEventListener('DOMContentLoaded', function() {
         } catch (e) {}
       };
       beat();
-      setInterval(beat, 120000);
+      setInterval(beat, 45000);
       document.addEventListener('click', function () { var n = Date.now(); if (n - ftLastBeat < 60000) return; ftLastBeat = n; beat(); }, true);
       window.addEventListener('beforeunload', function () { try { acct.update({ online: false, lastActive: sv }); } catch (e) {} });
       ftPresenceStarted = true;
@@ -12198,10 +12250,25 @@ window.addEventListener('DOMContentLoaded', function() {
     if (rr) { var o = {}; o[field] = t; rr.child(id).update(o).catch(function () { setLocal('rc_' + (field === 'readAt' ? 'read_' : 'del_') + id, t); }); }
     else setLocal('rc_' + (field === 'readAt' ? 'read_' : 'del_') + id, t);
   }
+  var ftInboxBound = null, ftInboxSrc = { reg: null, mirror: null };
+  function ftInboxMerge() {
+    var m = {};
+    if (ftInboxSrc.reg) Object.keys(ftInboxSrc.reg).forEach(function (k) { if (ftInboxSrc.reg[k]) m[k] = ftInboxSrc.reg[k]; });
+    if (ftInboxSrc.mirror) Object.keys(ftInboxSrc.mirror).forEach(function (k) { if (ftInboxSrc.mirror[k]) m[k] = ftInboxSrc.mirror[k]; });
+    ftInboxCache = m;
+    refreshBell();
+  }
   function loadInbox() {
     var r = db(), b = activeBiz();
     if (!r || !b || isPA()) return;
-    try { r.ref('atmos_platform_admin/businesses/' + b + '/inbox').on('value', function (s) { ftInboxCache = s.val() || {}; refreshBell(); }, function () {}); } catch (e) {}
+    if (ftInboxBound === b) return;
+    ftInboxBound = b;
+    try {
+      r.ref('atmos_platform_admin/businesses/' + b + '/inbox').on('value', function (s) { ftInboxSrc.reg = s.val() || {}; ftInboxMerge(); }, function () { ftInboxBound = null; });
+    } catch (e) { ftInboxBound = null; }
+    try {
+      r.ref('businesses/' + b + '/meta/notifications').on('value', function (s) { ftInboxSrc.mirror = s.val() || {}; ftInboxMerge(); }, function () {});
+    } catch (e) {}
   }
 
   function collect() {
@@ -12223,7 +12290,9 @@ window.addEventListener('DOMContentLoaded', function() {
       out = out.filter(function (n) { return !n.hidden; });
     } else {
       var biz = (PD().businesses || {})[activeBiz()] || {};
-      var inbox = biz.inbox || ftInboxCache || {};
+      var inbox = {};
+      if (biz.inbox) Object.keys(biz.inbox).forEach(function (k) { if (biz.inbox[k]) inbox[k] = biz.inbox[k]; });
+      if (ftInboxCache) Object.keys(ftInboxCache).forEach(function (k) { if (ftInboxCache[k]) inbox[k] = ftInboxCache[k]; });
       Object.keys(inbox).forEach(function (id) {
         var n = inbox[id] || {};
         var rc = receiptOf(id);
@@ -12366,12 +12435,13 @@ window.addEventListener('DOMContentLoaded', function() {
     var keys = Object.keys(platformData.notifications).sort(function (a, b) { return (platformData.notifications[b].sentAt || 0) - (platformData.notifications[a].sentAt || 0); });
     keys.slice(5).forEach(function (k) { delete platformData.notifications[k]; });
     try { await savePlatformData(); } catch (e) { console.error(e); }
-    var r = db(), ok = 0, bad = 0;
+    var ok = 0, bad = 0;
     for (var i = 0; i < ids.length; i++) {
+      var sent = false;
       try {
-        await r.ref('atmos_platform_admin/businesses/' + ids[i] + '/inbox/' + nid).update({ id: nid, subject: subject, message: message, senderName: 'Platform Administrator', senderRole: 'Platform Administrator', audience: aud, sentAt: sentAt, publishAt: pub || 0, expiryAt: exp || 0 });
-        ok++;
-      } catch (e) { bad++; }
+        sent = await ftDeliverToBusiness(ids[i], { id: nid, subject: subject, message: message, senderName: 'Platform Administrator', senderRole: 'Platform Administrator', audience: aud, sentAt: sentAt, publishAt: pub || 0, expiryAt: exp || 0 });
+      } catch (e) { sent = false; }
+      if (sent) ok++; else bad++;
     }
     alert(bad ? ('Announcement saved, but delivery failed for ' + bad + ' business(es).') : ('Announcement sent to ' + ok + ' business(es).'));
     if (typeof renderPANotifications === 'function') { try { renderPANotifications(); } catch (e) {} }
@@ -12478,7 +12548,7 @@ window.addEventListener('DOMContentLoaded', function() {
     var rows = Object.keys(bl).map(function (k) { return Object.assign({ id: k }, bl[k]); });
     if (!rows.length) { host.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:22px">No businesses registered yet.</td></tr>'; return; }
     host.innerHTML = rows.map(function (b) {
-      var s = subInfo(b), pr = pres[b.id] || {};
+      var s = subInfo(b), pr = (typeof ftPresenceInfo === 'function') ? ftPresenceInfo(pres[b.id] || {}) : (pres[b.id] || {});
       var stored = ftStorageCache ? bytes(ftStorageCache[b.id]) : '<span style="color:var(--text-muted)">Measuring...</span>';
       return '<tr>' +
         '<td><strong>' + escapeHtml(b.name || b.id) + '</strong><div style="font-size:.7rem;color:var(--text-muted)">' + (b.displayId || '-') + '</div></td>' +
@@ -12510,20 +12580,7 @@ window.addEventListener('DOMContentLoaded', function() {
     var out = {};
     Object.keys(map || {}).forEach(function (k) {
       if (k.indexOf('platform_') === 0) return;
-      var v = map[k] || {}, online = false, last = Number(v.lastActive) || 0;
-      var FT_FRESH = 5 * 60 * 1000;
-      if (v.accounts) {
-        Object.keys(v.accounts).forEach(function (u) {
-          var a = v.accounts[u] || {};
-          var seen = Math.max(Number(a.at) || 0, Number(a.lastActive) || 0);
-          if (seen > last) last = seen;
-          if (a.online && seen && (Date.now() - seen) < FT_FRESH) online = true;
-        });
-      } else {
-        var seenRoot = Math.max(Number(v.at) || 0, last);
-        online = !!(v.online && seenRoot && (Date.now() - seenRoot) < FT_FRESH);
-      }
-      out[k] = { online: online, lastActive: last };
+      out[k] = (typeof ftPresenceInfo === 'function') ? ftPresenceInfo(map[k]) : { online: false, lastActive: 0 };
     });
     return out;
   }
@@ -12602,11 +12659,12 @@ window.addEventListener('DOMContentLoaded', function() {
   var __sw = switchPATab;
   switchPATab = function (id) {
     var r = __sw.apply(null, arguments);
+    try { build(); } catch (e) {}
     try { var ls = document.getElementById('ftLiveStatusTab'); if (ls) ls.style.display = (id === 'ftLiveStatusTab') ? 'block' : 'none'; if (id === 'ftLiveStatusTab') { ensureDisplayIds(); renderLiveStatus(true); } } catch (e) {}
     return r;
   };
   var __rpd = renderPADashboard;
-  renderPADashboard = function () { var r = __rpd.apply(null, arguments); try { ensureDisplayIds(); renderPending(); renderLiveStatus(false); } catch (e) {} return r; };
+  renderPADashboard = function () { var r = __rpd.apply(null, arguments); try { build(); ensureDisplayIds(); renderPending(); renderLiveStatus(false); } catch (e) {} return r; };
   var __rbc = renderBizSubscriptionCard;
   renderBizSubscriptionCard = function () {
     var r = __rbc.apply(null, arguments);
@@ -12624,9 +12682,26 @@ window.addEventListener('DOMContentLoaded', function() {
     return r;
   };
   setInterval(function () { try { refreshBell(); } catch (e) {} }, 30000);
-  setTimeout(function () { try { build(); listenPresence(); listenReceipts(); loadInbox(); refreshBell(); } catch (e) { console.error('notif build', e); } }, 1200);
-  setTimeout(function () { try { listenReceipts(); loadInbox(); refreshBell(); } catch (e) {} }, 4000);
-  setTimeout(function () { try { refreshBell(); } catch (e) {} }, 4000);
+  function ftConsoleBoot() {
+    try { build(); } catch (e) { console.error('notif build', e); }
+    try { listenPresence(); } catch (e) {}
+    try { listenReceipts(); } catch (e) {}
+    try { loadInbox(); } catch (e) {}
+    try { refreshBell(); } catch (e) {}
+  }
+  ftConsoleBoot();
+  /* The console screen only exists once the platform administrator has signed in
+     and the platform records have arrived, so keep booting until every anchor on
+     it is present instead of trying a single time. */
+  var ftConsoleBoots = 0;
+  var ftConsoleTimer = setInterval(function () {
+    ftConsoleBoots++;
+    ftConsoleBoot();
+    if (document.getElementById('ftAnnComposer') && document.getElementById('ftLiveStatusTab') && document.getElementById('ftWelcomeSendBtn')) { clearInterval(ftConsoleTimer); }
+    if (ftConsoleBoots > 150) clearInterval(ftConsoleTimer);
+  }, 2000);
+  setInterval(function () { try { refreshBell(); } catch (e) {} }, 30000);
+  setInterval(function () { try { loadInbox(); } catch (e) {} }, 15000);
 })();
 
   /* ============================================================
