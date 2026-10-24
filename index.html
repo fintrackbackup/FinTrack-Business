@@ -153,10 +153,8 @@
     .side-drawer.open { left: 0; }
     .drawer-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: transparent; z-index: 1090; display: none;
+      background: #0B1E2D; z-index: 1090; display: none;
     }
-    #ftNavSearchResults div:hover { background: #F1F5F9; }
-    #ftNavSearchInput::placeholder { color: rgba(255,255,255,.6); }
     .drawer-overlay.active { display: block; }
     body.ft-sub-locked .side-drawer, body.ft-sub-locked .drawer-overlay { display: none !important; }
     .drawer-header {
@@ -1064,11 +1062,6 @@ html, body { background-color: transparent !important; background-image: none !i
     </div>
   </div>
   <div class="nav-actions">
-    <div id="ftNavSearchWrap" style="position: relative; display: flex; align-items: center; gap: 7px; margin-right: 12px;">
-      <i class="fa-solid fa-magnifying-glass" style="color: #ffffff; font-size: .85rem;" aria-hidden="true"></i>
-      <input id="ftNavSearchInput" type="text" autocomplete="off" placeholder="" aria-label="Search" oninput="ftNavSearchRun()" onfocus="ftNavSearchRun()" onkeydown="ftNavSearchKey(event)" style="width: 148px; padding: 6px 9px; border-radius: 8px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.12); color: #ffffff; font-size: .78rem; outline: none;">
-      <div id="ftNavSearchResults" style="display: none; position: absolute; top: calc(100% + 8px); right: 0; min-width: 250px; max-height: 320px; overflow-y: auto; background: #ffffff; border-radius: 10px; box-shadow: 0 14px 34px rgba(0,0,0,.28); z-index: 1300; padding: 6px;"></div>
-    </div>
     <button id="ftNotifBell" type="button" class="nav-icon-btn" title="Notifications" onclick="ftOpenNotifPanel()" style="position:relative;margin-right:6px"><i class="fa-solid fa-bell"></i><span id="ftNotifBadge" style="display:none;position:absolute;top:-5px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:#FACC15;color:#0B1E2D;font-size:.62rem;font-weight:900;line-height:16px;text-align:center;box-shadow:0 0 0 1px #fff">0</span></button><span id="cloudSyncStatusBadge" class="sync-badge sync-local"><i class="fa-solid fa-cloud"></i> Sync to Cloud</span>
     <span id="activeUserBadge" class="user-pill">Guest</span>
     <button class="nav-icon-btn" onclick="appLogout()" title="Sign Out"><i class="fa-solid fa-power-off"></i></button>
@@ -1897,23 +1890,19 @@ html, body { background-color: transparent !important; background-image: none !i
           <h3 style="font-size: 1.1rem; font-weight: 900; color: var(--atmos-navy);">Monthly Financial Statement</h3>
         </div>
 
-        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; width: 100%;">
-          <div style="flex: 1 1 50%; min-width: 250px; display: flex; gap: 8px; align-items: center; justify-content: flex-start; flex-wrap: wrap;">
-            <div class="month-picker-box">
-              <i class="fa-solid fa-calendar-days" style="color: var(--atmos-navy);"></i>
-              <label>Select Month:</label>
-              <input type="month" id="reportMonthPicker" onchange="generateFinancialReport()">
-            </div>
-            <button class="btn-pdf" onclick="exportReportPDF('monthly')" style="background: var(--atmos-navy);"><i class="fa-solid fa-file-pdf"></i> Monthly PDF</button>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <div class="month-picker-box">
+            <i class="fa-solid fa-calendar-days" style="color: var(--atmos-navy);"></i>
+            <label>Select Month:</label>
+            <input type="month" id="reportMonthPicker" onchange="generateFinancialReport()">
           </div>
-          <div style="flex: 1 1 50%; min-width: 250px; display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
-            <div class="month-picker-box">
-              <i class="fa-solid fa-calendar-day" style="color: var(--atmos-navy);"></i>
-              <label>Daily Date:</label>
-              <input type="date" id="dailyPdfDate">
-            </div>
+          <div class="month-picker-box" style="margin-left:auto;">
+            <i class="fa-solid fa-calendar-day" style="color: var(--atmos-navy);"></i>
+            <label>Daily Date:</label>
+            <input type="date" id="dailyPdfDate">
             <button class="btn-pdf" onclick="exportDailyPDF()"><i class="fa-solid fa-file-pdf"></i> Daily PDF</button>
           </div>
+          <button class="btn-pdf" onclick="exportReportPDF('monthly')" style="background: var(--atmos-navy);"><i class="fa-solid fa-file-pdf"></i> Monthly PDF</button>
         </div>
       </div>
 
@@ -2073,7 +2062,7 @@ html, body { background-color: transparent !important; background-image: none !i
       <button type="button" class="ftg-box" onclick="showAdminSection('attendanceMgmtSection')"><i class="fa-solid fa-user-clock" style="color:var(--atmos-red)"></i><span>3 &middot; Attendance Management</span></button>
       <button type="button" class="ftg-box" onclick="showAdminSection('staffReportSection')"><i class="fa-solid fa-file-lines" style="color:var(--accent-amber)"></i><span>4 &middot; Staff Reports</span></button>
       <button type="button" class="ftg-box" onclick="showAdminSection('ftStaffAnnounceSection')"><i class="fa-solid fa-envelope-open-text" style="color:var(--atmos-navy)"></i><span>Staff Announcements</span></button>
-      <button type="button" class="ftg-box" onclick="showAdminSection('analyticsSection')"><i class="fa-solid fa-chart-pie" style="color:var(--primary)"></i><span>Business Analytics</span></button>
+      <button type="button" class="ftg-box" onclick="showAdminSection('analyticsSection')"><i class="fa-solid fa-chart-pie" style="color:var(--primary)"></i><span>Analytics &amp; Catalog</span></button>
     </div>
 
     <!-- 1b. ATTENDANCE MANAGEMENT PORTAL (ADMIN ONLY) -->
@@ -5150,7 +5139,6 @@ const FIREBASE_CONFIG = {
     saveRememberedLogin();
     currentUser = user;
     document.getElementById('activeUserBadge').innerText = user.name + ' (' + user.role + ')';
-    if (window.ftSetAuthSignature) window.ftSetAuthSignature(user.name);
     document.getElementById('loginModal').style.display = 'none';
     ftbShowWelcomeSplash();
 
@@ -7253,9 +7241,7 @@ const FIREBASE_CONFIG = {
       customerPhone: phone,
       payMode: mode,
       items: [...currentInvoiceItems],
-      total: parseFloat(document.getElementById('invTotalVal').innerText || 0),
-      createdBy: (isUpdate && editingInvoiceId && (appData.invoices.find(x => x.id === editingInvoiceId) || {}).createdBy) || (window.ftAuthSignName ? window.ftAuthSignName() : ''),
-      createdByRole: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.role : ''
+      total: parseFloat(document.getElementById('invTotalVal').innerText || 0)
     };
 
     if (isUpdate && editingInvoiceId) {
@@ -7302,9 +7288,6 @@ const FIREBASE_CONFIG = {
     currentInvoiceItems = [...inv.items];
     renderInvoiceTable();
 
-    /* A saved invoice signs with the person who created it. */
-    if (window.ftSetAuthSignature) window.ftSetAuthSignature(inv.createdBy || '');
-
     document.getElementById('invoiceActionArea').style.display = 'flex';
   }
 
@@ -7316,7 +7299,6 @@ const FIREBASE_CONFIG = {
     currentInvoiceItems = [];
     renderInvoiceTable();
     document.getElementById('savedInvoiceSelect').value = '';
-    if (window.ftSetAuthSignature) window.ftSetAuthSignature();
     document.getElementById('invoiceActionArea').style.display = 'none';
   }
 
@@ -7332,10 +7314,6 @@ const FIREBASE_CONFIG = {
   }
 
   function printCSCInvoice() {
-    /* A saved invoice prints the name of whoever created it; a brand new one
-       prints whoever is signed in right now. */
-    var inv = (editingInvoiceId && appData.invoices.find(function (x) { return x.id === editingInvoiceId; })) || null;
-    if (window.ftSetAuthSignature) window.ftSetAuthSignature(inv && inv.createdBy ? inv.createdBy : '');
     window.print();
   }
 
@@ -9328,10 +9306,6 @@ function updateBusinessBrandingDisplays() {
   if (!isBusinessUser) return;
   var navTitle = document.getElementById('navBrandTitle');
   var navSub = document.getElementById('navBrandSubtitle');
-  /* The name and motto beside the logo are the signed-in business's own -
-     never the platform's. They used to be left on the platform defaults. */
-  if (navTitle) navTitle.innerText = brand.name || '';
-  if (navSub) { navSub.innerText = brand.motto || ''; navSub.style.display = brand.motto ? 'block' : 'none'; }
   var navBox = document.getElementById('navBrandLogoBox');
   if (navBox) {
     if (bizLogo) {
@@ -12241,90 +12215,6 @@ window.addEventListener('DOMContentLoaded', function() {
   window.ftCheckConn = ftCheckConn;
   window.addEventListener('online', ftPaint);
   window.addEventListener('offline', ftPaint);
-
-  /* ---------- WHO CREATED THIS INVOICE ---------- */
-  window.ftAuthSignName = function () {
-    try { if (typeof currentUser !== 'undefined' && currentUser && currentUser.name) return currentUser.name; } catch (e) {}
-    try { if (typeof platformAdminUser !== 'undefined' && platformAdminUser && platformAdminUser.name) return platformAdminUser.name; } catch (e) {}
-    return '';
-  };
-  window.ftSetAuthSignature = function (name) {
-    var el = document.getElementById('authSignatureName');
-    if (el) el.innerText = name || window.ftAuthSignName() || '';
-  };
-
-  /* ---------- TOP BAR SEARCH (role aware) ---------- */
-  var FT_SEARCH_INDEX = [
-    { label: 'Dashboard Summary', icon: 'fa-chart-line', tab: 'dashboardTab', keys: 'dashboard summary overview' },
-    { label: 'Services', icon: 'fa-concierge-bell', tab: 'servicesTab', keys: 'service collection charge' },
-    { label: 'Shop Expenses', icon: 'fa-receipt', tab: 'expenseTab', keys: 'expense spend shop' },
-    { label: 'Bank & Drawer Transfer Ledger', icon: 'fa-right-left', tab: 'transferTab', keys: 'transfer bank drawer ledger' },
-    { label: 'Invoice Generator', icon: 'fa-file-invoice', tab: 'invoiceTab', keys: 'invoice bill print download' },
-    { label: 'Financial Reports', icon: 'fa-file-invoice-dollar', tab: 'reportsTab', keys: 'report pdf monthly daily statement' },
-    { label: 'Staff Profile', icon: 'fa-id-card', tab: 'hrTab', keys: 'profile attendance mine' },
-    { label: 'Admin Controls', icon: 'fa-user-shield', tab: 'adminTab', admin: true, keys: 'admin controls subscription renew business details block' },
-    { label: 'HR Management', icon: 'fa-people-group', tab: 'hrMgmtTab', admin: true, keys: 'hr human resource management' },
-    { label: 'Month Closing', icon: 'fa-lock', section: 'monthClosingSection', admin: true, keys: 'month closing close' },
-    { label: 'Opening Balances', icon: 'fa-scale-balanced', section: 'openingBalSection', admin: true, keys: 'opening balance cash bank' },
-    { label: 'Master Catalog', icon: 'fa-layer-group', section: 'masterCatalogSection', admin: true, keys: 'catalog service price master' },
-    { label: 'Cashbook', icon: 'fa-book', section: 'cashbookSection', admin: true, keys: 'cashbook financial year all time' },
-    { label: 'Add Staff', icon: 'fa-user-plus', section: 'ftStaffSection', admin: true, keys: 'add staff employee new' },
-    { label: 'Salary & Incentives', icon: 'fa-money-check-dollar', section: 'staffSalarySection', admin: true, keys: 'salary incentive pay staff' },
-    { label: 'Attendance Management', icon: 'fa-calendar-check', section: 'attendanceMgmtSection', admin: true, keys: 'attendance present absent late half day leave' },
-    { label: 'Staff Reports', icon: 'fa-file-lines', section: 'staffReportSection', admin: true, keys: 'staff report performance pdf' },
-    { label: 'Business Analytics', icon: 'fa-chart-pie', section: 'analyticsSection', admin: true, keys: 'analytics charts catalog breakdown business' }
-  ];
-  window.ftNavSearchHits = [];
-  window.ftNavSearchRun = function () {
-    var input = document.getElementById('ftNavSearchInput');
-    var box = document.getElementById('ftNavSearchResults');
-    if (!input || !box) return;
-    var q = (input.value || '').trim().toLowerCase();
-    if (!q) { box.style.display = 'none'; box.innerHTML = ''; window.ftNavSearchHits = []; return; }
-    var isAdmin = false;
-    try { isAdmin = !!(typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'Admin'); } catch (e) {}
-    var hits = FT_SEARCH_INDEX.filter(function (it) {
-      if (it.admin && !isAdmin) return false;
-      var hay = (it.label + ' ' + (it.keys || '')).toLowerCase();
-      return hay.indexOf(q) !== -1;
-    });
-    window.ftNavSearchHits = hits;
-    if (!hits.length) {
-      box.innerHTML = '<div style="padding: 10px 12px; font-size: .8rem; color: #64748b;">No results available</div>';
-      box.style.display = 'block';
-      return;
-    }
-    box.innerHTML = hits.map(function (it, i) {
-      return '<div onclick="ftNavSearchGo(' + i + ')" style="padding: 9px 12px; border-radius: 8px; font-size: .82rem; color: #0B1E2D; cursor: pointer; display: flex; align-items: center; gap: 9px;"><i class="fa-solid ' + it.icon + '" style="color: #EE2B2E; width: 15px;"></i><span>' + it.label + '</span></div>';
-    }).join('');
-    box.style.display = 'block';
-  };
-  window.ftNavSearchGo = function (i) {
-    var it = window.ftNavSearchHits[i];
-    if (!it) return;
-    var box = document.getElementById('ftNavSearchResults');
-    var input = document.getElementById('ftNavSearchInput');
-    if (box) box.style.display = 'none';
-    if (input) input.value = '';
-    if (it.section) { showAdminSection(it.section); return; }
-    var btn = document.getElementById('btn-' + it.tab);
-    if (btn) btn.click(); else switchTab(it.tab, null);
-  };
-  window.ftNavSearchKey = function (e) {
-    if (e.key === 'Escape') {
-      var box = document.getElementById('ftNavSearchResults');
-      var input = document.getElementById('ftNavSearchInput');
-      if (box) box.style.display = 'none';
-      if (input) input.blur();
-    }
-  };
-  try {
-    document.addEventListener('click', function (e) {
-      var wrap = document.getElementById('ftNavSearchWrap');
-      var box = document.getElementById('ftNavSearchResults');
-      if (wrap && box && !wrap.contains(e.target)) box.style.display = 'none';
-    });
-  } catch (e) {}
   document.addEventListener('visibilitychange', function () { if (!document.hidden) ftCheckConn(); });
   window.addEventListener('focus', function () { ftCheckConn(); });
   window.addEventListener('online', function () { ftCheckConn(); });
