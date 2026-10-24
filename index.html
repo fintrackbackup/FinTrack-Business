@@ -476,6 +476,20 @@ body:not(.pa-mode) .side-drawer .drawer-menu-item[data-pa="1"]{display:none!impo
 .biz-reg-logo-preview img{width:100%;height:100%;object-fit:contain}
 </style>
 <style id="loginRedesignStyles">
+#ftGlobalFooter{position:fixed;left:0;right:0;bottom:0;z-index:3000;text-align:center;padding:9px 14px;
+  background:#fff;border-top:1px solid var(--border);color:var(--text-muted);font-size:.75rem;font-weight:600;
+  box-shadow:0 -2px 12px rgba(15,23,42,.06)}
+body{padding-bottom:104px !important}
+#loginModal .login-card{display:flex;flex-direction:column;justify-content:center}
+.metric-card{text-align:center}
+.metric-card .metric-header{justify-content:center}
+.metric-card .metric-sub{justify-content:center}
+.metric-card.card-green .metric-title,.metric-card.card-green .metric-value{color:var(--accent-green)}
+.metric-card.card-rose .metric-title,.metric-card.card-rose .metric-value{color:var(--accent-rose)}
+.metric-card.card-amber .metric-title,.metric-card.card-amber .metric-value{color:var(--accent-amber)}
+.metric-card.card-mint .metric-title,.metric-card.card-mint .metric-value{color:#16A34A}
+table.ft-only5 tr:nth-child(n+6){display:none !important}
+
 /* Login + PIN screens: same layout/terminology as the reference, app's own colours */
 #loginModal.login-modal{background:#F6F3ED;padding:18px}
 #loginModal .login-shell{display:flex;flex-direction:column-reverse;gap:18px;width:100%;max-width:960px;margin:auto;align-items:center}
@@ -486,10 +500,10 @@ body:not(.pa-mode) .side-drawer .drawer-menu-item[data-pa="1"]{display:none!impo
 #loginModal .login-features li{display:flex;gap:9px;align-items:flex-start;font-size:.8rem;font-weight:700;color:#334155;line-height:1.35}
 #loginModal .login-features li i{color:var(--primary);margin-top:2px;font-size:.9rem;flex-shrink:0}
 @media (min-width:880px){
-  #loginModal .login-shell{flex-direction:row;align-items:stretch;max-width:980px}
-  #loginModal .login-features{flex:1;max-width:none;display:flex;flex-direction:column;justify-content:center}
+  #loginModal .login-shell{flex-direction:row;align-items:stretch;max-width:1080px}
+  #loginModal .login-features{flex:1 1 0;min-width:0;max-width:none;display:flex;flex-direction:column;justify-content:center}
   #loginModal .login-features ul{grid-template-columns:1fr}
-  #loginModal .login-card{max-width:400px}
+  #loginModal .login-card{flex:1 1 0;min-width:0;max-width:none}
 }
 @media (max-width:420px){
   #loginModal .login-features{padding:16px 14px}
@@ -1597,7 +1611,7 @@ html, body { background-color: transparent !important; background-image: none !i
               <th>Description</th>
               <th>Amount (₹)</th>
               <th>Deducted From</th>
-              <th>Recorded By</th>
+              <th>Staff</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -1659,7 +1673,7 @@ html, body { background-color: transparent !important; background-image: none !i
               <th>Date & Time</th>
               <th>Transfer Type / Direction</th>
               <th>Amount Transferred (₹)</th>
-              <th>Recorded By</th>
+              <th>Staff</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -1743,7 +1757,7 @@ html, body { background-color: transparent !important; background-image: none !i
               <th>Transfer Type</th>
               <th>Description</th>
               <th>Amount (₹)</th>
-              <th>Recorded By</th>
+              <th>Staff</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -1885,6 +1899,15 @@ html, body { background-color: transparent !important; background-image: none !i
             <button class="btn-pdf" onclick="exportDailyPDF()"><i class="fa-solid fa-file-pdf"></i> Daily PDF</button>
           </div>
           <button class="btn-pdf" onclick="exportReportPDF('monthly')" style="background: var(--atmos-navy);"><i class="fa-solid fa-file-pdf"></i> Monthly PDF</button>
+            <div class="month-picker-box">
+              <i class="fa-solid fa-book"></i>
+              <label>Cashbook:</label>
+              <select id="cashbookPdfRange" style="border:none; background:transparent; font-weight:800; color:var(--atmos-navy); outline:none; cursor:pointer;">
+                <option value="all">All-Time Data</option>
+                <option value="fy">Current Financial Year</option>
+              </select>
+              <button class="btn-pdf" onclick="exportCashbookPDF()"><i class="fa-solid fa-file-pdf"></i> Download</button>
+            </div>
         </div>
       </div>
 
@@ -1907,7 +1930,7 @@ html, body { background-color: transparent !important; background-image: none !i
           <div class="metric-sub">Outsourced utility payments</div>
         </div>
 
-        <div class="metric-card card-blue">
+        <div class="metric-card card-mint">
           <div class="metric-header"><span class="metric-title">Net Balance</span></div>
           <div class="metric-value" id="rptNetBalance">₹0.00</div>
           <div class="metric-sub" id="rptBalanceStatus">Income - Expenses</div>
@@ -1923,12 +1946,12 @@ html, body { background-color: transparent !important; background-image: none !i
             <thead>
               <tr>
                 <th>Type</th>
-                <th>Timestamp</th>
-                <th>Head / Description</th>
+                <th>Date &amp; Time</th>
+                <th>Service</th>
                 <th>Net Income (₹)</th>
                 <th>Dept Fee (₹)</th>
                 <th>Expense (₹)</th>
-                <th>Recorded By</th>
+                <th>Staff</th>
               </tr>
             </thead>
             <tbody id="reportItemizedTable"></tbody>
@@ -2066,23 +2089,8 @@ html, body { background-color: transparent !important; background-image: none !i
         <label for="attExtrasStaffVisibilityToggle" style="margin: 0; color: var(--accent-amber); font-size: 0.8rem; cursor: pointer;">Staff Visibility: show Half Day, Approved Leave &amp; Total Deductions boxes to Staff</label>
       </div>
       <div id="attMgmtSummary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px;"></div>
-      <div style="overflow-x: auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Day</th>
-              <th>Login Time</th>
-              <th>Current Status</th>
-              <th>Admin Override</th>
-            </tr>
-          </thead>
-          <tbody id="attendanceMgmtTableBody"></tbody>
-        </table>
-      </div>
-
       <!-- BUSINESS-SPECIFIC ATTENDANCE TIMING & RULES (ADMIN ONLY) -->
-      <div style="background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-top: 16px;">
+      <div style="background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin: 0 0 16px;">
         <h4 style="font-size: 0.9rem; font-weight: 900; color: var(--atmos-navy); margin-bottom: 4px;">
           <i class="fa-solid fa-clock" style="color: var(--primary); margin-right: 6px;"></i> Attendance Timing &amp; Rules (this business)
         </h4>
@@ -2109,7 +2117,24 @@ html, body { background-color: transparent !important; background-image: none !i
           </div>
         </div>
         <p id="attRuleHalfDayNote" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 10px;">Half Day deduction: 50% of the daily rate (existing policy, unchanged).</p>
+      </div
+
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Day</th>
+              <th>Login Time</th>
+              <th>Current Status</th>
+              <th>Admin Override</th>
+            </tr>
+          </thead>
+          <tbody id="attendanceMgmtTableBody"></tbody>
+        </table>
       </div>
+
+      >
 
       <!-- MANUAL ATTENDANCE CHANGE HISTORY (ADMIN ONLY) -->
       <details style="margin-top: 16px;">
@@ -2117,7 +2142,7 @@ html, body { background-color: transparent !important; background-image: none !i
         <div style="overflow-x: auto; margin-top: 10px;">
           <table>
             <thead>
-              <tr><th>Timestamp</th><th>Staff</th><th>Date</th><th>Original</th><th>Updated</th><th>Admin / Reason</th></tr>
+              <tr><th>Date &amp; Time</th><th>Staff</th><th>Date</th><th>Original</th><th>Updated</th><th>Admin / Reason</th></tr>
             </thead>
             <tbody id="attAuditLogBody"></tbody>
           </table>
@@ -2891,10 +2916,7 @@ html, body { background-color: transparent !important; background-image: none !i
 <div id="paAdminInfo"></div>
 </div>
 </div>
-<!-- FOOTER -->
-  <footer class="no-print" style="text-align: center; margin-top: 40px; color: var(--text-muted); font-size: 0.8rem; font-weight: 600;">
-    <p>© 2026 <strong>FinTrack Business</strong>. All Rights Reserved.</p>
-  </footer>
+<!-- the copyright line is one fixed bar at the bottom of every screen (#ftGlobalFooter) -->
 
 </div>
 
@@ -3359,8 +3381,8 @@ html, body { background-color: transparent !important; background-image: none !i
     adminTransfers: [],
     historicalMonths: {},
     logoDataUrl: '',
-    attendanceExtrasVisibleForStaff: true,
-    staffBalanceEditAccess: true,
+    attendanceExtrasVisibleForStaff: false,
+    staffBalanceEditAccess: false,
     /* Business-specific attendance timing & rules (stored per business, never shared) */
     attendanceRules: { reportingTime: '09:25', graceMinutes: 0, noonCutoff: '12:00', timezone: 'Asia/Kolkata', halfDayDeductionPct: 50 },
     attendanceAuditLog: [],
@@ -3543,8 +3565,8 @@ const FIREBASE_CONFIG = {
         return { id: at.id, date: at.date, time: at.time || "", timestamp: at.timestamp || Date.now(), type: at.type, source: at.source || "Bank/UPI", desc: at.desc || "", amount: at.amount, user: at.staff || "" };
       }),
       historicalMonths: appData.historicalMonths || {},
-      attendanceExtrasVisibleForStaff: appData.attendanceExtrasVisibleForStaff !== false,
-      staffBalanceEditAccess: appData.staffBalanceEditAccess !== false,
+      attendanceExtrasVisibleForStaff: appData.attendanceExtrasVisibleForStaff === true,
+      staffBalanceEditAccess: appData.staffBalanceEditAccess === true,
       attendanceRules: appData.attendanceRules || { reportingTime: '09:25', graceMinutes: 0, noonCutoff: '12:00', timezone: 'Asia/Kolkata', halfDayDeductionPct: 50 },
       attendanceAuditLog: (appData.attendanceAuditLog || []).slice(-1000),
       businessProfile: appData.businessProfile || null,
@@ -3566,7 +3588,7 @@ const FIREBASE_CONFIG = {
       attendance: {}, closedMonths: {}, openingBalances: {}, monthlySalaries: {},
       staffDailyEditCount: {}, staffMilestoneAchieved: {}, staffProfiles: {},
       adminTransfers: [], historicalMonths: {},
-      logoDataUrl: '', attendanceExtrasVisibleForStaff: true, staffBalanceEditAccess: true,
+      logoDataUrl: '', attendanceExtrasVisibleForStaff: false, staffBalanceEditAccess: false,
       attendanceRules: { reportingTime: '09:25', graceMinutes: 0, noonCutoff: '12:00', timezone: 'Asia/Kolkata', halfDayDeductionPct: 50 },
       attendanceAuditLog: [],
       businessProfile: { shopName: reg.name || '', motto: reg.motto || '', category: reg.category || '', customCategory: '', shopCode: '', address: '' }
@@ -4837,6 +4859,9 @@ const FIREBASE_CONFIG = {
     var file = e.target.files[0];
     if (!file) return;
     compressLogoImage(file, function (dataUrl) {
+      /* Drop the previous logo first, so only the current one is stored. */
+      appData.logoDataUrl = '';
+      try { if (appData.businessProfile && appData.businessProfile.logoDataUrl && appData.businessProfile.logoDataUrl !== dataUrl) delete appData.businessProfile.logoDataUrl; } catch (e) {}
       appData.logoDataUrl = dataUrl;
       saveData();
       updateShopLogoDisplays();
@@ -5264,7 +5289,7 @@ const FIREBASE_CONFIG = {
         managedGen = managedRun.gen;
       }
       if (!owned || !owned.record) throw new Error('Your email is verified, but business registration is incomplete. Open Register Your Business and use this same email and password to finish it.');
-      if (owned.record.blocked || owned.record.deletedAt) throw new Error('This business is unavailable. Contact the platform administrator.');
+      if (owned.record.deletedAt) throw new Error('This business is unavailable. Contact the platform administrator.');
       detachTenant();
       bindActiveBusiness(owned.id);
       platformData.businesses = {};
@@ -5739,12 +5764,165 @@ const FIREBASE_CONFIG = {
     html2pdf().set(opt).from(container).save().then(function(){ document.body.removeChild(container); }).catch(function(){ if (container.parentNode) document.body.removeChild(container); });
   }
 
+  /* ===== ADMIN TOGGLE DEFAULTS: nothing is pre-ticked (one-time reset) ===== */
+  function ftApplyAdminToggleDefaults() {
+    if (window.__ftToggleDefaultsBusy) return;
+    if (appData.adminToggleDefaultsV2 === true) return;
+    window.__ftToggleDefaultsBusy = true;
+    appData.attendanceExtrasVisibleForStaff = false;
+    appData.staffBalanceEditAccess = false;
+    appData.adminToggleDefaultsV2 = true;
+    try { saveData(); } catch (e) {}
+    try { refreshAllViews(); } catch (e) {}
+    window.__ftToggleDefaultsBusy = false;
+  }
+
+  /* ===== SIX-MONTH DETAILED HISTORY RETENTION ===== */
+  function ftMonthShift(m, n) {
+    var y = parseInt(m.substring(0, 4)), mo = (parseInt(m.substring(5, 7)) - 1) + n;
+    var d = new Date(y, mo, 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+  function ftMonthLastDay(m) {
+    var y = parseInt(m.substring(0, 4)), mo = parseInt(m.substring(5, 7));
+    return m + '-' + String(new Date(y, mo, 0).getDate()).padStart(2, '0');
+  }
+  function runHistoryRetention() {
+    var today = getISTDateStr();
+    if (appData.lastRetentionRun === today) return false;
+    if (!(appData.serviceLog || []).length && !(appData.expenseLog || []).length && !Object.keys(appData.attendance || {}).length) return false;
+    var cutoff = ftMonthShift(getISTMonthStr(), -6);
+    var old = {};
+    function note(d) { var m = (d || '').substring(0, 7); if (m && m < cutoff) old[m] = true; }
+    (appData.serviceLog || []).forEach(function (s) { note(s.date); });
+    (appData.expenseLog || []).forEach(function (e) { note(e.date); });
+    (appData.transferLog || []).forEach(function (t) { note(t.date); });
+    (appData.adminTransfers || []).forEach(function (t) { note(t.date); });
+    Object.keys(appData.attendance || {}).forEach(function (m) { if (m < cutoff) old[m] = true; });
+    appData.lastRetentionRun = today;
+    var months = Object.keys(old);
+    if (!months.length) { try { saveData(); } catch (e) {} return false; }
+    var arch = appData.monthlyArchive || (appData.monthlyArchive = {});
+    var removed = 0;
+    months.forEach(function (m) {
+      var inc = 0, df = 0, exp = 0, cnt = 0;
+      (appData.serviceLog || []).forEach(function (s) { if ((s.date || '').substring(0, 7) !== m) return; inc += parseFloat(s.serviceCharge || 0) - parseFloat(s.discount || 0); df += parseFloat(s.deptFee || 0); cnt++; });
+      (appData.expenseLog || []).forEach(function (e) { if ((e.date || '').substring(0, 7) !== m) return; exp += parseFloat(e.amount || 0); cnt++; });
+      var cl = computeBalancesUpTo(ftMonthLastDay(m), true);
+      var prev = arch[m] || {};
+      arch[m] = { income: inc, deptFee: df, expense: exp, closing: cl.total, closingCash: cl.cash, closingBank: cl.bank, closingCredit: cl.credit, records: cnt || prev.records || 0, archivedAt: prev.archivedAt || Date.now() };
+    });
+    function keepByMonth(list) {
+      var before = list.length;
+      var out = list.filter(function (x) { var m = ((x && x.date) || '').substring(0, 7); return !(m && m < cutoff); });
+      removed += before - out.length;
+      return out;
+    }
+    appData.serviceLog = keepByMonth(appData.serviceLog || []);
+    appData.expenseLog = keepByMonth(appData.expenseLog || []);
+    appData.transferLog = keepByMonth(appData.transferLog || []);
+    appData.adminTransfers = keepByMonth(appData.adminTransfers || []);
+    appData.attendanceAuditLog = (appData.attendanceAuditLog || []).filter(function (a) { var m = ((a && (a.date || a.dateStr || a.month)) || '').substring(0, 7); return !(m && m < cutoff); });
+    months.forEach(function (m) { if (m < cutoff) { delete appData.attendance[m]; if (appData.staffDailyEditCount) delete appData.staffDailyEditCount[m]; } });
+    var aBefore = (appData.staffAnnouncements || []).length;
+    appData.staffAnnouncements = (appData.staffAnnouncements || []).filter(function (a) {
+      var ts = Number((a && (a.sentAt || a.at)) || 0);
+      if (!ts) return true;
+      var d = new Date(ts);
+      return (d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')) >= cutoff;
+    });
+    removed += aBefore - appData.staffAnnouncements.length;
+    appData.lastRetentionLog = { at: Date.now(), from: cutoff, months: months, removed: removed };
+    try { saveData(); } catch (e) {}
+    try { refreshAllViews(); } catch (e) {}
+    return true;
+  }
+
+  /* ===== CASHBOOK PDF: ALL-TIME / CURRENT FINANCIAL YEAR ===== */
+  function cashbookReportData(range) {
+    var cur = getISTMonthStr();
+    var byMonth = {};
+    function slot(m) { if (!byMonth[m]) byMonth[m] = { income: 0, deptFee: 0, expense: 0, closing: null }; return byMonth[m]; }
+    var arch = appData.monthlyArchive || {};
+    Object.keys(arch).forEach(function (m) {
+      var e = slot(m);
+      e.income = parseFloat(arch[m].income || 0);
+      e.deptFee = parseFloat(arch[m].deptFee || 0);
+      e.expense = parseFloat(arch[m].expense || 0);
+      e.closing = parseFloat(arch[m].closing || 0);
+    });
+    (appData.serviceLog || []).forEach(function (s) {
+      var m = (s.date || '').substring(0, 7); if (!m) return;
+      var e = slot(m);
+      e.income += parseFloat(s.serviceCharge || 0) - parseFloat(s.discount || 0);
+      e.deptFee += parseFloat(s.deptFee || 0);
+    });
+    (appData.expenseLog || []).forEach(function (x) {
+      var m = (x.date || '').substring(0, 7); if (!m) return;
+      slot(m).expense += parseFloat(x.amount || 0);
+    });
+    var keys = Object.keys(byMonth).sort();
+    keys.forEach(function (m) { if (byMonth[m].closing == null) byMonth[m].closing = computeBalancesUpTo(ftMonthLastDay(m), true).total; });
+    var from, to, title;
+    if (range === 'fy') {
+      var y = parseInt(cur.substring(0, 4)), mo = parseInt(cur.substring(5, 7));
+      var start = (mo >= 4) ? y : (y - 1);
+      from = start + '-04'; to = cur;
+      title = 'FINANCIAL YEAR ' + start + '-' + String(start + 1).substring(2);
+    } else {
+      from = keys[0] || cur; to = cur;
+      title = 'ALL-TIME CASHBOOK';
+    }
+    var income = 0, expense = 0, deptFee = 0, closing = 0;
+    var rows = [];
+    keys.forEach(function (m) {
+      if (m < from || m > to) return;
+      var e = byMonth[m];
+      income += e.income; expense += e.expense; deptFee += e.deptFee; closing = e.closing;
+      rows.push({ m: m, e: e, net: e.income - e.expense });
+    });
+    return { title: title, fromLabel: from, toLabel: to, rows: rows, income: income, expense: expense, deptFee: deptFee, profit: income - expense, closing: closing };
+  }
+
+  function exportCashbookPDF() {
+    var sel = document.getElementById('cashbookPdfRange');
+    var range = sel ? sel.value : 'all';
+    var d = cashbookReportData(range);
+    function box(label, val, color) {
+      return '<div style="flex:1 1 22%; min-width:120px; border:1px solid #e2e8f0; padding:8px; border-radius:6px; background:#f8fafc;"><span style="font-size:9px; color:#64748b; font-weight:bold;">' + label + '</span><div style="font-size:13px; font-weight:bold; color:' + (color || '#0B1E2D') + ';">\u20b9' + val.toFixed(2) + '</div></div>';
+    }
+    var body = d.rows.map(function (r) {
+      return '<tr><td style="padding:5px; border:1px solid #cbd5e1; font-weight:bold;">' + r.m + '</td>' +
+        '<td style="padding:5px; border:1px solid #cbd5e1; text-align:right; color:#059669; font-weight:bold;">\u20b9' + r.e.income.toFixed(2) + '</td>' +
+        '<td style="padding:5px; border:1px solid #cbd5e1; text-align:right; color:#b45309;">\u20b9' + r.e.deptFee.toFixed(2) + '</td>' +
+        '<td style="padding:5px; border:1px solid #cbd5e1; text-align:right; color:#e11d48; font-weight:bold;">\u20b9' + r.e.expense.toFixed(2) + '</td>' +
+        '<td style="padding:5px; border:1px solid #cbd5e1; text-align:right; font-weight:bold; color:' + (r.net >= 0 ? '#059669' : '#e11d48') + ';">\u20b9' + r.net.toFixed(2) + '</td>' +
+        '<td style="padding:5px; border:1px solid #cbd5e1; text-align:right; font-weight:bold;">\u20b9' + r.e.closing.toFixed(2) + '</td></tr>';
+    }).join('');
+    if (!body) body = '<tr><td colspan="6" style="padding:8px; border:1px solid #cbd5e1; text-align:center; color:#64748b;">No records in this period</td></tr>';
+    var html = '<div style="padding:20px; background:white; color:#0f172a;">' +
+      '<div style="display:flex; justify-content:space-between; border-bottom:2px solid #0B1E2D; padding-bottom:10px; margin-bottom:12px;"><div><h1 style="font-size:18px; color:#0B1E2D; margin:0;">__FTBIZNAME__</h1><p style="font-size:11px; color:#EE2B2E; font-weight:bold; margin:2px 0 0 0;">__FTBIZSUB__</p></div><div style="text-align:right; font-size:10px; color:#64748b; white-space:nowrap; min-width:190px;"><p style="font-size:12px; font-weight:bold; color:#0B1E2D; margin:0;">' + d.title + '</p><p style="margin:2px 0 0 0;">Period: ' + d.fromLabel + ' to ' + d.toLabel + '</p><p style="margin:2px 0 0 0;">Generated: ' + getISTDateTimeStr() + '</p></div></div>' +
+      '<p style="font-size:10px; font-weight:bold; color:#0B1E2D; margin:8px 0 4px 0;">SUMMARY</p>' +
+      '<div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">' + box('Total Income', d.income, '#059669') + box('Total Expenses', d.expense, '#e11d48') + box('Cumulative Profit / Loss', d.profit, d.profit >= 0 ? '#059669' : '#e11d48') + box('Closing Balance', d.closing, '#0B1E2D') + '</div>' +
+      '<p style="font-size:10px; font-weight:bold; color:#0B1E2D; margin:12px 0 4px 0;">MONTH BY MONTH (latest first)</p>' +
+      '<table style="width:100%; border-collapse:collapse; font-size:10px;"><thead><tr style="background:#f1f5f9;"><th style="padding:5px; border:1px solid #cbd5e1; text-align:left;">Month</th><th style="padding:5px; border:1px solid #cbd5e1;">Income (\u20b9)</th><th style="padding:5px; border:1px solid #cbd5e1;">Dept Fee (\u20b9)</th><th style="padding:5px; border:1px solid #cbd5e1;">Expenses (\u20b9)</th><th style="padding:5px; border:1px solid #cbd5e1;">Net (\u20b9)</th><th style="padding:5px; border:1px solid #cbd5e1;">Closing Balance (\u20b9)</th></tr></thead><tbody>' + body + '</tbody></table>' +
+      '<p style="font-size:9px; color:#64748b; margin-top:10px;">Monthly income is the net service charge after discount. Cumulative profit or loss is income minus expenses over the period shown. Closing balance is the overall balance at the end of the latest month listed. Monthly summaries are kept permanently, so older months still report correctly.</p>' +
+      '</div>';
+    var container = document.createElement('div');
+    container.style.width = '730px'; container.style.background = '#ffffff';
+    container.innerHTML = ftBrandHtml(html, 'CASHBOOK STATEMENT');
+    container.className = container.className ? container.className + ' ft-pdf-stage' : 'ft-pdf-stage';
+    document.body.appendChild(container);
+    var opt = { margin: 8, filename: ftPdfFileName('Cashbook Report', range === 'fy' ? 'Financial Year' : 'All Time'), image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+    html2pdf().set(opt).from(container).save().then(function () { document.body.removeChild(container); }).catch(function () { if (container.parentNode) document.body.removeChild(container); });
+  }
+
   function renderStaffOpeningBalSummary() {
     var isStaff = currentUser && currentUser.role === 'Staff';
     var card = document.getElementById('staffOpeningBalSummaryCard');
     if (card) card.style.display = isStaff ? 'block' : 'none';
     if (!isStaff) return;
-    var editVisible = (appData.staffBalanceEditAccess !== false);
+    var editVisible = (appData.staffBalanceEditAccess === true);
     ['staffObCashEditBtn', 'staffObBankEditBtn', 'staffObCreditEditBtn'].forEach(function(id) {
       var b = document.getElementById(id);
       if (b) b.style.display = editVisible ? 'inline-block' : 'none';
@@ -5906,7 +6084,7 @@ const FIREBASE_CONFIG = {
         <td>₹${parseFloat(s.deptFee || 0).toFixed(2)}</td>
         <td>₹${parseFloat(s.serviceCharge || 0).toFixed(2)}</td>
         <td style="font-weight:800; color:var(--accent-purple);">₹${dueAmt.toFixed(2)}</td>
-        <td>${s.staff}</td>
+        <td>${s.staff || s.user || '\u2014'}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -6328,7 +6506,7 @@ const FIREBASE_CONFIG = {
         <td>₹${parseFloat(s.discount || 0).toFixed(2)}</td>
         <td style="font-weight:800; color:var(--accent-green);">₹${parseFloat(s.total || 0).toFixed(2)}</td>
         <td>${modeBadge}</td>
-        <td>${s.staff}</td>
+        <td>${s.staff || s.user || '\u2014'}</td>
         <td>
           ${!isClosed ? `
             <button class="mobile-restricted" onclick="openEditServiceModal('${s.id}')" style="background:none; color:var(--primary); padding:2px 6px;"><i class="fa-solid fa-pen"></i></button>
@@ -6556,7 +6734,7 @@ const FIREBASE_CONFIG = {
         <td>${e.desc}</td>
         <td style="font-weight:800; color:var(--accent-rose);">₹${parseFloat(e.amount || 0).toFixed(2)}</td>
         <td>${e.payMode}</td>
-        <td>${e.staff}</td>
+        <td>${e.staff || e.user || '\u2014'}</td>
         <td>
           ${!isClosed ? `
             <button class="mobile-restricted" onclick="openEditExpenseModal('${e.id}')" style="background:none; color:var(--primary); padding:2px 6px;"><i class="fa-solid fa-pen"></i></button>
@@ -7101,7 +7279,7 @@ const FIREBASE_CONFIG = {
         <td style="color:var(--accent-green); font-weight:800;">₹${netSrv.toFixed(2)}</td>
         <td style="color:var(--accent-amber);">₹${df.toFixed(2)}</td>
         <td>-</td>
-        <td>${s.staff}</td>
+        <td>${s.staff || s.user || '\u2014'}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -7118,7 +7296,7 @@ const FIREBASE_CONFIG = {
         <td>-</td>
         <td>-</td>
         <td style="color:var(--accent-rose); font-weight:800;">₹${amt.toFixed(2)}</td>
-        <td>${e.staff}</td>
+        <td>${e.staff || e.user || '\u2014'}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -7589,7 +7767,7 @@ const FIREBASE_CONFIG = {
   function loadAdminOpeningBalancesForPicker() {
     const month = document.getElementById('openingBalMonthPicker').value || getISTMonthStr();
     var accToggle = document.getElementById('staffBalanceEditAccessToggle');
-    if (accToggle) accToggle.checked = appData.staffBalanceEditAccess !== false;
+    if (accToggle) accToggle.checked = appData.staffBalanceEditAccess === true;
     if (appData.openingBalances[month]) {
       document.getElementById('adminOpeningCashInput').value = appData.openingBalances[month].cash || 0;
       document.getElementById('adminOpeningBankInput').value = appData.openingBalances[month].bank || 0;
@@ -8216,7 +8394,7 @@ const FIREBASE_CONFIG = {
     document.getElementById('profLeaveCount').innerText = approvedLeave;
 
     /* Staff visibility of the new boxes is controlled by Admin (Admin always sees everything) */
-    var showExtras = !currentUser || currentUser.role !== 'Staff' || appData.attendanceExtrasVisibleForStaff !== false;
+    var showExtras = !currentUser || currentUser.role !== 'Staff' || appData.attendanceExtrasVisibleForStaff === true;
     ['profTotalDeductionsBox', 'profHalfDayTile', 'profLeaveTile'].forEach(function(boxId) {
       var boxEl = document.getElementById(boxId);
       if (boxEl) boxEl.style.display = showExtras ? '' : 'none';
@@ -8236,7 +8414,11 @@ const FIREBASE_CONFIG = {
     const reader = new FileReader();
     reader.onload = function(evt) {
       if (!appData.staffProfiles) appData.staffProfiles = {};
-      appData.staffProfiles[staffName] = { photoDataUrl: evt.target.result };
+      /* Only the current picture is kept: an earlier one is dropped, never stored twice. */
+      var prevProfile = appData.staffProfiles[staffName] || {};
+      delete prevProfile.photoDataUrl;
+      prevProfile.photoDataUrl = evt.target.result;
+      appData.staffProfiles[staffName] = prevProfile;
       saveData();
       document.getElementById('profileAvatarDisplay').innerHTML = '<img src="' + evt.target.result + '" alt="Profile Photo">';
       alert('Staff photo updated successfully!');
@@ -8550,7 +8732,7 @@ const FIREBASE_CONFIG = {
   function renderAttendanceMgmt() {
     var month = document.getElementById('attMgmtMonthPicker').value || getISTMonthStr();
     var visToggle = document.getElementById('attExtrasStaffVisibilityToggle');
-    if (visToggle) visToggle.checked = appData.attendanceExtrasVisibleForStaff !== false;
+    if (visToggle) visToggle.checked = appData.attendanceExtrasVisibleForStaff === true;
     renderAttendanceRulesUI();
     renderAttendanceAuditLog();
     var select = document.getElementById('attMgmtStaffSelect');
@@ -10046,11 +10228,21 @@ function addNewBusiness() {
 function blockBusiness(bizId) {
   var b = (platformData.businesses||{})[bizId];
   if (!b) return;
-  b.blocked = !b.blocked;
-  savePlatformData();
-  alert(b.blocked ? 'Business blocked.' : 'Business unblocked.');
+  var blocking = !b.blocked;
+  var name = b.name || 'This business';
+  if (!confirm(blocking
+    ? 'Block ' + name + '?\n\nNo one in this business can use the app until you unblock it. Only the top bar with the business name and the logout button stays usable.'
+    : 'Unblock ' + name + '?\n\nThe business gets back to work normally straight away.')) return;
+  b.blocked = blocking;
+  var saving = savePlatformData();
+  alert(blocking
+    ? name + ' is blocked.\n\nTheir screen now shows "Account Blocked" and nothing in the app works until you press Unblock.'
+    : name + ' is unblocked.\n\nThey can work normally again.');
   renderPlatformAdminViews();
   if (paCurrentBizId === bizId) openBusinessProfile(bizId);
+  if (saving && saving.catch) saving.catch(function (err) {
+    alert('The change could not be saved to the platform database: ' + ((err && err.message) ? err.message : 'unknown error') + '\n\nCheck the platform connection and try again.');
+  });
 }
 
 /* Remove the access associations that belong ONLY to this business. */
@@ -12508,7 +12700,7 @@ function ftSubModel() {
   var st = null; try { st = getSubscriptionState(); } catch (e) { return null; }
   if (!st || !st.registered) return null;
   var m = { st: st, admin: ftSubIsAdmin(), mode: 'ok', color: '#15803D', days: Number(st.daysLeft) || 0, title: '', msg: '', on: st.expiryText || '' };
-  if (st.status === 'blocked') { m.mode = 'blocked'; m.color = '#8B0000'; m.title = 'Account Blocked'; m.msg = st.message; }
+  if (st.status === 'blocked') { m.mode = 'blocked'; m.adminBlocked = true; m.color = '#8B0000'; m.title = 'Account Blocked'; m.msg = 'Your account has been blocked by the Platform Administrator. Kindly contact the Platform Administrator to restore access.'; }
   else if (st.status === 'expired' || st.locked) { m.mode = 'blocked'; m.color = '#8B0000'; m.title = 'Subscription Not Renewed'; m.msg = st.message; }
   else if (st.status === 'grace') {
     m.mode = 'grace'; m.color = '#B91C1C'; m.days = Number(st.graceLeft) || 0;
@@ -12576,6 +12768,10 @@ function ftRenderAccessLock() {
   var when = (m.on && m.on !== '\u2014')
     ? '<div style="font-size:.72rem;color:#6B7787;margin-top:5px">' + (m.mode === 'blocked' ? 'Ended on ' : 'Ends on ') + m.on + '</div>'
     : '';
+  var countBox = m.adminBlocked ? '' : '<div style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;background:#F8FAFC;border:1px solid #E5E7EB;border-radius:12px;padding:12px 24px;margin-bottom:14px;min-width:124px">'
+    + '<div style="font-size:2.1rem;font-weight:900;color:' + m.color + ';line-height:1">' + count + '</div>'
+    + '<div style="font-size:.62rem;font-weight:900;color:#64748B;letter-spacing:.12em;text-transform:uppercase;margin-top:4px">' + (m.mode === 'grace' ? 'grace days left' : 'days left') + '</div>'
+    + when + '</div>';
   var motto = '', bizLine = '';
   try {
     var bz = getCurrentBizRecord();
@@ -12584,7 +12780,10 @@ function ftRenderAccessLock() {
     if (bz && bz.displayId) bizLine = bizLine ? bizLine + ' \u00b7 ' + bz.displayId : bz.displayId;
   } catch (e) {}
   var payBtn;
-  if (m.mode === 'blocked') {
+  if (m.adminBlocked) {
+    var waText = 'Hello, my FinTrack Business account' + (bizLine ? ' (' + bizLine + ')' : '') + ' has been blocked by the Platform Administrator. Kindly help me restore access.';
+    payBtn = '<a href="https://wa.me/918089278115?text=' + encodeURIComponent(waText) + '" target="_blank" rel="noopener" style="display:block;width:100%;box-sizing:border-box;border-radius:12px;padding:14px 18px;background:#25D366;color:#FFFFFF;font-size:.86rem;font-weight:900;text-decoration:none"><i class="fa-brands fa-whatsapp" style="margin-right:8px"></i>Contact the Platform Administrator</a>';
+  } else if (m.mode === 'blocked') {
     if (m.admin) {
       payBtn = pending
         ? '<div style="background:#FFF7ED;border:1px solid #FDBA74;color:#9A3412;border-radius:10px;padding:10px 12px;font-size:.75rem;font-weight:800;line-height:1.45">Payment submitted. Waiting for the Platform Administrator to verify it.</div>'
@@ -12595,7 +12794,9 @@ function ftRenderAccessLock() {
   } else {
     payBtn = '<button type="button" onclick="ftCloseSubNotice()" style="width:100%;border:0;border-radius:12px;padding:13px 18px;background:#0B1E2D;color:#FFFFFF;font-size:.84rem;font-weight:900;cursor:pointer">Close</button>';
   }
-  var footer = m.mode === 'blocked'
+  var footer = m.adminBlocked
+    ? '<div style="font-size:.66rem;color:#7C8899;margin-top:12px;line-height:1.5">This screen stays until the Platform Administrator unblocks your account. Nothing can be opened, added, edited or downloaded meanwhile.</div><div style="font-size:.62rem;color:#9AA6B5;margin-top:6px">The account unlocks automatically the moment it is unblocked.</div>'
+    : m.mode === 'blocked'
     ? '<div style="font-size:.66rem;color:#7C8899;margin-top:12px;line-height:1.5">Records, reports, edits, deletions and downloads are paused until the Platform Administrator verifies your payment.</div><div style="font-size:.62rem;color:#9AA6B5;margin-top:6px">Access is restored automatically after verification.</div>'
     : '<div style="font-size:.66rem;color:#7C8899;margin-top:12px;line-height:1.5">This reminder appears once a day. Close it and carry on with your work.</div>';
   var html = ''
@@ -12606,10 +12807,7 @@ function ftRenderAccessLock() {
     + (bizLine ? '<div style="font-size:.92rem;font-weight:900;color:#0B1E2D;line-height:1.3">' + bizLine + '</div>' : '')
     + (motto ? '<div style="font-size:.64rem;font-weight:800;color:#8B7355;letter-spacing:.14em;text-transform:uppercase;margin:4px 0 14px">' + motto + '</div>' : '<div style="height:14px"></div>')
     + '<div style="font-size:1.16rem;font-weight:900;color:' + m.color + ';margin-bottom:12px;line-height:1.3">' + m.title + '</div>'
-    + '<div style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;background:#F8FAFC;border:1px solid #E5E7EB;border-radius:12px;padding:12px 24px;margin-bottom:14px;min-width:124px">'
-    + '<div style="font-size:2.1rem;font-weight:900;color:' + m.color + ';line-height:1">' + count + '</div>'
-    + '<div style="font-size:.62rem;font-weight:900;color:#64748B;letter-spacing:.12em;text-transform:uppercase;margin-top:4px">' + (m.mode === 'grace' ? 'grace days left' : 'days left') + '</div>'
-    + when + '</div>'
+    + countBox
     + '<p style="font-size:.85rem;color:#334155;line-height:1.55;margin:0 0 16px">' + (m.msg || '') + '</p>'
     + payBtn + footer
     + '</div>';
@@ -13119,6 +13317,9 @@ function ftMountHrMgmt() {
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ftMountHrMgmt);
 setTimeout(ftMountHrMgmt, 500);
 setTimeout(ftMountHrMgmt, 2500);
+    setTimeout(function () { try { if (typeof ftApplyAdminToggleDefaults === 'function') ftApplyAdminToggleDefaults(); } catch (e) {} }, 2600);
+    setTimeout(function () { try { if (typeof runHistoryRetention === 'function') runHistoryRetention(); } catch (e) {} }, 3500);
+    setTimeout(function () { try { if (typeof runHistoryRetention === 'function') runHistoryRetention(); } catch (e) {} }, 12000);
 
 var __ftSwitchTab = window.switchTab;
 if (typeof __ftSwitchTab === 'function') {
@@ -13300,6 +13501,39 @@ if (typeof __ftSwitchTab === 'function') {
     b.onclick = function () { window.ftStartOnboarding(true); };
     document.body.appendChild(b);
   }, 2500);
+})();
+</script>
+
+<script>
+(function () {
+  if (!document.getElementById('ftGlobalFooter')) {
+    var f = document.createElement('div');
+    f.id = 'ftGlobalFooter';
+    f.className = 'no-print';
+    f.innerHTML = '&copy; 2026 <strong>FinTrack Business</strong>. All Rights Reserved.';
+    document.body.appendChild(f);
+  }
+})();
+(function () {
+  var IDS = ['reportItemizedTable','serviceHistoryTable','expenseHistoryTable','transferHistoryTable',
+    'adminTransferHistoryTable','attendanceMgmtTableBody','attAuditLogBody','historicalMonthsTableBody',
+    'staffSalaryTableBody','masterServicesTable','staffMasterServicesTable','overallStaffReportTableBody'];
+  function cap() {
+    IDS.forEach(function (id) {
+      var tb = document.getElementById(id);
+      if (!tb || !tb.closest) return;
+      var table = tb.closest('table');
+      if (!table) return;
+      if (!table.classList.contains('ft-only5')) table.classList.add('ft-only5');
+      var box = table.parentElement;
+      if (box && (box.style.maxHeight || box.style.overflowY)) { box.style.maxHeight = ''; box.style.overflowY = ''; }
+    });
+  }
+  var t = null;
+  function plan() { clearTimeout(t); t = setTimeout(cap, 80); }
+  document.addEventListener('DOMContentLoaded', plan);
+  window.addEventListener('load', plan);
+  try { new MutationObserver(plan).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
 })();
 </script>
 </body>
