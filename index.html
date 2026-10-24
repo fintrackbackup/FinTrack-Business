@@ -166,8 +166,12 @@
       border-radius: var(--radius-md); color: #94a3b8; font-weight: 700; font-size: 0.88rem;
       cursor: pointer; transition: 0.2s; margin-bottom: 4px; text-decoration: none;
     }
-    .drawer-menu-item:hover, .drawer-menu-item.active { background: rgba(255,255,255,0.12); color: white; }
-    .drawer-menu-item i { width: 20px; font-size: 1rem; color: var(--atmos-red); }
+        .drawer-menu-item:hover { background: rgba(255,255,255,0.12); color: white; }
+    .drawer-menu-item i { width: 20px; font-size: 1rem; color: var(--atmos-red); transition: 0.2s; }
+    /* The area you are in is marked by its own colour: selected = filled red, white
+       icon and text; everything else stays muted with a red icon. */
+    .drawer-menu-item.active { background: var(--atmos-red); color: #fff; box-shadow: 0 8px 18px rgba(238,43,46,0.35); }
+    .drawer-menu-item.active i { color: #fff; }
 
     /* Horizontal Tab Bar */
     .tab-bar { display: flex; gap: 8px; margin: 20px auto 0; max-width: 1200px; padding: 0 16px; overflow-x: auto; }
@@ -8973,6 +8977,34 @@ var platformData = {
   lifetimeStats: { totalSubscriptions: 0, totalRevenue: 0 },
   branding: { logoDataUrl: '', name: 'FinTrack Business', motto: 'Business Management Platform', description: '', trialDays: 7 }
 };
+
+/* Every list of businesses in the platform console follows the Business ID
+   sequence - FT-001, FT-002, FT-003 ... - never the order the records happen to
+   arrive in. */
+function ftBizOrderIds(map) {
+  map = map || {};
+  return Object.keys(map).sort(function (a, b) {
+    var na = parseInt(String((map[a] || {}).displayId || '').replace(/[^0-9]/g, ''), 10);
+    var nb = parseInt(String((map[b] || {}).displayId || '').replace(/[^0-9]/g, ''), 10);
+    if (!isFinite(na)) na = Number.MAX_SAFE_INTEGER;
+    if (!isFinite(nb)) nb = Number.MAX_SAFE_INTEGER;
+    if (na !== nb) return na - nb;
+    var ja = Date.parse((map[a] || {}).joiningDate || '') || 0;
+    var jb = Date.parse((map[b] || {}).joiningDate || '') || 0;
+    if (ja !== jb) return ja - jb;
+    return String(a) < String(b) ? -1 : 1;
+  });
+}
+
+/* The size each business has really used, in KB, as measured from its records. */
+window.ftBizKB = window.ftBizKB || {};
+function ftRememberBizKB(id, kb) { var v = Number(kb) || 0; if (id && v > 0) window.ftBizKB[id] = v; }
+function ftFmtKB(kb) {
+  kb = Number(kb) || 0;
+  if (kb >= 1024) return (kb / 1024).toFixed(2) + ' MB';
+  if (kb >= 1) return kb.toFixed(1) + ' KB';
+  return '0 KB';
+}
 var platformAdminUser = null;
 
 /* True while this browser holds a verified platform-administrator identity.
@@ -9952,6 +9984,23 @@ function ftSendWelcomeNotification(bizId) {
     })    .catch(function () { return false; });
 }
 
+/* A business's administrator receives the welcome message in the bell on their
+   first sign-in: once per business, administrator only, never for staff, and
+   never twice whether it was sent here or when the business was registered. */
+function ftEnsureWelcomeOnce(bizId) {
+  if (!bizId) return;
+  try { if (typeof isPA === 'function' && isPA()) return; } catch (e) {}
+  var u = null; try { u = (typeof me === 'function') ? me() : null; } catch (e) { u = null; }
+  if (u && u.role && String(u.role).toLowerCase() !== 'admin') return;
+  var b = (platformData.businesses || {})[bizId] || null;
+  if (!b || b.welcomeSentAt) return;
+  var key = 'FT_WELCOME_SENT_' + bizId;
+  try { if (localStorage.getItem(key) === '1') return; localStorage.setItem(key, '1'); } catch (e) {}
+  b.welcomeSentAt = Date.now();
+  try { savePlatformData(); } catch (e) {}
+  try { ftSendWelcomeNotification(bizId); } catch (e) {}
+}
+
 /* Who has really received the welcome message: each business's own inbox is
    read instead of trusting a stored flag, so the one-time send stays available
    until the message has actually arrived. */
@@ -10290,6 +10339,9 @@ function calculateBizDataUsage(b) {
   var usage = (platformData.dataUsage || {})[b.id] || {};
   var currentKB = usage.currentKB || 0;
   if (!currentKB && Number(b.dataKB) > 0) currentKB = Number(b.dataKB);
+  /* the size measured from that business's own records, so real data is never
+     reported as 0 KB */
+  if (!currentKB) { var __kb = (window.ftBizKB || {})[b.id] || 0; if (__kb > 0) currentKB = __kb; }
   var cumulativeKB = usage.cumulativeKB || 0;
   var todayKB = usage.todayKB || 0;
   /* If this is the current business, calculate from appData */
@@ -10842,6 +10894,44 @@ function rejectPayment() {
 }
 
 /* ===== NOTIFICATIONS ===== */
+/* How many businesses have really opened a message: counted from each
+   business's own copy, where its administrator marks it read. */
+var ftReadCounts = null, ftReadAt = 0, ftReadBusy = false;
+function ftReadCountTotal(n) {
+  if (!n) return 0;
+  var c = 0;
+  if (ftReadCounts) c = Math.max(ftReadCounts['pa_' + n.id] || 0, ftReadCounts[n.id] || 0);
+  if (!c && n.readBy) c = Object.keys(n.readBy).length;
+  return c;
+}
+function ftLoadReadCounts(force) {
+  if (ftReadBusy) return;
+  if (!force && ftReadCounts && (Date.now() - ftReadAt) < 60000) return;
+  var ids = [], out = {}, r = null;
+  try { ids = ftBizOrderIds(platformData.businesses || {}); } catch (e) { ids = []; }
+  try { r = firebase.database(); } catch (e) { r = null; }
+  ftReadCounts = ftReadCounts || {};
+  if (!r || !ids.length) { ftReadAt = Date.now(); return; }
+  ftReadBusy = true;
+  var left = ids.length;
+  var done = function () {
+    left--;
+    if (left) return;
+    ftReadCounts = out; ftReadAt = Date.now(); ftReadBusy = false;
+    try { renderPANotifications(); } catch (e) {}
+  };
+  ids.forEach(function (bid) {
+    r.ref('businesses/' + bid + '/meta/notifications').get().then(function (s) {
+      var v = (s && s.val()) || {};
+      Object.keys(v).forEach(function (nid) {
+        var rb = v[nid] && v[nid].readBy;
+        var c = rb ? Object.keys(rb).length : 0;
+        if (c > (out[nid] || 0)) out[nid] = c;
+      });
+    }).catch(function () {}).then(done);
+  });
+}
+
 function renderPANotifications() {
   var bizSelect = document.getElementById('paNotifBusinessSelect');
   if (bizSelect) {
@@ -10863,7 +10953,7 @@ function renderPANotifications() {
         group.style.display = 'block';
         if (sel) {
           sel.innerHTML = '';
-          Object.keys(platformData.businesses||{}).forEach(function(k) {
+          ftBizOrderIds(platformData.businesses||{}).forEach(function(k) {
             var b = platformData.businesses[k];
             var opt = document.createElement('option');
             opt.value = k; opt.innerText = b.name || k;
@@ -10879,13 +10969,20 @@ function renderPANotifications() {
   var htbody = document.getElementById('paNotifHistoryTable');
   if (htbody) {
     htbody.innerHTML = '';
+    /* the history is kept for one week, then it clears itself */
+    var __cutoff = Date.now() - 7 * 86400000, __pruned = false;
+    Object.keys(platformData.notifications || {}).forEach(function (k) {
+      var __n = platformData.notifications[k] || {};
+      if ((Number(__n.sentAt) || 0) < __cutoff) { delete platformData.notifications[k]; __pruned = true; }
+    });
+    if (__pruned) { try { savePlatformData(); } catch (e) {} }
     var notifs = Object.keys(platformData.notifications||{}).map(function(k) { return Object.assign({id:k}, platformData.notifications[k]); }).sort(function(a,b) { return (b.sentAt||0)-(a.sentAt||0); });
     if (notifs.length === 0) {
       htbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">No notifications sent yet.</td></tr>';
     } else {
       notifs.forEach(function(n) {
         var targetLabel = n.type === 'announcement' ? (n.target === 'all' ? 'All Businesses' : n.target === 'active' ? 'Active Businesses' : 'Selected Businesses') : ((platformData.businesses||{})[n.businessId]||{}).name || '-';
-        var readCount = n.readBy ? Object.keys(n.readBy).length : 0;
+        var readCount = ftReadCountTotal(n);
         var totalTargets = n.totalTargets || 1;
         var statusLabel = n.expiryDate && new Date(n.expiryDate).getTime() < Date.now() ? 'Expired' : (n.publishDate && new Date(n.publishDate).getTime() > Date.now() ? 'Scheduled' : 'Active');
         var tr = document.createElement('tr');
@@ -10894,6 +10991,7 @@ function renderPANotifications() {
       });
     }
   }
+  try { ftLoadReadCounts(); } catch (e) {}
 }
 
 function sendIndividualNotification() {
@@ -10973,7 +11071,7 @@ function sendAnnouncement() {
 function renderPAReports() {
   var period = document.getElementById('paReportPeriod') ? document.getElementById('paReportPeriod').value : 'weekly';
   var businesses = platformData.businesses || {};
-  var bizArr = Object.keys(businesses).map(function(k) { return Object.assign({id:k}, businesses[k]); });
+  var bizArr = ftBizOrderIds(businesses).map(function(k) { return Object.assign({id:k}, businesses[k]); });
   var now = Date.now();
   var periodStart = period === 'weekly' ? now - 7*24*60*60*1000 : now - 30*24*60*60*1000;
   var newBiz = bizArr.filter(function(b) { return (b.joiningDate ? new Date(b.joiningDate).getTime() : 0) > periodStart; }).length;
@@ -10990,7 +11088,7 @@ function renderPAReports() {
     metricBox('Total Users', totalUsers, 'fa-users', 'green')+
     metricBox('Active Businesses', activeBiz, 'fa-circle-check', 'green')+
     metricBox('Dormant Businesses', dormantBiz, 'fa-moon', 'amber')+
-    metricBox('Total Storage', (totalStorage/1024).toFixed(2)+' MB', 'fa-database', 'purple');
+    metricBox('Total Storage', ftFmtKB(totalStorage), 'fa-database', 'purple');
   var rm = document.getElementById('paReportMetrics');
   if (rm) rm.innerHTML = metricsHtml;
 
@@ -11052,7 +11150,7 @@ function exportPAReport() {
   var businesses = platformData.businesses || {};
   var rows = '<div style="padding:20px;background:white;color:#0f172a;font-family:Arial,sans-serif"><div style="display:flex;justify-content:space-between;border-bottom:2px solid #0B1E2D;padding-bottom:10px;margin-bottom:15px"><div><h1 style="font-size:18px;color:#0B1E2D;margin:0">FINTRACK BUSINESS PLATFORM ADMIN</h1><p style="font-size:11px;color:#EE2B2E;font-weight:bold;margin:2px 0 0 0">'+period.toUpperCase()+' REPORT</p></div><div style="text-align:right;font-size:10px;color:#64748b"><p style="margin:0">Generated: '+getISTDateTimeStr()+'</p></div></div>';
   rows += '<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#f1f5f9"><th style="padding:6px;border:1px solid #cbd5e1">Business</th><th style="padding:6px;border:1px solid #cbd5e1">Users</th><th style="padding:6px;border:1px solid #cbd5e1">Staff</th><th style="padding:6px;border:1px solid #cbd5e1">Storage (KB)</th><th style="padding:6px;border:1px solid #cbd5e1">Subscription</th><th style="padding:6px;border:1px solid #cbd5e1">Last Activity</th></tr></thead><tbody>';
-  Object.keys(businesses).forEach(function(k) {
+  ftBizOrderIds(businesses).forEach(function(k) {
     var b = businesses[k];
     var usage = calculateBizDataUsage(Object.assign({id:k}, b));
     var subStatus = getBizSubscriptionStatus(Object.assign({id:k}, b));
@@ -12105,6 +12203,7 @@ window.addEventListener('DOMContentLoaded', function() {
         } catch (e) {}
       };
       beat();
+      try { ftEnsureWelcomeOnce(biz); } catch (e) {}
       setInterval(beat, 45000);
       document.addEventListener('click', function () { var n = Date.now(); if (n - ftLastBeat < 60000) return; ftLastBeat = n; beat(); }, true);
       window.addEventListener('beforeunload', function () { try { acct.update({ online: false, lastActive: sv }); } catch (e) {} });
@@ -12336,7 +12435,12 @@ window.addEventListener('DOMContentLoaded', function() {
   function markRead(n) {
     var u = me(); if (!u) return;
     var t = Date.now();
-    if (n.scope === 'pa') writeReceipt(n.id, 'readAt');
+    if (n.scope === 'pa') {
+      writeReceipt(n.id, 'readAt');
+      /* a second mark inside the business's own records, so the platform console
+         can count the read */
+      try { var __r = db(); if (__r && u && u.id) __r.ref('businesses/' + activeBiz() + '/meta/notifications/' + n.id + '/readBy/' + u.id).set(t).catch(function () {}); } catch (e) {}
+    }
     else if (n.scope === 'sa') {
       var list = (appData && Array.isArray(appData.staffAnnouncements)) ? appData.staffAnnouncements : [];
       list.forEach(function (a) { if (a && a.id === n.rawId) { a.readBy = a.readBy || {}; a.readBy[u.id] = t; } });
@@ -12402,7 +12506,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
   function bizOptionsHtml() {
     var pd = PD(), h = '';
-    Object.keys(pd.businesses || {}).forEach(function (k) {
+    ftBizOrderIds(pd.businesses || {}).forEach(function (k) {
       var b = pd.businesses[k] || {};
       h += '<label style="display:flex;gap:8px;align-items:center;padding:4px 2px;font-size:.8rem"><input type="checkbox" class="ftAnnBiz" value="' + k + '"> ' + escapeHtml(b.name || k) + (b.displayId ? ' <span style="color:var(--text-muted)">(' + b.displayId + ')</span>' : '') + '</label>';
     });
@@ -12420,7 +12524,7 @@ window.addEventListener('DOMContentLoaded', function() {
     if (pub && exp && exp < pub) return alert('The expiry date must be after the publish date.');
     var pd = PD(), ids = [], picked = {};
     [].forEach.call(document.querySelectorAll('.ftAnnBiz:checked'), function (c) { picked[c.value] = true; });
-    Object.keys(pd.businesses || {}).forEach(function (k) {
+    ftBizOrderIds(pd.businesses || {}).forEach(function (k) {
       var b = pd.businesses[k] || {};
       if (b.blocked) return;
       if (mode === 'selected' && !picked[k]) return;
@@ -12533,10 +12637,17 @@ window.addEventListener('DOMContentLoaded', function() {
 
   async function measureStorage() {
     var r = db(); if (!r || !isPA()) return {};
-    var pd = PD(), ids = Object.keys(pd.businesses || {}).slice(0, 20), out = {};
+    var pd = PD(), ids = ftBizOrderIds(pd.businesses || {}), out = {};
     for (var i = 0; i < ids.length; i++) {
-      try { var snap = await r.ref('businesses/' + ids[i] + '/data').get(); var v = snap && snap.val(); out[ids[i]] = v ? JSON.stringify(v).length : 0; }
-      catch (e) { out[ids[i]] = null; }
+      var kb = 0;
+      /* what the business publishes on its own beat */
+      try { var f = await r.ref('businesses/' + ids[i] + '/meta/facts/usageKB').get(); kb = Number(f && f.val()) || 0; } catch (e) { kb = 0; }
+      /* otherwise measure its records directly */
+      if (!kb) {
+        try { var snap = await r.ref('businesses/' + ids[i] + '/data').get(); var v = snap && snap.val(); kb = v ? (JSON.stringify(v).length / 1024) : 0; } catch (e) { kb = -1; }
+      }
+      if (kb >= 0) { out[ids[i]] = Math.round(kb * 1024); if (kb > 0) ftRememberBizKB(ids[i], Math.round(kb * 10) / 10); }
+      else out[ids[i]] = null;
     }
     return out;
   }
@@ -12545,7 +12656,7 @@ window.addEventListener('DOMContentLoaded', function() {
   function renderLiveStatus(force) {
     var host = document.getElementById('ftLiveStatusBody'); if (!host) return;
     var pd = PD(), bl = pd.businesses || {}, pres = pd.presence || {};
-    var rows = Object.keys(bl).map(function (k) { return Object.assign({ id: k }, bl[k]); });
+    var rows = ftBizOrderIds(bl).map(function (k) { return Object.assign({ id: k }, bl[k]); });
     if (!rows.length) { host.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:22px">No businesses registered yet.</td></tr>'; return; }
     host.innerHTML = rows.map(function (b) {
       var s = subInfo(b), pr = (typeof ftPresenceInfo === 'function') ? ftPresenceInfo(pres[b.id] || {}) : (pres[b.id] || {});
@@ -12555,12 +12666,12 @@ window.addEventListener('DOMContentLoaded', function() {
         '<td style="font-size:.78rem">' + escapeHtml(b.adminName || '-') + '<div style="font-size:.7rem;color:var(--text-muted)">' + escapeHtml(b.adminContact || b.adminEmail || '-') + '</div></td>' +
         '<td><span style="background:' + s.color + ';color:#fff;padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:800">' + s.label + '</span><div style="font-size:.7rem;color:var(--text-muted);margin-top:4px;line-height:1.45">' + (s.detail.join('<br>') || '-') + '</div></td>' +
         '<td style="font-size:.78rem">' + (b.staffCount || 0) + '</td>' +
-        '<td style="font-size:.78rem">' + stored + '<div style="font-size:.68rem;color:var(--text-muted)">transfer: not measurable</div></td>' +
+        '<td style="font-size:.78rem">' + stored + '</td>' +
         '<td style="font-size:.78rem"><span style="color:' + (pr.online ? 'var(--accent-green)' : 'var(--text-muted)') + ';font-weight:800">' + (pr.online ? 'Online' : 'Offline') + '</span></td>' +
         '<td style="font-size:.78rem">' + (pr.lastActive ? formatTimeAgo(pr.lastActive) : 'Never') + '</td>' +
         '</tr>';
     }).join('');
-    if (!ftStorageCache || force) measureStorage().then(function (m) { ftStorageCache = m; renderLiveStatus(false); }).catch(function () {});
+    if (!ftStorageCache || force) measureStorage().then(function (m) { ftStorageCache = m; renderLiveStatus(false); try { renderPASubscriptions(); renderPAReports(); } catch (e) {} }).catch(function () {});
   }
   window.ftRenderLiveStatus = renderLiveStatus;
 
@@ -12648,9 +12759,9 @@ window.addEventListener('DOMContentLoaded', function() {
       ls.className = 'pa-section tab-content';
       ls.style.display = 'none';
       ls.innerHTML = '<div class="section-header admin-header"><i class="fa-solid fa-heart-pulse"></i> Live Status - Every Business</div>' +
-        '<div class="app-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap"><p style="font-size:.78rem;color:var(--text-muted);margin:0">Trial, paid, grace and verification state for every business, with the customer name and contact.</p><button class="btn-primary" style="width:auto;padding:6px 12px;font-size:.78rem" onclick="ftRenderLiveStatus(true)"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button></div>' +
-        '<div style="overflow-x:auto"><table><thead><tr><th>Business</th><th>Customer</th><th>Subscription</th><th>Staff</th><th>Data stored</th><th>Presence</th><th>Last activity</th></tr></thead><tbody id="ftLiveStatusBody"></tbody></table></div>' +
-        '<p style="font-size:.7rem;color:var(--text-muted);margin-top:8px">Data stored is measured by reading each business record. Data transfer is not measurable from the browser and is reported as such.</p></div>';
+        '<div class="app-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap"><p style="font-size:.8rem;color:var(--text-muted);margin:0;line-height:1.6">A read-only list of every business in Business ID order: its subscription state, how many staff it has, how much storage its records take, and whether an administrator is signed in right now. Nothing on this screen changes anything.</p><button class="btn-primary" style="width:auto;padding:6px 12px;font-size:.78rem" onclick="ftRenderLiveStatus(true)"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button></div>' +
+        '<div style="overflow-x:auto"><table><thead><tr><th>Business</th><th>Customer</th><th>Subscription</th><th>Staff</th><th>Storage used</th><th>Signed in now</th><th>Last activity</th></tr></thead><tbody id="ftLiveStatusBody"></tbody></table></div>' +
+        '<p style="font-size:.72rem;color:var(--text-muted);margin-top:8px;line-height:1.6">Storage used is the size of that business\'s own saved records, read from the business itself. Signed in now means the business is signed in at this moment: Online while a session is still beating, Offline within two minutes of the tab closing.</p></div>';
       bizSection.parentNode.insertBefore(ls, bizSection);
     }
     renderStaffAnnounceHistory();
@@ -12688,6 +12799,9 @@ window.addEventListener('DOMContentLoaded', function() {
     try { listenReceipts(); } catch (e) {}
     try { loadInbox(); } catch (e) {}
     try { refreshBell(); } catch (e) {}
+    try {
+      if (!ftStorageCache) measureStorage().then(function (m) { ftStorageCache = m; try { renderLiveStatus(false); renderPASubscriptions(); renderPAReports(); } catch (e) {} }).catch(function () {});
+    } catch (e) {}
   }
   ftConsoleBoot();
   /* The console screen only exists once the platform administrator has signed in
