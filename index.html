@@ -9877,7 +9877,7 @@ var FT_WELCOME_MESSAGE = 'Welcome aboard! \uD83C\uDF89\n\nWe are thrilled to hav
 
 /* "**text**" is shown in bold inside the notification bell. */
 function ftBoldText(s) {
-  return escapeHtml(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 }
 
 /* The welcome is delivered into the business's own inbox tagged admin-only, so
@@ -9906,19 +9906,55 @@ function ftSendWelcomeNotification(bizId) {
     .catch(function () { return false; });
 }
 
-/* Businesses registered before the welcome existed: the Platform Administrator
-   sends it once from the Pending Actions list. */
-function sendWelcomeToAllExistingBusinesses() {
+/* Who has really received the welcome message: each business's own inbox is
+   read instead of trusting a stored flag, so the one-time send stays available
+   until the message has actually arrived. */
+var ftWelcomeScanState = { running: false, ready: false, due: [], total: 0 };
+function ftWelcomeScan(force) {
+  if (ftWelcomeScanState.running) return;
+  if (ftWelcomeScanState.ready && !force) return;
   var businesses = platformData.businesses || {};
-  var ids = Object.keys(businesses).filter(function (id) { return !businesses[id].welcomeSentAt; });
-  if (!ids.length) return alert('Every business has already received the welcome message.');
-  if (!confirm('Send the welcome message to ' + ids.length + ' business administrator(s)?\n\nEach administrator sees it once in the notification bell after signing in. Staff members do not receive it.')) return;
-  var jobs = ids.map(function (id) {
-    businesses[id].welcomeSentAt = Date.now();
-    return ftSendWelcomeNotification(id);
+  var ids = Object.keys(businesses);
+  var r = null;
+  try { r = firebase.database(); } catch (e) { r = null; }
+  if (!r) {
+    ftWelcomeScanState = { running: false, ready: true, due: ids.slice(), total: ids.length };
+    return;
+  }
+  ftWelcomeScanState = { running: true, ready: false, due: [], total: ids.length };
+  Promise.all(ids.map(function (id) {
+    return r.ref('atmos_platform_admin/businesses/' + id + '/inbox').once('value').then(function (s) {
+      var inbox = s.val() || {};
+      var got = Object.keys(inbox).some(function (k) {
+        return String(k).indexOf('welcome_') === 0 || (inbox[k] && inbox[k].senderRole === 'FinTrack Business');
+      });
+      return got ? '' : id;
+    }).catch(function () { return ''; });
+  })).then(function (rows) {
+    var due = rows.filter(function (id) { return !!id; });
+    ftWelcomeScanState = { running: false, ready: true, due: due, total: ids.length };
+    try { renderPADashboard(); } catch (e) {}
   });
-  Promise.all(jobs).then(function () {
+}
+
+/* The one-time send for businesses registered before the welcome existed. It is
+   offered in Pending Actions, with the message shown, until it has arrived. */
+function sendWelcomeToAllExistingBusinesses() {
+  if (platformData.welcomeCampaignSentAt) {
+    return alert('The welcome message has already been sent to the existing businesses once. New businesses receive it automatically, in the same format, when their administrator first signs in.');
+  }
+  var ids = ftWelcomeScanState.ready ? ftWelcomeScanState.due.slice() : Object.keys(platformData.businesses || {});
+  if (!ids.length) {
+    return alert('Every registered business already has the welcome message in its administrator notification area.');
+  }
+  if (!confirm('Send the welcome message to ' + ids.length + ' business administrator(s)?\n\nSubject: ' + FT_WELCOME_SUBJECT + '\n\nEach administrator sees it once in the notification bell after signing in. Staff members never receive it. This is a one-time send and will not be offered again.')) return;
+  var stamp = Date.now();
+  Promise.all(ids.map(function (id) { return ftSendWelcomeNotification(id); })).then(function () {
+    platformData.welcomeCampaignSentAt = stamp;
+    platformData.welcomeCampaignCount = ids.length;
+    if (platformData.businesses) ids.forEach(function (id) { if (platformData.businesses[id]) platformData.businesses[id].welcomeSentAt = stamp; });
     savePlatformData();
+    ftWelcomeScan(true);
     try { renderPADashboard(); } catch (e) {}
     alert('Welcome message sent to ' + ids.length + ' business administrator(s).');
   }).catch(function (err) {
@@ -9976,8 +10012,32 @@ function renderPADashboard() {
   if (dm) dm.innerHTML = html;
   /* pending actions */
   var pa = '';
-  var welcomeDue = bizArr.filter(function(b) { return !b.welcomeSentAt; }).length;
-  if (welcomeDue > 0) pa += '<div style="background:var(--primary-light);border:1px solid var(--primary);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:8px"><i class="fa-solid fa-envelope-open-text" style="color:var(--primary)"></i> <strong>'+welcomeDue+' business(es) have not received the welcome message yet.</strong> <a class="pa-link" onclick="sendWelcomeToAllExistingBusinesses()">Send now &rarr;</a></div>';
+  /* the welcome message: a one-time send that stays on offer, with the message
+     shown, until every registered business has actually received it */
+  if (!platformData.welcomeCampaignSentAt) {
+    var welcomePreview = '<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700;font-size:.78rem;color:var(--primary)">View the message kept for this send</summary>' +
+      '<div style="margin-top:6px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;max-height:190px;overflow:auto">' +
+      '<div style="font-weight:800;font-size:.8rem;margin-bottom:6px">' + FT_WELCOME_SUBJECT + '</div>' +
+      '<div style="font-size:.78rem;white-space:pre-line;line-height:1.55">' + ftBoldText(FT_WELCOME_MESSAGE) + '</div>' +
+      '</div></details>';
+    if (!ftWelcomeScanState || !ftWelcomeScanState.ready) {
+      ftWelcomeScan();
+      pa += '<div style="background:var(--primary-light);border:1px solid var(--primary);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:8px"><i class="fa-solid fa-envelope-open-text" style="color:var(--primary)"></i> <strong>Checking which businesses still need the welcome message&hellip;</strong></div>';
+    } else if (ftWelcomeScanState.due.length > 0) {
+      pa += '<div style="background:var(--primary-light);border:1px solid var(--primary);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:8px">' +
+        '<i class="fa-solid fa-envelope-open-text" style="color:var(--primary)"></i> <strong>' + ftWelcomeScanState.due.length + ' business(es) have not received the welcome message yet.</strong>' +
+        '<div style="font-size:.76rem;color:var(--text-muted);margin-top:3px">One-time send to every existing business administrator. New businesses receive the same message automatically when their administrator first signs in.</div>' +
+        welcomePreview +
+        '<div style="margin-top:8px"><a class="pa-link" style="cursor:pointer;font-weight:800" onclick="sendWelcomeToAllExistingBusinesses()">Send now &rarr;</a></div>' +
+        '</div>';
+    } else {
+      pa += '<div style="background:var(--accent-green-bg);border:1px solid var(--accent-green);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:8px">' +
+        '<i class="fa-solid fa-circle-check" style="color:var(--accent-green)"></i> <strong>Every registered business has the welcome message in its administrator notification area.</strong>' +
+        '<div style="font-size:.76rem;color:var(--text-muted);margin-top:3px">New businesses receive it automatically when their administrator first signs in.</div>' +
+        welcomePreview +
+        '</div>';
+    }
+  }
   if (pendingPayments > 0) pa += '<div style="background:var(--accent-amber-bg);border:1px solid var(--accent-amber);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:8px"><i class="fa-solid fa-hourglass-half" style="color:var(--accent-amber)"></i> <strong>'+pendingPayments+' payment(s) pending verification.</strong> <a class="pa-link" onclick="switchPATab(\'paSubscriptionsTab\')">Review now →</a></div>';
   if (expiredSubs > 0) pa += '<div style="background:var(--accent-rose-bg);border:1px solid var(--accent-rose);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:8px"><i class="fa-solid fa-calendar-xmark" style="color:var(--accent-rose)"></i> <strong>'+expiredSubs+' business(es) with expired subscriptions.</strong></div>';
   if (dormantBiz > 0) pa += '<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:var(--radius-md);padding:10px 14px;margin-bottom:8px"><i class="fa-solid fa-moon" style="color:#c2410c"></i> <strong>'+dormantBiz+' dormant business(es) — no activity in 7+ days.</strong></div>';
