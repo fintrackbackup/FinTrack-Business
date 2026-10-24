@@ -115,7 +115,7 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
     .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-title { font-size: 1.05rem; font-weight: 900; color: var(--atmos-navy); letter-spacing: -0.3px; text-transform: uppercase; }
+    .brand-title { font-size: 1.05rem; font-weight: 900; color: var(--atmos-navy); letter-spacing: -0.3px; }
     .brand-subtitle { font-size: 0.62rem; color: var(--atmos-red); font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; }
 
     .nav-actions { display: flex; align-items: center; gap: 10px; }
@@ -141,14 +141,14 @@
       background: var(--bg); color: var(--atmos-navy); display: flex; align-items: center;
       justify-content: center; font-size: 1.1rem; cursor: pointer; transition: 0.2s;
     }
-    .menu-toggle-btn:hover { background: var(--atmos-navy); color: white; }
+    .menu-toggle-btn:hover { background: var(--primary); color: white; }
 
     /* Side Drawer Navigation Menu */
     .side-drawer {
       position: fixed; top: 0; left: -290px; width: 290px; height: 100%;
-      background: var(--atmos-navy); color: white; z-index: 1100; transition: left 0.3s ease;
-      box-shadow: 5px 0 25px rgba(0,0,0,0.3); padding: 24px 16px; display: flex; flex-direction: column;
-      overflow-y: auto;
+      background: #ffffff; color: var(--text-main); z-index: 1100; transition: left 0.3s ease;
+      border-right: 1px solid var(--border); box-shadow: 5px 0 25px rgba(15,23,42,0.12);
+      padding: 24px 16px; display: flex; flex-direction: column; overflow-y: auto;
     }
     .side-drawer.open { left: 0; }
     .drawer-overlay {
@@ -161,18 +161,18 @@
     body.ft-sub-locked .side-drawer, body.ft-sub-locked .drawer-overlay { display: none !important; }
     .drawer-header {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
     }
     .drawer-menu-item {
       display: flex; align-items: center; gap: 12px; padding: 12px 16px;
-      border-radius: var(--radius-md); color: #94a3b8; font-weight: 700; font-size: 0.88rem;
+      border-radius: var(--radius-md); color: #475569; font-weight: 700; font-size: 0.88rem;
       cursor: pointer; transition: 0.2s; margin-bottom: 4px; text-decoration: none;
     }
-        .drawer-menu-item:hover { background: rgba(255,255,255,0.12); color: white; }
-    .drawer-menu-item i { width: 20px; font-size: 1rem; color: var(--atmos-red); transition: 0.2s; }
-    /* The area you are in is marked by its own colour: selected = filled red, white
-       icon and text; everything else stays muted with a red icon. */
-    .drawer-menu-item.active { background: var(--atmos-red); color: #fff; box-shadow: 0 8px 18px rgba(238,43,46,0.35); }
+        .drawer-menu-item:hover { background: var(--primary-light); color: var(--primary); }
+    .drawer-menu-item i { width: 20px; font-size: 1rem; color: var(--primary); transition: 0.2s; }
+    /* The area you are in is marked by its own colour: selected = filled blue, white
+       icon and text; everything else stays muted with a blue icon. */
+    .drawer-menu-item.active { background: var(--primary); color: #fff; box-shadow: 0 8px 18px rgba(37,99,235,0.28); }
     .drawer-menu-item.active i { color: #fff; }
 
     /* Horizontal Tab Bar */
@@ -182,7 +182,7 @@
       font-size: 0.85rem; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: 0.2s; white-space: nowrap;
     }
     .tab-btn:hover { background: white; color: var(--atmos-navy); }
-    .tab-btn.active { background: var(--grad-navy); color: white; box-shadow: var(--shadow); border-color: transparent; }
+    .tab-btn.active { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; box-shadow: var(--shadow); border-color: transparent; }
 
     .container { max-width: 1200px; margin: 20px auto; padding: 0 16px; }
     
@@ -312,7 +312,7 @@
     /* Auth screens must fully hide the private dashboard behind them. */
     #bizRegisterModal, #paLoginModal, #paSetupModal, #paForgotModal, #forgotPasswordModal, #adminResetLinkModal { background: #F6F3ED !important; backdrop-filter: none; }
     #loginModal { background: rgba(246,243,237,0.55) !important; backdrop-filter: none; -webkit-backdrop-filter: none; }
-    .ftg-overlay { background: rgba(255,255,255,.97) !important; backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px); }
+    .ftg-overlay { background: rgba(246,243,237,.55) !important; backdrop-filter: blur(1.5px); -webkit-backdrop-filter: blur(1.5px); }
     .ftg-overlay::before, .ftg-overlay::after { display: none !important; }
 
     .tab-content { display: none; }
@@ -415,11 +415,11 @@
     .ft-brand-text { min-width: 0; }
     .ft-brand-text .brand-title, .ft-brand-text .brand-subtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .ft-brand-text .brand-subtitle { margin-top: 3px; line-height: 1.2; }
-    .ft-search { position: relative; display: flex; align-items: center; flex: 0 1 210px; min-width: 104px; }
+    .ft-search { position: relative; display: flex; align-items: center; flex: 0 1 210px; min-width: 104px; margin: 0 auto; }
     .ft-search .ft-search-icon { position: absolute; left: 11px; font-size: .78rem; color: var(--text-muted); pointer-events: none; }
     .ft-search input { width: 100%; padding: 8px 12px 8px 30px; border-radius: 20px; border: 1px solid var(--border); background: white; font-size: .8rem; font-weight: 600; color: var(--atmos-navy); }
     .ft-search input::placeholder { color: var(--text-muted); font-weight: 600; }
-    .ft-search-results { position: absolute; top: calc(100% + 8px); left: 0; width: 268px; max-height: 320px; overflow-y: auto; background: white; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 18px 40px rgba(11,23,42,.18); padding: 6px; z-index: 1200; display: none; }
+    .ft-search-results { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); width: 268px; max-height: 320px; overflow-y: auto; background: white; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 18px 40px rgba(11,23,42,.18); padding: 6px; z-index: 1200; display: none; }
     .ft-search-results.open { display: block; }
     .ft-search-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: transparent; border: none; border-radius: 8px; padding: 9px 10px; font-size: .82rem; font-weight: 700; color: var(--atmos-navy); }
     .ft-search-item i { width: 16px; font-size: .85rem; color: var(--atmos-red); }
@@ -479,7 +479,7 @@ body:not(.pa-mode) .side-drawer .drawer-menu-item[data-pa="1"]{display:none!impo
 .ws-logo-box img{max-height:72px;max-width:230px;object-fit:contain;display:block}
 .ws-logo-text{font-size:1.9rem;font-weight:900;letter-spacing:-.02em;background:#fff;color:#0B1E2D;padding:10px 22px;border-radius:14px;box-shadow:0 8px 24px -8px rgba(0,0,0,.4)}
 .ws-logo-text span{color:#EE2B2E}
-.ws-name{font-size:1.5rem;font-weight:900;text-transform:uppercase;letter-spacing:.02em}
+.ws-name{font-size:1.5rem;font-weight:900;letter-spacing:.02em}
 .ws-motto{font-size:.85rem;color:#EE2B2E;font-weight:800;margin-top:4px}
 .ws-body{padding:26px 24px}
 .ws-desc{font-size:.9rem;line-height:1.65;color:#334155;margin-bottom:18px}
@@ -825,10 +825,10 @@ html, body { background-color: transparent !important; background-image: none !i
   <div class="drawer-header">
     <div id="drawerBrandLogoBox" class="brand-logo-box has-logo"><img src="https://media.base44.com/images/public/6acf90c0138cd5df73588169/2881a5748_IMG_2552.jpg" alt="FinTrack Business" style="max-height:38px;max-width:120px;object-fit:contain"></div>
     <div style="flex:1;min-width:0;margin-left:10px">
-      <div id="drawerBizName" style="font-size:.85rem;font-weight:900;color:#fff;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:none"></div>
+      <div id="drawerBizName" style="font-size:.85rem;font-weight:900;color:#0f172a;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:none"></div>
       <div id="drawerBizMotto" style="font-size:.68rem;color:#EE2B2E;font-weight:700;display:none"></div>
     </div>
-    <button onclick="closeDrawer()" style="background:transparent; color:white; font-size:1.2rem; padding:4px;"><i class="fa-solid fa-xmark"></i></button>
+    <button onclick="closeDrawer()" style="background:transparent; color:#0f172a; font-size:1.2rem; padding:4px;"><i class="fa-solid fa-xmark"></i></button>
   </div>
   <a class="drawer-menu-item active" id="drawer-dashboardTab" onclick="navigateFromDrawer('dashboardTab')"><i class="fa-solid fa-chart-line"></i> Dashboard Summary</a>
   <a class="drawer-menu-item" id="drawer-servicesTab" onclick="navigateFromDrawer('servicesTab')"><i class="fa-solid fa-concierge-bell"></i> Services</a>
@@ -1085,12 +1085,12 @@ html, body { background-color: transparent !important; background-image: none !i
       <div class="brand-subtitle" id="navBrandSubtitle">Business Management Platform</div>
     </div>
   </div>
+  <div class="ft-search" id="ftFeatureSearchWrap">
+    <i class="fa-solid fa-magnifying-glass ft-search-icon"></i>
+    <input type="text" id="ftFeatureSearchInput" placeholder="Search features" autocomplete="off" spellcheck="false" aria-label="Search application features" aria-expanded="false">
+    <div class="ft-search-results" id="ftFeatureSearchResults" role="listbox"></div>
+  </div>
   <div class="nav-actions">
-    <div class="ft-search" id="ftFeatureSearchWrap">
-      <i class="fa-solid fa-magnifying-glass ft-search-icon"></i>
-      <input type="text" id="ftFeatureSearchInput" placeholder="Search features" autocomplete="off" spellcheck="false" aria-label="Search application features" aria-expanded="false">
-      <div class="ft-search-results" id="ftFeatureSearchResults" role="listbox"></div>
-    </div>
     <button id="ftNotifBell" type="button" class="nav-icon-btn" title="Notifications" onclick="ftOpenNotifPanel()" style="position:relative;margin-right:6px"><i class="fa-solid fa-bell"></i><span id="ftNotifBadge" style="display:none;position:absolute;top:-5px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:#FACC15;color:#0B1E2D;font-size:.62rem;font-weight:900;line-height:16px;text-align:center;box-shadow:0 0 0 1px #fff">0</span></button><span id="cloudSyncStatusBadge" class="sync-badge sync-local"><i class="fa-solid fa-cloud"></i> Sync to Cloud</span>
     <span id="activeUserBadge" class="user-pill">Guest</span>
     <button class="nav-icon-btn" onclick="appLogout()" title="Sign Out"><i class="fa-solid fa-power-off"></i></button>
@@ -2142,7 +2142,7 @@ html, body { background-color: transparent !important; background-image: none !i
           </div>
         </div>
         <p id="attRuleHalfDayNote" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 10px;">Half Day deduction: 50% of the daily rate (existing policy, unchanged).</p>
-      </div
+      </div>
 
       <div style="overflow-x: auto;">
         <table>
@@ -2158,8 +2158,6 @@ html, body { background-color: transparent !important; background-image: none !i
           <tbody id="attendanceMgmtTableBody"></tbody>
         </table>
       </div>
-
-      >
 
       <!-- MANUAL ATTENDANCE CHANGE HISTORY (ADMIN ONLY) -->
       <details style="margin-top: 16px;">
@@ -9201,9 +9199,9 @@ function trialActivatedMessage() {
 function applyPlatformBranding() {
   var br = getPlatformBranding();
   var wsLogo = document.getElementById('wsLogoBox');
-  if (wsLogo) wsLogo.innerHTML = br.logoDataUrl ? '<img src="' + br.logoDataUrl + '" alt="Platform Logo">' : '<div class="ws-logo-text">' + br.name + '</div>';
+  if (wsLogo) wsLogo.innerHTML = br.logoDataUrl ? '<img src="' + br.logoDataUrl + '" alt="Platform Logo">' : '<div class="ws-logo-text">' + (/^fintrack business$/i.test(String(br.name || '').trim()) ? DEFAULT_PLATFORM_BRANDING.name : br.name) + '</div>';
   var wsName = document.getElementById('wsPlatformName');
-  if (wsName) wsName.innerText = br.name;
+  if (wsName) wsName.innerText = /^fintrack business$/i.test(String(br.name || '').trim()) ? DEFAULT_PLATFORM_BRANDING.name : (br.name || DEFAULT_PLATFORM_BRANDING.name);
   var wsMotto = document.getElementById('wsPlatformMotto');
   if (wsMotto) wsMotto.innerText = br.motto;
   var wsDesc = document.getElementById('wsDescription');
@@ -9421,10 +9419,7 @@ function paPlans(){
 /* FIREBASE RULES TEXT */
 var PA_FIREBASE_RULES = `{
   "rules": {
-    "atmos_hub_data_v12": {
-      ".read": true,
-      ".write": false
-    },
+    "atmos_hub_data_v12": { ".read": true, ".write": false },
     "atmos_signin_index": {
       ".read": true,
       "$handle": {
@@ -9446,16 +9441,18 @@ var PA_FIREBASE_RULES = `{
         ".write": "(auth != null && (root.child('atmos_platform_bootstrap/uid').val() === auth.uid || root.child('atmos_platform_admin/credentials/uid').val() === auth.uid)) || (auth != null && root.child('atmos_platform_admin/businesses/'+$businessId+'/adminUid').val() === auth.uid)",
         "data": {
           ".write": "auth != null && root.child('atmos_tenant_claims/'+auth.uid+'/b').val() === $businessId && root.child('atmos_platform_admin/businesses/'+$businessId+'/blocked').val() !== true && !root.child('atmos_platform_admin/businesses/'+$businessId+'/deletedAt').exists()"
+        },
+        "meta": {
+          "facts": { ".write": "auth != null && root.child('atmos_tenant_claims/'+auth.uid+'/b').val() === $businessId" },
+          "notifications": { "$notifId": { "readBy": { "$member": { ".write": "auth != null && root.child('atmos_tenant_claims/'+auth.uid+'/b').val() === $businessId" } }, "deletedBy": { "$member": { ".write": "auth != null && root.child('atmos_tenant_claims/'+auth.uid+'/b').val() === $businessId" } } } }
         }
       }
     },
+    "atmos_notification_receipts": { "$businessId": { "$uid": { ".read": "auth != null && auth.uid === $uid", ".write": "auth != null && auth.uid === $uid && root.child('atmos_tenant_claims/'+auth.uid+'/b').val() === $businessId" } } },
     "atmos_platform_admin": {
       ".read": "auth != null && (root.child('atmos_platform_bootstrap/uid').val() === auth.uid || root.child('atmos_platform_admin/credentials/uid').val() === auth.uid)",
       ".write": "auth != null && (root.child('atmos_platform_bootstrap/uid').val() === auth.uid || root.child('atmos_platform_admin/credentials/uid').val() === auth.uid)",
-      "public": {
-        ".read": true,
-        ".write": "auth != null && (root.child('atmos_platform_bootstrap/uid').val() === auth.uid || root.child('atmos_platform_admin/credentials/uid').val() === auth.uid)"
-      },
+      "public": { ".read": true, ".write": "auth != null && (root.child('atmos_platform_bootstrap/uid').val() === auth.uid || root.child('atmos_platform_admin/credentials/uid').val() === auth.uid)" },
       "credentials": {
         ".read": "auth != null && (root.child('atmos_platform_bootstrap/uid').val() === auth.uid || root.child('atmos_platform_admin/credentials/uid').val() === auth.uid)",
         ".write": "auth != null && (root.child('atmos_platform_bootstrap/uid').val() === auth.uid || root.child('atmos_platform_admin/credentials/uid').val() === auth.uid)",
@@ -9483,7 +9480,7 @@ var PA_FIREBASE_RULES = `{
       },
       "presence": {
         "$businessId": {
-          ".read": "auth != null && root.child('atmos_platform_admin/credentials/uid').val() === auth.uid",
+          ".read": "auth != null && (root.child('atmos_platform_admin/credentials/uid').val() === auth.uid || root.child('atmos_tenant_claims/'+auth.uid+'/b').val() === $businessId)",
           ".write": "auth != null && (root.child('atmos_platform_admin/credentials/uid').val() === auth.uid || root.child('atmos_tenant_claims/'+auth.uid+'/b').val() === $businessId)"
         }
       },
@@ -11274,7 +11271,7 @@ function savePALimits() {
 function exportPAReport() {
   var period = document.getElementById('paReportPeriod').value;
   var businesses = platformData.businesses || {};
-  var rows = '<div style="padding:20px;background:white;color:#0f172a;font-family:Arial,sans-serif"><div style="display:flex;justify-content:space-between;border-bottom:2px solid #0B1E2D;padding-bottom:10px;margin-bottom:15px"><div><h1 style="font-size:18px;color:#0B1E2D;margin:0">FINTRACK BUSINESS PLATFORM ADMIN</h1><p style="font-size:11px;color:#EE2B2E;font-weight:bold;margin:2px 0 0 0">'+period.toUpperCase()+' REPORT</p></div><div style="text-align:right;font-size:10px;color:#64748b"><p style="margin:0">Generated: '+getISTDateTimeStr()+'</p></div></div>';
+  var rows = '<div style="padding:20px;background:white;color:#0f172a;font-family:Arial,sans-serif"><div style="display:flex;justify-content:space-between;border-bottom:2px solid #0B1E2D;padding-bottom:10px;margin-bottom:15px"><div><h1 style="font-size:18px;color:#0B1E2D;margin:0">FinTrack Business Platform Admin</h1><p style="font-size:11px;color:#EE2B2E;font-weight:bold;margin:2px 0 0 0">'+period.toUpperCase()+' REPORT</p></div><div style="text-align:right;font-size:10px;color:#64748b"><p style="margin:0">Generated: '+getISTDateTimeStr()+'</p></div></div>';
   rows += '<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#f1f5f9"><th style="padding:6px;border:1px solid #cbd5e1">Business</th><th style="padding:6px;border:1px solid #cbd5e1">Users</th><th style="padding:6px;border:1px solid #cbd5e1">Staff</th><th style="padding:6px;border:1px solid #cbd5e1">Storage (KB)</th><th style="padding:6px;border:1px solid #cbd5e1">Subscription</th><th style="padding:6px;border:1px solid #cbd5e1">Last Activity</th></tr></thead><tbody>';
   ftBizOrderIds(businesses).forEach(function(k) {
     var b = businesses[k];
@@ -11814,9 +11811,9 @@ function hideWelcomeScreen() {
 function ftbShowWelcomeSplash() {
   ftbHideBootSplash();
   var existing = document.getElementById('ftbWelcomeSplash'); if (existing) existing.remove();
-  var logo = '';
-  try { logo = (typeof ftBizBrand === 'function' ? ftBizBrand().logo : '') || (getPlatformBranding && getPlatformBranding().logoDataUrl) || ''; } catch (e) {}
-  if (!logo) logo = 'https://media.base44.com/images/public/6ad20c8082d97b3bd37417ae/266afcba3_IMG_2552.jpg';
+  /* Platform splash artwork only: the business's own logo is never used here, so
+     admin, staff and platform admin all see the same platform name and logo. */
+  var logo = 'https://media.base44.com/images/public/6ad20c8082d97b3bd37417ae/266afcba3_IMG_2552.jpg';
   var splash = document.createElement('div');
   splash.id = 'ftbWelcomeSplash';
   splash.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#F6F3ED;opacity:0;transition:opacity .35s ease';
@@ -11836,19 +11833,19 @@ function markWelcomeSeen() {
 function welcomeGoLogin() {
   markWelcomeSeen();
   hideWelcomeScreen();
-  document.getElementById('loginModal').style.display = 'flex';
+  try { ftbShowWelcomeSplash(); } catch (e) {} document.getElementById('loginModal').style.display = 'flex';
   showPasswordLogin();
   try { restoreRememberedLogin(); } catch (e) {}
 }
 function welcomeGoForgot() {
   markWelcomeSeen();
   hideWelcomeScreen();
-  openForgotPasswordModal();
+  try { ftbShowWelcomeSplash(); } catch (e) {} openForgotPasswordModal();
 }
 function welcomeGoRegister() {
   markWelcomeSeen();
   hideWelcomeScreen();
-  openBizRegisterModal();
+  try { ftbShowWelcomeSplash(); } catch (e) {} openBizRegisterModal();
 }
 
 /* --- Business registration (2 steps) --- */
@@ -13994,7 +13991,7 @@ function ftMountHrMgmt() {
   try {
     var host = document.getElementById('hrMgmtMount');
     if (!host) return;
-    ['ftMgmtSwitch', 'ftMgmtPanel-money', 'ftMgmtPanel-staff', 'monthClosingSection', 'openingBalSection', 'ftStaffSection', 'staffSalarySection', 'attendanceMgmtSection', 'staffReportSection', 'analyticsSection', 'masterCatalogSection', 'cashbookSection'].forEach(function (id) {
+    ['ftMgmtSwitch', 'ftMgmtPanel-money', 'ftMgmtPanel-staff', 'monthClosingSection', 'openingBalSection', 'ftStaffSection', 'staffSalarySection', 'attendanceMgmtSection', 'staffReportSection', 'analyticsSection', 'masterCatalogSection'].forEach(function (id) {
       var el = document.getElementById(id);
       if (el && el.parentNode !== host) host.appendChild(el);
     });
@@ -14016,7 +14013,7 @@ if (typeof __ftSwitchTab === 'function') {
 }
 
 (function () {
-  var STEPS = [["Welcome to FinTrack Business","Everything your shop needs is in the tabs above: collection, expenses, invoices, staff and reports. This short tour takes about a minute.",""],["Your five balances","Cash Drawer is the physical cash in the box. Bank / UPI is the money in your bank. Receivables is what customers still owe you. Admin Fund is money set aside for the owner. Total Balance adds all of them together.","dashboardTab"],["Today at a glance","The day overview shows what came in and went out today, so you can check the day before you close.","dashboardTab"],["Services and split payment","Set your service names and prices once in the Master Catalog. At billing time the amount can be split between your service charge and the department fee.",""],["Cashbook, shop expenses and bank ledger","Every rupee in and out is recorded here. Shop expenses are your running costs, and the bank transfer ledger keeps track of UPI and bank movements.",""],["Invoice","Create an invoice for a customer, print it, and the collection flows into your cashbook automatically.",""],["Financial reports","The daily and monthly reports download as PDF documents named after your business, ready to print or share.",""],["Admin Controls","Application Control holds the platform view, the Monthly Overview, the cashbook settings, month closing and opening balances.","adminTab"],["HR Management","Two groups live here. Money Management closes the month and sets opening balances. Staff Management adds staff, sets salary and incentives, marks attendance and builds staff reports.","hrMgmtTab"],["Staff Profile","Open any staff member to see their interactions, collection, incentive, attendance and total payable salary, and download that report as a branded PDF.","hrTab"],["Subscription","Your trial days and plan are shown on the subscription box. When access ends, adding and editing are locked until the subscription is renewed, while your records stay readable.",""]];
+  var STEPS = [["Welcome to FinTrack Business","Everything your shop needs is in the tabs above: collection, expenses, invoices, staff and reports. This short tour takes about a minute.",""],["Your five balances","Cash Drawer is the physical cash in the box. Bank / UPI is the money in your bank. Receivables is what customers still owe you. Admin Fund is money set aside for the owner. Total Balance adds all of them together.","dashboardTab"],["Today at a glance","The day overview shows what came in and went out today, so you can check the day before you close.","dashboardTab"],["Services and split payment","Set your service names and prices once in the Master Catalog. At billing time the amount can be split between your service charge and the department fee.","adminTab","masterCatalogSection"],["Cashbook, shop expenses and bank ledger","Every rupee in and out is recorded here. Shop expenses are your running costs, and the bank transfer ledger keeps track of UPI and bank movements.","expenseTab"],["Invoice","Create an invoice for a customer, print it, and the collection flows into your cashbook automatically.","invoiceTab"],["Financial reports","The daily and monthly reports download as PDF documents named after your business, ready to print or share.","reportsTab"],["Admin Controls","Application Control holds the platform view, the Monthly Overview, the cashbook settings, month closing and opening balances.","adminTab"],["HR Management","Two groups live here. Money Management closes the month and sets opening balances. Staff Management adds staff, sets salary and incentives, marks attendance and builds staff reports.","hrMgmtTab"],["Staff Profile","Open any staff member to see their interactions, collection, incentive, attendance and total payable salary, and download that report as a branded PDF.","hrTab"],["Subscription","Your trial days and plan are shown on the subscription box. When access ends, adding and editing are locked until the subscription is renewed, while your records stay readable.","adminTab","application"]];
   var idx = 0, mode = 'checklist', overlay = null, card = null;
 
   function isAdminUi() {
@@ -14136,7 +14133,7 @@ if (typeof __ftSwitchTab === 'function') {
       + '<button type="button" class="ftg-next" style="padding:9px 18px;border-radius:10px;border:0;background:#12203A;color:#fff;font-size:.82rem;font-weight:800;cursor:pointer;">' + (idx === STEPS.length - 1 ? 'Finish tour' : 'Next') + '</button>'
       + '</div>';
     bind();
-    goTab(s[2]);
+    (function (tab, sec) { if (sec === 'application') { goTab(tab || 'adminTab'); try { setAdminGroup('application', document.getElementById('admGroupBtn-application')); } catch (e) {} return; } if (sec) { openSection(sec); return; } goTab(tab); })(s[2], s[3]);
   }
   function bind() {
     if (!card) return;
