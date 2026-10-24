@@ -691,8 +691,7 @@ html, body { background-color: transparent !important; background-image: none !i
 .ftg-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin-bottom:20px}
 .ftg-box{display:flex;align-items:center;gap:10px;text-align:left;background:#fff;border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:14px 16px;font-weight:800;font-size:.84rem;color:var(--atmos-navy,#0B1E2D);cursor:pointer;box-shadow:0 6px 18px rgba(11,30,45,.06);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
 .ftg-box:hover{transform:translateY(-2px);border-color:rgba(11,30,45,.22);box-shadow:0 12px 26px rgba(11,30,45,.12)}
-.ftg-box i{font-size:1rem}
-.ftg-box span{line-height:1.25}
+.ftg-box i{font-size:1rem} .ftg-box span{line-height:1.25} #attendanceMgmtScroll{overflow-x:auto;overflow-y:auto} #attendanceMgmtScroll thead th{position:sticky;top:0;background:#f8fafc;z-index:2}
 @media(max-width:640px){.ftg-btn{flex:1 1 100%}}
 </style>
 <style>html.ft-no-scroll, html.ft-no-scroll body{overflow:hidden !important;height:100%;overscroll-behavior:none;}</style>
@@ -2074,24 +2073,18 @@ html, body { background-color: transparent !important; background-image: none !i
 
     <!-- MONEY & STAFF MANAGEMENT: two titles, each expands into its option boxes -->
     <div class="ftg-switch" id="ftMgmtSwitch" role="tablist" aria-label="Money and staff management">
-      <button type="button" class="ftg-btn" id="ftMgmtBtn-money" role="tab" aria-selected="false" onclick="ftSetMgmtGroup('money', this)"><i class="fa-solid fa-sack-dollar"></i> Money Management</button>
-      <button type="button" class="ftg-btn" id="ftMgmtBtn-staff" role="tab" aria-selected="false" onclick="ftSetMgmtGroup('staff', this)"><i class="fa-solid fa-users-gear"></i> Staff Management</button>
+      <button type="button" class="ftg-btn active" id="ftMgmtBtn-staff" role="tab" aria-selected="true" onclick="ftSetMgmtGroup('staff', this)"><i class="fa-solid fa-users-gear"></i> Staff Management</button><button type="button" class="ftg-btn" id="ftMgmtBtn-money" role="tab" aria-selected="false" onclick="ftSetMgmtGroup('money', this)"><i class="fa-solid fa-sack-dollar"></i> Money Management</button>
     </div>
 
     <div class="ftg-panel" id="ftMgmtPanel-money" role="tabpanel" style="display:none">
-      <button type="button" class="ftg-box" onclick="showAdminSection('monthClosingSection')"><i class="fa-solid fa-calendar-check" style="color:var(--primary)"></i><span>Month Closing</span></button>
-      <button type="button" class="ftg-box" onclick="showAdminSection('openingBalSection')"><i class="fa-solid fa-scale-balanced" style="color:var(--accent-green)"></i><span>Opening Balances</span></button>
-      <button type="button" class="ftg-box" onclick="showAdminSection('masterCatalogSection')"><i class="fa-solid fa-layer-group" style="color:var(--accent-purple)"></i><span>Master Catalog</span></button>
-      <button type="button" class="ftg-box" onclick="showAdminSection('cashbookSection')"><i class="fa-solid fa-book" style="color:var(--atmos-red)"></i><span>Cashbook</span></button>
+      <button type="button" class="ftg-box" onclick="showAdminSection('openingBalSection')"><i class="fa-solid fa-scale-balanced" style="color:var(--accent-green)"></i><span>Opening Balances</span></button><button type="button" class="ftg-box" onclick="showAdminSection('monthClosingSection')"><i class="fa-solid fa-calendar-check" style="color:var(--primary)"></i><span>Month Closing</span></button>
+      <button type="button" class="ftg-box" onclick="showAdminSection('cashbookSection')"><i class="fa-solid fa-book" style="color:var(--atmos-red)"></i><span>Cashbook</span></button><button type="button" class="ftg-box" onclick="showAdminSection('masterCatalogSection')"><i class="fa-solid fa-layer-group" style="color:var(--accent-purple)"></i><span>Master Catalog</span></button>
     </div>
 
     <div class="ftg-panel" id="ftMgmtPanel-staff" role="tabpanel" style="display:none">
-      <button type="button" class="ftg-box" onclick="showAdminSection('ftStaffSection')"><i class="fa-solid fa-user-plus" style="color:var(--atmos-navy)"></i><span>1 &middot; Add Staff</span></button>
-      <button type="button" class="ftg-box" onclick="showAdminSection('staffSalarySection')"><i class="fa-solid fa-money-check-dollar" style="color:var(--accent-purple)"></i><span>2 &middot; Salary &amp; Incentives</span></button>
-      <button type="button" class="ftg-box" onclick="showAdminSection('attendanceMgmtSection')"><i class="fa-solid fa-user-clock" style="color:var(--atmos-red)"></i><span>3 &middot; Attendance Management</span></button>
-      <button type="button" class="ftg-box" onclick="showAdminSection('staffReportSection')"><i class="fa-solid fa-file-lines" style="color:var(--accent-amber)"></i><span>4 &middot; Staff Reports</span></button>
-      <button type="button" class="ftg-box" onclick="showAdminSection('ftStaffAnnounceSection')"><i class="fa-solid fa-envelope-open-text" style="color:var(--atmos-navy)"></i><span>Staff Announcements</span></button>
-      <button type="button" class="ftg-box" onclick="showAdminSection('analyticsSection')"><i class="fa-solid fa-chart-pie" style="color:var(--primary)"></i><span>Business Analytics</span></button>
+      <button type="button" class="ftg-box" onclick="showAdminSection('ftStaffSection')"><i class="fa-solid fa-user-plus" style="color:var(--atmos-navy)"></i><span>Add Staff</span></button><button type="button" class="ftg-box" onclick="showAdminSection('staffSalarySection')"><i class="fa-solid fa-money-check-dollar" style="color:var(--accent-purple)"></i><span>Salary &amp; Incentives</span></button>
+      <button type="button" class="ftg-box" onclick="showAdminSection('attendanceMgmtSection')"><i class="fa-solid fa-user-clock" style="color:var(--atmos-red)"></i><span>Attendance Management</span></button><button type="button" class="ftg-box" onclick="showAdminSection('staffReportSection')"><i class="fa-solid fa-file-lines" style="color:var(--accent-amber)"></i><span>Staff Reports</span></button>
+      <button type="button" class="ftg-box" onclick="showAdminSection('ftStaffAnnounceSection')"><i class="fa-solid fa-envelope-open-text" style="color:var(--atmos-navy)"></i><span>Staff Announcements</span></button><button type="button" class="ftg-box" onclick="showAdminSection('analyticsSection')"><i class="fa-solid fa-chart-pie" style="color:var(--primary)"></i><span>Business Analytics</span></button>
     </div>
 
     <!-- 1b. ATTENDANCE MANAGEMENT PORTAL (ADMIN ONLY) -->
@@ -2144,13 +2137,11 @@ html, body { background-color: transparent !important; background-image: none !i
         <p id="attRuleHalfDayNote" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 10px;">Half Day deduction: 50% of the daily rate (existing policy, unchanged).</p>
       </div>
 
-      <div style="overflow-x: auto;">
+      <div id="attendanceMgmtScroll">
         <table>
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Day</th>
-              <th>Login Time</th>
+              <th>Date</th><th>Day</th><th>Login Time</th>
               <th>Current Status</th>
               <th>Admin Override</th>
             </tr>
@@ -5644,9 +5635,8 @@ const FIREBASE_CONFIG = {
     const drawerBtn = document.getElementById(`drawer-${tabId}`);
     if (drawerBtn) drawerBtn.classList.add('active');
 
-    refreshAllViews();
+    refreshAllViews(); if (tabId === 'adminTab') { try { setAdminGroup('administration', document.getElementById('admGroupBtn-administration')); } catch (e) {} } if (tabId === 'hrMgmtTab') { try { window.ftResetHrMgmtView(); } catch (e) {} }
   }
-
   function openDrawer() {
     document.getElementById('sideDrawer').classList.add('open');
     document.getElementById('drawerOverlay').classList.add('active');
@@ -8945,9 +8935,11 @@ const FIREBASE_CONFIG = {
         '<td><span class="badge" style="background:' + statusBg + '; color:' + statusColor + ';">' + statusLabel + '</span>' + overrideTag + '</td>' +
         '<td><select onchange="saveAttendanceOverride(&#39;' + staffName + '&#39;, &#39;' + dateStr + '&#39;, this.value)" style="width:auto; padding:4px 8px; font-size:0.8rem;">' + optHtml + '</select></td>';
       tbody.appendChild(tr);
-    }
+    } ftSizeAttendanceList();
   }
-
+  /* Admin override list: five days at a time, longer months scroll inside the box. */
+  function ftSizeAttendanceList() { var wrap = document.getElementById('attendanceMgmtScroll'); var tbody = document.getElementById('attendanceMgmtTableBody'); if (!wrap || !tbody) return; var rows = tbody.querySelectorAll('tr'); var height = 0; for (var i = 0; i < rows.length && i < 5; i++) height += rows[i].offsetHeight; if (rows.length > 5 && height > 0) { wrap.style.maxHeight = height + 'px'; wrap.style.overflowY = 'auto'; } else { wrap.style.maxHeight = 'none'; wrap.style.overflowY = 'hidden'; } }
+  window.ftSizeAttendanceList = ftSizeAttendanceList;
   function saveAttendanceOverride(staffName, dateStr, action) {
     if (!currentUser || currentUser.role !== 'Admin') { alert('Only an authorised administrator can change attendance.'); renderAttendanceMgmt(); return; }
     var month = document.getElementById('attMgmtMonthPicker').value || getISTMonthStr();
@@ -12201,12 +12193,10 @@ window.addEventListener('DOMContentLoaded', function() {
   }
   var __ftSectionSwitch = showAdminSection;
   showAdminSection = function (id) {
-    window.__ftOpenAdminSection = id;
     var r;
     try { r = __ftSectionSwitch.apply(null, arguments); } catch (e) {}
-    ['monthClosingSection', 'staffSalarySection', 'openingBalSection', 'cashbookSection', 'staffReportSection', 'analyticsSection', 'attendanceMgmtSection', 'ftStaffAnnounceSection', 'ftStaffSection'].forEach(function (x) {
-      var el = document.getElementById(x); if (el) el.style.display = (x === id) ? 'block' : 'none';
-    });
+    window.__ftOpenAdminSection = id;
+    ['monthClosingSection', 'staffSalarySection', 'openingBalSection', 'cashbookSection', 'staffReportSection', 'analyticsSection', 'attendanceMgmtSection', 'ftStaffAnnounceSection', 'ftStaffSection'].forEach(function (x) { var el = document.getElementById(x); if (el) el.style.display = (x === id) ? 'block' : 'none'; }); if (window.ftOpenMgmtGroup) { try { window.ftOpenMgmtGroup(['monthClosingSection', 'openingBalSection', 'cashbookSection', 'masterCatalogSection'].indexOf(id) !== -1 ? 'money' : 'staff'); } catch (e) {} } if (id === 'attendanceMgmtSection' && window.ftSizeAttendanceList) { try { requestAnimationFrame(window.ftSizeAttendanceList); } catch (e) { window.ftSizeAttendanceList(); } }
     return r;
   };
   window.showAdminSection = showAdminSection;
@@ -13729,8 +13719,7 @@ function rfBindHub() {
   requestAnimationFrame(tick);
 }/* ===== ADMINISTRATION | APPLICATION CONTROL ===== */
 var adminGroup = 'administration';
-var ADMIN_APPLICATION_MATCH = ['Business Profile Details', 'Business Name', 'Business Motto', 'Shop Logo Management', 'Staff Credential Management', 'Platform Subscription', 'Password Reset Email', 'Firebase Realtime Cloud Database Live Sync'];
-
+var ADMIN_APPLICATION_MATCH = ['Business Profile Details', 'Business Name', 'Business Motto', 'Shop Logo Management', 'Staff Credential Management', 'Platform Subscription', 'Password Reset Email', 'Firebase Realtime Cloud Database Live Sync']; var ADMIN_HR_SECTIONS = ['monthClosingSection', 'openingBalSection', 'cashbookSection', 'masterCatalogSection', 'ftStaffSection', 'staffSalarySection', 'attendanceMgmtSection', 'staffReportSection', 'ftStaffAnnounceSection', 'analyticsSection']; window.FT_HR_SECTIONS = ADMIN_HR_SECTIONS;
 function admIsPlatformPanel(card) {
   if (!card) return false;
   if (card.querySelector && card.querySelector('#pinEmailBlock')) return true;
@@ -13758,8 +13747,7 @@ function applyAdminGroups() {
   if (sw) sw.style.display = isPlatform ? 'none' : 'flex';
   adminTab.querySelectorAll('.app-card').forEach(function (card) {
     if (admIsPlatformPanel(card)) { card.style.display = isPlatform ? '' : 'none'; return; }
-    if (isPlatform) { card.style.display = 'none'; return; }
-    card.style.display = (admCardGroup(card) === adminGroup) ? '' : 'none';
+    if (isPlatform) { card.style.display = 'none'; return; } if (ADMIN_HR_SECTIONS.indexOf(card.id) === -1) card.style.display = (admCardGroup(card) === adminGroup) ? '' : 'none';
   });
   /* Keep whichever option box the administrator opened visible. */
   var __open = window.__ftOpenAdminSection;
@@ -13869,18 +13857,15 @@ function paPrepareTenantAssociations() {
 
 </script><script src="fintrack-extras.js"></script>
 <script>
+window.ftOpenMgmtGroup = function (key) { ['staff', 'money'].forEach(function (g) { var p = document.getElementById('ftMgmtPanel-' + g); var b = document.getElementById('ftMgmtBtn-' + g); if (!p) return; var isThis = (g === key); p.style.display = isThis ? 'grid' : 'none'; if (b) { b.classList.toggle('active', isThis); b.setAttribute('aria-selected', isThis ? 'true' : 'false'); } }); };
+window.ftHideHrSections = function () { window.__ftOpenAdminSection = null; (window.FT_HR_SECTIONS || []).forEach(function (id) { var el = document.getElementById(id); if (el) el.style.display = 'none'; }); };
+window.ftResetHrMgmtView = function () { window.ftHideHrSections(); window.ftOpenMgmtGroup('staff'); };
 window.ftSetMgmtGroup = function (key, btn) {
   var panel = document.getElementById('ftMgmtPanel-' + key);
   if (!panel) return;
   var open = panel.style.display === 'none' || !panel.style.display;
-  ['money', 'staff'].forEach(function (g) {
-    var p = document.getElementById('ftMgmtPanel-' + g);
-    var b = document.getElementById('ftMgmtBtn-' + g);
-    if (!p) return;
-    var isThis = (g === key) && open;
-    p.style.display = isThis ? 'grid' : 'none';
-    if (b) { b.classList.toggle('active', isThis); b.setAttribute('aria-selected', isThis ? 'true' : 'false'); }
-  });
+  if (open) window.ftHideHrSections();
+  window.ftOpenMgmtGroup(open ? key : '');
 };
 </script>
 <script>
@@ -14263,9 +14248,8 @@ if (typeof __ftSwitchTab === 'function') {
   }
   function goStaffGroup() {
     return function () {
-      closeDrawer();
-      openAdminArea();
-      try { ftSetMgmtGroup('staff', document.getElementById('ftMgmtBtn-staff')); } catch (e) {}
+      closeDrawer(); openAdminArea();
+      try { window.ftOpenMgmtGroup('staff'); } catch (e) {}
     };
   }
 
