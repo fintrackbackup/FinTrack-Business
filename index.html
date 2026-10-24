@@ -2430,7 +2430,7 @@ html, body { background-color: transparent !important; background-image: none !i
       </div>
 
       <!-- FIREBASE REALTIME CLOUD SYNC CONFIGURATION -->
-      <div class="app-card" style="border-left: 5px solid var(--primary); margin-bottom: 24px;">
+      <div class="app-card" style="display:none; border-left: 5px solid var(--primary); margin-bottom: 24px;">
         <h3 style="font-size: 1.05rem; font-weight: 900; color: var(--atmos-navy); margin-bottom: 6px;">
           <i class="fa-solid fa-cloud-arrow-up" style="color: var(--primary); margin-right: 6px;"></i> Firebase Realtime Cloud Database Live Sync
         </h3>
@@ -2468,7 +2468,7 @@ html, body { background-color: transparent !important; background-image: none !i
       </div>
 
       <!-- PASSWORD RESET EMAIL DELIVERY (ADMIN CONTROLS) -->
-      <div class="app-card" style="border-left: 5px solid var(--accent-green); margin-bottom: 24px;">
+      <div class="app-card" style="display:none; border-left: 5px solid var(--accent-green); margin-bottom: 24px;">
         <div id="pinEmailBlock" style="padding-top:0">
           <div class="sec-label" style="margin-bottom:8px"><i class="fa-solid fa-envelope-circle-check"></i> Password Reset Email Delivery</div>
           <p style="font-size:.75rem;color:var(--text-muted);margin-bottom:12px">The admin password-reset link is emailed to the registered administrator address. Administrator reset links use Firebase Authentication email delivery. EmailJS settings below apply only to legacy email templates and are not required for password resets.</p>
@@ -3265,11 +3265,12 @@ html, body { background-color: transparent !important; background-image: none !i
 </div>
 <!-- HIDDEN PDF REPORT TEMPLATE -->
 <div id="pdfReportTemplate" style="padding: 20px; background: white; color: #0f172a;">
-  <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #0B1E2D; padding-bottom: 10px; margin-bottom: 15px;">
-    <div>
-      <h1 style="font-size: 18px; color: #0B1E2D; margin: 0;">__FTBIZNAME__</h1>
-      <p style="font-size: 11px; color: #EE2B2E; font-weight: bold; margin: 2px 0 0 0;">__FTBIZSUB__</p>
-    </div>
+  <div style="display: flex; align-items: flex-start; border-bottom: 2px solid #0B1E2D; padding-bottom: 10px; margin-bottom: 15px;">
+        <div style="width: 84px; flex: 0 0 84px; text-align: left;">__FTBIZLOGO__</div>
+        <div style="flex: 1; text-align: center;">
+          <h1 style="font-size: 18px; color: #0B1E2D; margin: 0;">__FTBIZNAME__</h1>
+          <p style="font-size: 11px; color: #EE2B2E; font-weight: bold; margin: 2px 0 0 0;">__FTBIZSUB__</p>
+        </div>
     <div style="text-align: right; font-size: 10px; color: #64748b;">
       <p id="pdfReportTitle" style="font-size: 12px; font-weight: bold; color: #0B1E2D; margin:0;"></p>
       <p id="pdfReportDate" style="margin:2px 0 0 0;"></p>
@@ -5749,7 +5750,7 @@ const FIREBASE_CONFIG = {
     }).join('');
     if (!rows) rows = '<tr><td colspan="7" style="padding:8px; border:1px solid #cbd5e1; text-align:center; color:#64748b;">No transactions on this date</td></tr>';
     var html = '<div style="padding:20px; background:white; color:#0f172a;">' +
-      '<div style="display:flex; justify-content:space-between; border-bottom:2px solid #0B1E2D; padding-bottom:10px; margin-bottom:12px;"><div><h1 style="font-size:18px; color:#0B1E2D; margin:0;">__FTBIZNAME__</h1><p style="font-size:11px; color:#EE2B2E; font-weight:bold; margin:2px 0 0 0;">__FTBIZSUB__</p></div><div style="text-align:right; font-size:10px; color:#64748b; white-space:nowrap; min-width:170px;"><p style="font-size:12px; font-weight:bold; color:#0B1E2D; margin:0;">Date: '+date+'</p><p style="margin:2px 0 0 0;">Generated: '+getISTDateTimeStr()+'</p></div></div>' +
+      '<div style="display:flex; align-items:flex-start; border-bottom:2px solid #0B1E2D; padding-bottom:10px; margin-bottom:12px;"><div style="width:84px; flex:0 0 84px; text-align:left;">__FTBIZLOGO__</div><div style="flex:1; text-align:center;"><h1 style="font-size:18px; color:#0B1E2D; margin:0;">__FTBIZNAME__</h1><p style="font-size:11px; color:#EE2B2E; font-weight:bold; margin:2px 0 0 0;">__FTBIZSUB__</p></div><div style="text-align:right; font-size:10px; color:#64748b; white-space:nowrap; min-width:170px;"><p style="font-size:12px; font-weight:bold; color:#0B1E2D; margin:0;">Date: '+date+'</p><p style="margin:2px 0 0 0;">Generated: '+getISTDateTimeStr()+'</p></div></div>' +
       '<p style="font-size:10px; font-weight:bold; color:#0B1E2D; margin:8px 0 4px 0;">OPENING BALANCE</p>' + openHtml +
       '<p style="font-size:10px; font-weight:bold; color:#0B1E2D; margin:12px 0 4px 0;">TRANSACTIONS (latest first)</p>' +
       '<table style="width:100%; table-layout:fixed; border-collapse:collapse; font-size:10px;"><colgroup><col style="width:56px"><col style="width:56px"><col style="width:196px"><col style="width:86px"><col style="width:78px"><col style="width:78px"><col style="width:180px"></colgroup><thead><tr style="background:#f1f5f9;"><th style="padding:5px; border:1px solid #cbd5e1; text-align:left;">Type</th><th style="padding:5px; border:1px solid #cbd5e1; text-align:left;">Time</th><th style="padding:5px; border:1px solid #cbd5e1; text-align:left; overflow-wrap:break-word;">Description</th><th style="padding:5px; border:1px solid #cbd5e1;">Net Income (₹)</th><th style="padding:5px; border:1px solid #cbd5e1;">Dept Fee (₹)</th><th style="padding:5px; border:1px solid #cbd5e1;">Expense (₹)</th><th style="padding:5px; border:1px solid #cbd5e1; text-align:left;">Staff</th></tr></thead><tbody>'+rows+'</tbody></table>' +
@@ -5888,25 +5889,31 @@ const FIREBASE_CONFIG = {
     var sel = document.getElementById('cashbookPdfRange');
     var range = sel ? sel.value : 'all';
     var d = cashbookReportData(range);
+    var R = '\u20b9';
+    function money(v) { return (v < 0 ? '-' : '') + R + Math.abs(v).toFixed(2); }
     function box(label, val, color) {
-      return '<div style="flex:1 1 22%; min-width:120px; border:1px solid #e2e8f0; padding:8px; border-radius:6px; background:#f8fafc;"><span style="font-size:9px; color:#64748b; font-weight:bold;">' + label + '</span><div style="font-size:13px; font-weight:bold; color:' + (color || '#0B1E2D') + ';">\u20b9' + val.toFixed(2) + '</div></div>';
+      return '<div style="flex:1 1 30%; min-width:130px; border:1px solid #e2e8f0; padding:9px; border-radius:6px; background:#f8fafc;"><span style="font-size:9px; color:#64748b; font-weight:bold;">' + label + '</span><div style="font-size:14px; font-weight:bold; color:' + color + ';">' + money(val) + '</div></div>';
     }
-    var body = d.rows.map(function (r) {
-      return '<tr><td style="padding:5px; border:1px solid #cbd5e1; font-weight:bold;">' + r.m + '</td>' +
-        '<td style="padding:5px; border:1px solid #cbd5e1; text-align:right; color:#059669; font-weight:bold;">\u20b9' + r.e.income.toFixed(2) + '</td>' +
-        '<td style="padding:5px; border:1px solid #cbd5e1; text-align:right; color:#b45309;">\u20b9' + r.e.deptFee.toFixed(2) + '</td>' +
-        '<td style="padding:5px; border:1px solid #cbd5e1; text-align:right; color:#e11d48; font-weight:bold;">\u20b9' + r.e.expense.toFixed(2) + '</td>' +
-        '<td style="padding:5px; border:1px solid #cbd5e1; text-align:right; font-weight:bold; color:' + (r.net >= 0 ? '#059669' : '#e11d48') + ';">\u20b9' + r.net.toFixed(2) + '</td>' +
-        '<td style="padding:5px; border:1px solid #cbd5e1; text-align:right; font-weight:bold;">\u20b9' + r.e.closing.toFixed(2) + '</td></tr>';
+    var cum = 0;
+    var body = d.rows.map(function (r, idx) {
+      cum += r.net;
+      var pc = cum >= 0 ? '#059669' : '#e11d48';
+      return '<tr><td style="padding:5px; border:1px solid #cbd5e1; text-align:center;">' + (idx + 1) + '</td>' +
+        '<td style="padding:5px; border:1px solid #cbd5e1; font-weight:bold;">' + r.m + '</td>' +
+        '<td style="padding:5px; border:1px solid #cbd5e1; text-align:right; color:#059669; font-weight:bold;">' + money(r.e.income) + '</td>' +
+        '<td style="padding:5px; border:1px solid #cbd5e1; text-align:right; color:#e11d48; font-weight:bold;">' + money(r.e.expense) + '</td>' +
+        '<td style="padding:5px; border:1px solid #cbd5e1; text-align:right; font-weight:bold; color:' + (r.net >= 0 ? '#059669' : '#e11d48') + ';">' + money(r.net) + '</td>' +
+        '<td style="padding:5px; border:1px solid #cbd5e1; text-align:right; font-weight:bold; color:' + pc + ';">' + money(cum) + '</td></tr>';
     }).join('');
     if (!body) body = '<tr><td colspan="6" style="padding:8px; border:1px solid #cbd5e1; text-align:center; color:#64748b;">No records in this period</td></tr>';
+    var profitColor = d.profit >= 0 ? '#059669' : '#e11d48';
     var html = '<div style="padding:20px; background:white; color:#0f172a;">' +
-      '<div style="display:flex; justify-content:space-between; border-bottom:2px solid #0B1E2D; padding-bottom:10px; margin-bottom:12px;"><div><h1 style="font-size:18px; color:#0B1E2D; margin:0;">__FTBIZNAME__</h1><p style="font-size:11px; color:#EE2B2E; font-weight:bold; margin:2px 0 0 0;">__FTBIZSUB__</p></div><div style="text-align:right; font-size:10px; color:#64748b; white-space:nowrap; min-width:190px;"><p style="font-size:12px; font-weight:bold; color:#0B1E2D; margin:0;">' + d.title + '</p><p style="margin:2px 0 0 0;">Period: ' + d.fromLabel + ' to ' + d.toLabel + '</p><p style="margin:2px 0 0 0;">Generated: ' + getISTDateTimeStr() + '</p></div></div>' +
+      '<div style="display:flex; align-items:flex-start; border-bottom:2px solid #0B1E2D; padding-bottom:10px; margin-bottom:12px;"><div style="width:84px; flex:0 0 84px; text-align:left;">__FTBIZLOGO__</div><div style="flex:1; text-align:center;"><h1 style="font-size:18px; color:#0B1E2D; margin:0;">__FTBIZNAME__</h1><p style="font-size:11px; color:#EE2B2E; font-weight:bold; margin:2px 0 0 0;">__FTBIZSUB__</p></div><div style="width:190px; flex:0 0 190px; text-align:right; font-size:10px; color:#64748b; white-space:nowrap;"><p style="font-size:12px; font-weight:bold; color:#0B1E2D; margin:0;">' + d.title + '</p><p style="margin:2px 0 0 0;">Period: ' + d.fromLabel + ' to ' + d.toLabel + '</p><p style="margin:2px 0 0 0;">Generated: ' + getISTDateTimeStr() + '</p></div></div>' +
       '<p style="font-size:10px; font-weight:bold; color:#0B1E2D; margin:8px 0 4px 0;">SUMMARY</p>' +
-      '<div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">' + box('Total Income', d.income, '#059669') + box('Total Expenses', d.expense, '#e11d48') + box('Cumulative Profit / Loss', d.profit, d.profit >= 0 ? '#059669' : '#e11d48') + box('Closing Balance', d.closing, '#0B1E2D') + '</div>' +
-      '<p style="font-size:10px; font-weight:bold; color:#0B1E2D; margin:12px 0 4px 0;">MONTH BY MONTH (latest first)</p>' +
-      '<table style="width:100%; border-collapse:collapse; font-size:10px;"><thead><tr style="background:#f1f5f9;"><th style="padding:5px; border:1px solid #cbd5e1; text-align:left;">Month</th><th style="padding:5px; border:1px solid #cbd5e1;">Income (\u20b9)</th><th style="padding:5px; border:1px solid #cbd5e1;">Dept Fee (\u20b9)</th><th style="padding:5px; border:1px solid #cbd5e1;">Expenses (\u20b9)</th><th style="padding:5px; border:1px solid #cbd5e1;">Net (\u20b9)</th><th style="padding:5px; border:1px solid #cbd5e1;">Closing Balance (\u20b9)</th></tr></thead><tbody>' + body + '</tbody></table>' +
-      '<p style="font-size:9px; color:#64748b; margin-top:10px;">Monthly income is the net service charge after discount. Cumulative profit or loss is income minus expenses over the period shown. Closing balance is the overall balance at the end of the latest month listed. Monthly summaries are kept permanently, so older months still report correctly.</p>' +
+      '<div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">' + box('Total Income', d.income, '#059669') + box('Total Expenses', d.expense, '#e11d48') + box('Cumulative Profit / Loss', d.profit, profitColor) + '</div>' +
+      '<p style="font-size:10px; font-weight:bold; color:#0B1E2D; margin:12px 0 4px 0;">MONTH BY MONTH</p>' +
+      '<table style="width:100%; border-collapse:collapse; font-size:10px;"><thead><tr style="background:#f1f5f9;"><th style="padding:5px; border:1px solid #cbd5e1;">S.No</th><th style="padding:5px; border:1px solid #cbd5e1; text-align:left;">Month</th><th style="padding:5px; border:1px solid #cbd5e1;">Income (' + R + ')</th><th style="padding:5px; border:1px solid #cbd5e1;">Expense (' + R + ')</th><th style="padding:5px; border:1px solid #cbd5e1;">Net Balance (' + R + ')</th><th style="padding:5px; border:1px solid #cbd5e1;">Cumulative Profit (' + R + ')</th></tr></thead><tbody>' + body + '</tbody></table>' +
+      '<p style="font-size:9px; color:#64748b; margin-top:10px;">Monthly income is the net service charge after discount. Net Balance is that month income minus that month expense. Cumulative Profit is the running total of the net balance from the first month of the period to that month.</p>' +
       '</div>';
     var container = document.createElement('div');
     container.style.width = '730px'; container.style.background = '#ffffff';
@@ -7331,7 +7338,7 @@ const FIREBASE_CONFIG = {
       margin: 0.5,
       filename: ftPdfFileName('Financial Report', month),
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
+      html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
 
@@ -8333,7 +8340,7 @@ const FIREBASE_CONFIG = {
     const currentDayNum = todayIST.getDate();
     const isCurrentMonth = getISTMonthStr(todayIST) === month;
 
-    for (let d = 1; d <= daysInMonth; d++) {
+    for (let d = daysInMonth; d >= 1; d--) {
       const dt = new Date(year, mIdx, d);
       const isSunday = dt.getDay() === 0;
       const dateStr = `${year}-${String(mIdx + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -8512,7 +8519,7 @@ const FIREBASE_CONFIG = {
     container.innerHTML = htmlContent;
     container.className = container.className ? container.className + ' ft-pdf-stage' : 'ft-pdf-stage';
     document.body.appendChild(container);
-    var opt = { margin: 0.5, filename: ftPdfFileName('Staff Report', month), image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+    var opt = { margin: 0.5, filename: ftPdfFileName('Staff Report', month), image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
     html2pdf().set(opt).from(container).save().then(function() { document.body.removeChild(container); });
   }
 
@@ -8655,13 +8662,17 @@ const FIREBASE_CONFIG = {
       line('Half Day', halfDay, '#d97706') +
       line('Approved Leave / Holiday', leaveDays) +
       line('Attendance', attPct + '%', '#0B1E2D');
-    var logoHtml = logo ? '<img src="' + logo + '" alt="Logo" style="max-height:60px; max-width:170px; object-fit:contain; display:block; margin:0 auto 8px auto;">' : '';
+    var logoSrc = logo || '';
+    if (!logoSrc) { try { logoSrc = (getBusinessProfile() || {}).logoDataUrl || ''; } catch (e) {} }
+    var logoHtml = logoSrc ? '<img src="' + logoSrc + '" alt="Logo" style="max-height:64px; max-width:82px; object-fit:contain; display:block;">' : '';
     var html = '<div style="padding:24px; background:#ffffff; font-family:Arial,Helvetica,sans-serif; color:#0f172a;">' +
-      '<div style="text-align:center; border-bottom:3px solid #0B1E2D; padding-bottom:10px; margin-bottom:12px;">' +
-        logoHtml +
-        '<h1 style="font-size:20px; color:#0B1E2D; margin:0; letter-spacing:.5px;">' + shopName + '</h1>' +
-        '<p style="font-size:10px; color:#EE2B2E; font-weight:bold; margin:4px 0 0 0; text-transform:uppercase; letter-spacing:1px;">' + motto + '</p>' +
-        (contact ? '<p style="font-size:10px; color:#64748b; margin:3px 0 0 0;">Contact: ' + contact + '</p>' : '') +
+      '<div style="display:flex; align-items:flex-start; border-bottom:3px solid #0B1E2D; padding-bottom:10px; margin-bottom:12px;">' +
+        '<div style="width:84px; flex:0 0 84px; text-align:left;">' + logoHtml + '</div>' +
+        '<div style="flex:1; text-align:center;">' +
+          '<h1 style="font-size:20px; color:#0B1E2D; margin:0; letter-spacing:.5px;">' + shopName + '</h1>' +
+          '<p style="font-size:10px; color:#EE2B2E; font-weight:bold; margin:4px 0 0 0; text-transform:uppercase; letter-spacing:1px;">' + motto + '</p>' +
+          (contact ? '<p style="font-size:10px; color:#64748b; margin:3px 0 0 0;">Contact: ' + contact + '</p>' : '') +
+        '</div>' +
       '</div>' +
       '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">' +
         '<p style="font-size:11px; font-weight:bold; color:#EE2B2E; margin:0; text-transform:uppercase; letter-spacing:.6px;">Individual Staff Report</p>' +
@@ -8694,25 +8705,24 @@ const FIREBASE_CONFIG = {
     const month = document.getElementById('attendanceMonthPicker').value || getISTMonthStr();
     const tbody = document.getElementById('attendanceTable');
     tbody.innerHTML = '';
-
     const monthAttd = appData.attendance[month] || {};
-
-    var __staffNames = appData.users.filter(function(u){ return u.role === 'Staff'; }).map(function(u){ return u.name; });
-  Object.keys(monthAttd).forEach(staffName => {
-    if (__staffNames.indexOf(staffName) < 0) return;
+    var __staffNames = appData.users.filter(function (u) { return u.role === 'Staff'; }).map(function (u) { return u.name; });
+    var rows = [];
+    Object.keys(monthAttd).forEach(staffName => {
+      if (__staffNames.indexOf(staffName) < 0) return;
       const days = monthAttd[staffName];
-      Object.keys(days).forEach(dateStr => {
-        const rec = days[dateStr];
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><strong>${staffName}</strong></td>
-          <td>${dateStr}</td>
-          <td>${rec.firstLogin}</td>
-          <td>${rec.lastActive}</td>
-          <td><span class="badge ${rec.status === 'Absent' ? 'badge-closed' : (rec.status === 'Half Day' ? 'badge-split' : ((rec.status === 'Approved Leave' || rec.status === 'Holiday') ? 'badge-upi' : (rec.isLate ? 'badge-split' : 'badge-open')))}">${rec.status || (rec.isLate ? 'Late' : 'On-time')}</span></td>
-        `;
-        tbody.appendChild(tr);
-      });
+      Object.keys(days).forEach(dateStr => { rows.push({ staffName: staffName, dateStr: dateStr, rec: days[dateStr] }); });
+    });
+    rows.sort(function (a, b) {
+      if (a.dateStr !== b.dateStr) return a.dateStr < b.dateStr ? 1 : -1;
+      return a.staffName > b.staffName ? 1 : -1;
+    });
+    rows.forEach(function (row) {
+      const staffName = row.staffName, dateStr = row.dateStr, rec = row.rec;
+      const tr = document.createElement('tr');
+      var badgeCls = rec.status === 'Absent' ? 'badge-closed' : (rec.status === 'Half Day' ? 'badge-split' : ((rec.status === 'Approved Leave' || rec.status === 'Holiday') ? 'badge-upi' : (rec.isLate ? 'badge-split' : 'badge-open')));
+      tr.innerHTML = '<td><strong>' + staffName + '</strong></td><td>' + dateStr + '</td><td>' + rec.firstLogin + '</td><td>' + rec.lastActive + '</td><td><span class="badge ' + badgeCls + '">' + (rec.status || (rec.isLate ? 'Late' : 'On-time')) + '</span></td>';
+      tbody.appendChild(tr);
     });
   }
 
@@ -11507,7 +11517,10 @@ window.addEventListener('DOMContentLoaded', function() {
     var p = {}; try { p = getBusinessProfile() || {}; } catch (e) {}
     var name = p.shopName || 'My Business';
     var sub = p.motto || fallback || '';
-    return String(s).split('__FTBIZNAME__').join(name).split('__FTBIZSUB__').join(sub);
+    var lg = p.logoDataUrl || '';
+    try { if (!lg) lg = appData.logoDataUrl || ''; } catch (e) {}
+    var lgH = lg ? '<img src="' + lg + '" alt="Logo" style="display:block; max-height:64px; max-width:82px; object-fit:contain;">' : '';
+    return String(s).split('__FTBIZNAME__').join(name).split('__FTBIZSUB__').join(sub).split('__FTBIZLOGO__').join(lgH);
   };
   window.ftApplyPdfBrand = function (el, fallback) {
     if (!el) return;
@@ -13516,9 +13529,20 @@ if (typeof __ftSwitchTab === 'function') {
 })();
 (function () {
   var IDS = ['reportItemizedTable','serviceHistoryTable','expenseHistoryTable','transferHistoryTable',
-    'adminTransferHistoryTable','attendanceMgmtTableBody','attAuditLogBody','historicalMonthsTableBody',
+    'adminTransferHistoryTable','histServiceLogTable','attAuditLogBody','historicalMonthsTableBody',
     'staffSalaryTableBody','masterServicesTable','staffMasterServicesTable','overallStaffReportTableBody'];
+  var SCROLL_IDS = ['attendanceTable', 'profDetailedAttendanceTableBody'];
   function cap() {
+    SCROLL_IDS.forEach(function (id) {
+      var tb = document.getElementById(id);
+      if (!tb || !tb.closest) return;
+      var table = tb.closest('table');
+      if (!table) return;
+      var box = table.parentElement;
+      if (!box) return;
+      box.style.maxHeight = '225px';
+      box.style.overflowY = 'auto';
+    });
     IDS.forEach(function (id) {
       var tb = document.getElementById(id);
       if (!tb || !tb.closest) return;
