@@ -3493,6 +3493,11 @@ const FIREBASE_CONFIG = {
   function convertToLegacyFormat() {
     let staffIdx = 0;
     return {
+      /* The business's own identity travels with its records, so a session that
+         loads from the cloud (a staff sign-in, another device) keeps its own
+         name, motto and logo instead of falling back to the platform branding. */
+      businessProfile: (appData && appData.businessProfile) ? appData.businessProfile : {},
+      logoDataUrl: (appData && appData.logoDataUrl) || '',
       userAccounts: appData.users.map(u => {
         let id = (u.id !== undefined && u.id !== null) ? u.id : (u.role === 'Admin' ? 'ADM-001' : 'STF-' + (101 + staffIdx++));
         return {
@@ -3653,6 +3658,7 @@ const FIREBASE_CONFIG = {
     if (!id) return false;
     if (authBusinessId && authBusinessId !== id) detachTenant();
     authBusinessId = id;
+    try { window.ftAuthBusinessId = id; } catch (e) {}
     try { localStorage.setItem(BIZ_ID_KEY, id); } catch (e) {}
     return true;
   }
@@ -3666,6 +3672,7 @@ const FIREBASE_CONFIG = {
     firebaseDbRef = null;
     isFirebaseSyncActive = false;
     authBusinessId = null;
+    try { window.ftAuthBusinessId = null; } catch (e) {}
     pendingBusinessId = null;
     localCacheForBiz = null;
     clearBusinessLocalCache();
@@ -3919,6 +3926,16 @@ const FIREBASE_CONFIG = {
         if (val) {
           var masterBefore = JSON.stringify(appData.masterServices.map(function (s) { return [s.id, s.name, s.price, s.deptFee || 0]; }));
           appData = convertLegacyData(val);
+          /* Businesses that saved before their own name, motto and logo travelled
+             with the records: write them once so every laptop and every staff
+             sign-in sees the business's own branding, not the platform's. */
+          try {
+            var hasIdentity = !!(appData.businessProfile && Object.keys(appData.businessProfile).length) || !!appData.logoDataUrl;
+            if (ftIdentityPushed !== authBusinessId && hasIdentity && currentUser && currentUser.role === 'Admin' && (!val.businessProfile || !val.logoDataUrl)) {
+              ftIdentityPushed = authBusinessId;
+              firebaseDbRef.update({ businessProfile: appData.businessProfile || {}, logoDataUrl: appData.logoDataUrl || '' });
+            }
+          } catch (e) {}
           applyMigrationState();
           relinkCurrentUser();
           bindTenantMetaListener();
@@ -4173,6 +4190,7 @@ const FIREBASE_CONFIG = {
   }
 
   var ftFactsAt = 0;
+  var ftIdentityPushed = false;
   function ftPublishBusinessFacts() {
     try {
       if (!currentUser || currentUser.role !== 'Admin' || platformAdminUser) return;
@@ -4180,9 +4198,21 @@ const FIREBASE_CONFIG = {
       var now = Date.now();
       if ((now - ftFactsAt) < 15000) return;
       ftFactsAt = now;
+      /* A staff member is any saved user that is not this administrator. Older records
+         may carry no role at all, so the administrator is also matched by name/email. */
+      var adminName = String(currentUser.name || '').trim().toLowerCase();
+      var adminMail = String(currentUser.email || '').trim().toLowerCase();
       var staff = 0;
-      (appData.users || []).forEach(function (u) { if (u && u.role && String(u.role).toLowerCase() !== 'admin') staff++; });
-      firebase.database().ref('atmos_platform_admin/businesses/' + authBusinessId + '/staffCount').set(staff).catch(function () {});
+      (appData.users || []).forEach(function (u) {
+        if (!u) return;
+        var r = String(u.role || '').toLowerCase();
+        if (r === 'admin') return;
+        var nm = String(u.name || '').trim().toLowerCase();
+        if (!r && ((adminName && nm && nm === adminName) || (adminMail && String(u.email || '').trim().toLowerCase() === adminMail))) return;
+        staff++;
+      });
+      var facts = { staffCount: staff, usageKB: Math.round(JSON.stringify(appData).length / 1024), lastActive: Date.now(), adminName: String(currentUser.name || ''), updatedAt: Date.now() };
+      firebase.database().ref('businesses/' + authBusinessId + '/meta/facts').update(facts).catch(function () {});
     } catch (e) {}
   }
   function saveData() {
@@ -4380,6 +4410,18 @@ const FIREBASE_CONFIG = {
   /* Converts the previous version's data shapes into this version's appData shapes */
   function convertLegacyData(legacy) {
     const out = { ...appData };
+
+    /* Business name, motto and logo: keep the cloud copy of every field that
+       carries a value, so branding survives a fresh sign-in on any device. */
+    if (legacy.businessProfile && typeof legacy.businessProfile === 'object') {
+      var bp = Object.assign({}, out.businessProfile || {});
+      Object.keys(legacy.businessProfile).forEach(function (k) {
+        var v = legacy.businessProfile[k];
+        if (v !== undefined && v !== null && v !== '') bp[k] = v;
+      });
+      out.businessProfile = bp;
+    }
+    if (legacy.logoDataUrl) out.logoDataUrl = legacy.logoDataUrl;
 
     if (Array.isArray(legacy.userAccounts) && legacy.userAccounts.length) {
       out.users = legacy.userAccounts.map(u => {
@@ -9433,16 +9475,73 @@ function listenScopedPlatformData() {
   listenOwnBusinessRecord();
 }
 
+/* A staff member signing in on a laptop that has never held this business's
+     data has no local copy of the shop name. The business's own registry record
+     is readable to its members, so take the registered name from there rather
+     than greet them with the platform's name. */
+  function adoptRegisteredBusinessName(rec) {
+    if (!rec || !rec.name) return;
+    var p = (appData && appData.businessProfile) || {};
+    var shown = p.shopName || '';
+    if (shown && shown !== 'FinTrack Business') return;
+    appData.businessProfile = Object.assign({}, p, { shopName: rec.name });
+    try { persistLocalData(); } catch (e) {}
+    try { updateBusinessBrandingDisplays(); updateShopLogoDisplays(); } catch (e) {}
+  }
+
+  /* A business whose registry record is missing shows "Not Registered" on its
+   subscription card. Create the record once (never overwriting an existing one)
+   so every account shows its real trial, grace, active or ended state. */
+function ensureOwnRegistryRecord() {
+  if (!authBusinessId) return;
+  var prof = (appData && appData.businessProfile) || {};
+  var users = (appData && appData.users) || [];
+  var admin = users.filter(function (u) { return u && u.role === 'Admin'; })[0] || null;
+  var branding = getPlatformBranding();
+  var uid = '';
+  try { uid = (firebase.auth().currentUser || {}).uid || ''; } catch (e) { uid = ''; }
+  var rec = {
+    name: prof.shopName || 'My Business',
+    category: prof.category === 'Other' ? (prof.customCategory || 'Other') : (prof.category || ''),
+    motto: prof.motto || '',
+    adminName: admin ? admin.name : 'Admin',
+    adminContact: admin ? (admin.mobile || '') : '',
+    adminEmail: admin ? (admin.email || '') : '',
+    adminUid: uid,
+    joiningDate: getISTDateStr(),
+    staffCount: users.filter(function (u) { return u && u.role && String(u.role).toLowerCase() !== 'admin'; }).length,
+    blocked: false,
+    subscriptionStatus: 'trial',
+    trialEndDate: Date.parse(getISTDateStr() + 'T00:00:00+05:30') + (branding.trialDays * 86400000),
+    subscriptionExpiry: '',
+    lastActivity: Date.now(),
+    isCurrentBusiness: true
+  };
+  try {
+    firebase.database().ref('atmos_platform_admin/businesses/' + authBusinessId).transaction(function (current) {
+      if (current) return;
+      return rec;
+    }, undefined, false).then(function (res) {
+      var v = res && res.snapshot ? res.snapshot.val() : null;
+      if (!v) return;
+      if (!platformData.businesses) platformData.businesses = {};
+      platformData.businesses[authBusinessId] = v;
+      try { renderBizSubscriptionCard(); checkSubscriptionLock(); } catch (e) {}
+    }).catch(function () {});
+  } catch (e) {}
+}
+
 function listenOwnBusinessRecord() {
   if (!authBusinessId) return;
   try {
     var ref = firebase.database().ref('atmos_platform_admin/businesses/' + authBusinessId);
     ref.on('value', function (snap) {
       var v = snap.val();
-      if (!v) return;
+      if (!v) { try { ensureOwnRegistryRecord(); } catch (e) {} return; }
       if (!platformData.businesses) platformData.businesses = {};
       platformData.businesses[authBusinessId] = v;
       try { renderBizSubscriptionCard(); checkSubscriptionLock(); } catch (e) {}
+      try { adoptRegisteredBusinessName(v); } catch (e) {}
     }, function () {});
     scopedPlatformRefs.push(ref);
   } catch (e) {}
@@ -9772,6 +9871,61 @@ function renderPlatformAdminViews() {
 }
 
 /* ===== DASHBOARD ===== */
+/* ===== WELCOME MESSAGE FOR NEW BUSINESS ADMINISTRATORS ===== */
+var FT_WELCOME_SUBJECT = 'Welcome to FinTrack Business \uD83C\uDF89';
+var FT_WELCOME_MESSAGE = 'Welcome aboard! \uD83C\uDF89\n\nWe are thrilled to have your business registered with **FinTrack Business**.\n\nYour account is now active and ready to help you manage your daily operations, staff attendance, service collections, and financial reports effortlessly.\n\nTo help you get started smoothly, here is a quick checklist:\n \u2022 Add your staff members and assign their secure login numbers.\n \u2022 Set up your staff salaries and incentive percentages.\n \u2022 Add your master catalog services so your team can record transactions quickly.\n \u2022 Record your monthly opening balance to keep your cash and bank accounts accurate from day one.\n\nIf you ever need guidance, the built-in Setup Guide on your dashboard is always there to walk you through each step.\n\nHere\u2019s to making your business management simpler, smarter, and fully organized! \uD83D\uDE80\n\nBest regards,\nThe **FinTrack Business** Team';
+
+/* "**text**" is shown in bold inside the notification bell. */
+function ftBoldText(s) {
+  return escapeHtml(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
+/* The welcome is delivered into the business's own inbox tagged admin-only, so
+   the administrator sees it in the notification bell and the staff never do. */
+function ftSendWelcomeNotification(bizId) {
+  if (!bizId) return Promise.resolve(false);
+  var r = null;
+  try { r = firebase.database(); } catch (e) { r = null; }
+  if (!r) return Promise.resolve(false);
+  var base = 'atmos_platform_admin/businesses/' + bizId;
+  var nid = 'welcome_' + Date.now().toString(36);
+  var msg = {};
+  msg[nid] = {
+    id: nid,
+    subject: FT_WELCOME_SUBJECT,
+    message: FT_WELCOME_MESSAGE,
+    senderName: 'FinTrack Business Team',
+    senderRole: 'FinTrack Business',
+    audience: 'admin',
+    sentAt: Date.now(),
+    publishAt: 0,
+    expiryAt: 0
+  };
+  return r.ref(base + '/inbox').update(msg)
+    .then(function () { return r.ref(base + '/welcomeSentAt').set(Date.now()); })
+    .catch(function () { return false; });
+}
+
+/* Businesses registered before the welcome existed: the Platform Administrator
+   sends it once from the Pending Actions list. */
+function sendWelcomeToAllExistingBusinesses() {
+  var businesses = platformData.businesses || {};
+  var ids = Object.keys(businesses).filter(function (id) { return !businesses[id].welcomeSentAt; });
+  if (!ids.length) return alert('Every business has already received the welcome message.');
+  if (!confirm('Send the welcome message to ' + ids.length + ' business administrator(s)?\n\nEach administrator sees it once in the notification bell after signing in. Staff members do not receive it.')) return;
+  var jobs = ids.map(function (id) {
+    businesses[id].welcomeSentAt = Date.now();
+    return ftSendWelcomeNotification(id);
+  });
+  Promise.all(jobs).then(function () {
+    savePlatformData();
+    try { renderPADashboard(); } catch (e) {}
+    alert('Welcome message sent to ' + ids.length + ' business administrator(s).');
+  }).catch(function (err) {
+    alert('The welcome message could not be sent to every business: ' + ((err && err.message) || 'unknown error'));
+  });
+}
+
 function renderPADashboard() {
   var businesses = platformData.businesses || {};
   var bizArr = Object.keys(businesses).map(function(k) { return Object.assign({id:k}, businesses[k]); });
@@ -9786,7 +9940,7 @@ function renderPADashboard() {
     var presence = (platformData.presence || {})[b.id] || {};
     if (presence.online) onlineBiz++;
     if (b.blocked) { blockedBiz++; return; }
-    var lastAct = presence.lastActive || b.lastActivity || 0;
+    var lastAct = presence.lastActive || b.lastActive || b.lastActivity || 0;
     if (lastAct > sevenDaysAgo) activeBiz++; else dormantBiz++;
     var subStatus = getBizSubscriptionStatus(b);
     if (subStatus === 'trial') trialBiz++;
@@ -9822,6 +9976,8 @@ function renderPADashboard() {
   if (dm) dm.innerHTML = html;
   /* pending actions */
   var pa = '';
+  var welcomeDue = bizArr.filter(function(b) { return !b.welcomeSentAt; }).length;
+  if (welcomeDue > 0) pa += '<div style="background:var(--primary-light);border:1px solid var(--primary);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:8px"><i class="fa-solid fa-envelope-open-text" style="color:var(--primary)"></i> <strong>'+welcomeDue+' business(es) have not received the welcome message yet.</strong> <a class="pa-link" onclick="sendWelcomeToAllExistingBusinesses()">Send now &rarr;</a></div>';
   if (pendingPayments > 0) pa += '<div style="background:var(--accent-amber-bg);border:1px solid var(--accent-amber);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:8px"><i class="fa-solid fa-hourglass-half" style="color:var(--accent-amber)"></i> <strong>'+pendingPayments+' payment(s) pending verification.</strong> <a class="pa-link" onclick="switchPATab(\'paSubscriptionsTab\')">Review now →</a></div>';
   if (expiredSubs > 0) pa += '<div style="background:var(--accent-rose-bg);border:1px solid var(--accent-rose);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:8px"><i class="fa-solid fa-calendar-xmark" style="color:var(--accent-rose)"></i> <strong>'+expiredSubs+' business(es) with expired subscriptions.</strong></div>';
   if (dormantBiz > 0) pa += '<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:var(--radius-md);padding:10px 14px;margin-bottom:8px"><i class="fa-solid fa-moon" style="color:#c2410c"></i> <strong>'+dormantBiz+' dormant business(es) — no activity in 7+ days.</strong></div>';
@@ -9878,18 +10034,61 @@ function initPACharts(bizArr, statusCounts) {
    staff before publishing, or whose write failed, would show 0. The platform
    reads each business's own user list and corrects the number. */
 var ftStaffSyncAt = 0, ftStaffSyncing = false;
-function ftSyncStaffCounts() {
+function ftStaffFromUsers(v, b) {
+  var list = Array.isArray(v) ? v : Object.keys(v || {}).map(function (k) { return v[k]; });
+  var adminName = String((b && b.adminName) || '').trim().toLowerCase();
+  var adminContact = String((b && b.adminContact) || '').trim();
+  var seen = {}, n = 0;
+  list.forEach(function (u) {
+    if (!u) return;
+    var r = String(u.role || '').toLowerCase();
+    if (r === 'admin' || r === 'owner') return;
+    var nm = String(u.name || '').trim().toLowerCase();
+    var mb = String(u.mobile || u.contact || '').trim();
+    if (!r) { if (adminName && nm && nm === adminName) return; if (adminContact && mb && mb === adminContact) return; }
+    var key = nm + '|' + (mb || String(u.email || '').toLowerCase());
+    if (seen[key]) return; seen[key] = 1; n++;
+  });
+  return n;
+}
+
+function ftStaffFromAccounts(v) {
+  var n = 0;
+  Object.keys(v || {}).forEach(function (k) {
+    var a = v[k] || {};
+    if (String(a.role || '').toLowerCase() === 'staff') n++;
+  });
+  return n;
+}
+
+function ftSyncStaffCounts(force) {
   var r = db(); if (!r || !isPA()) return;
-  if (ftStaffSyncing || (Date.now() - ftStaffSyncAt) < 60000) return;
+  if (ftStaffSyncing) return;
+  if (!force && (Date.now() - ftStaffSyncAt) < 20000) return;
   ftStaffSyncing = true; ftStaffSyncAt = Date.now();
-  var pd = PD(), ids = Object.keys(pd.businesses || {}).slice(0, 20), changed = false;
+  var pd = PD(), ids = Object.keys(pd.businesses || {}).slice(0, 50), changed = false;
   var jobs = ids.map(function (id) {
-    return r.ref('businesses/' + id + '/data/users').get().then(function (snap) {
-      var v = snap && snap.val(); if (!v) return;
-      var list = Array.isArray(v) ? v : Object.keys(v).map(function (k) { return v[k]; });
-      var n = list.filter(function (u) { return u && u.role && String(u.role).toLowerCase() !== 'admin'; }).length;
-      var b = pd.businesses[id]; if (!b) return;
-      if (Number(b.staffCount || 0) !== n) { b.staffCount = n; changed = true; }
+    var b = pd.businesses[id]; if (!b) return Promise.resolve();
+    return r.ref('businesses/' + id + '/meta/facts').get().then(function (snap) {
+      var f = snap && snap.val();
+      if (f && f.staffCount !== undefined && f.staffCount !== null) {
+        var st = Number(f.staffCount);
+        if (isFinite(st) && Number(b.staffCount || 0) !== st) { b.staffCount = st; changed = true; }
+        var kb = Number(f.usageKB);
+        if (isFinite(kb) && kb > 0 && Number(b.dataKB || 0) !== kb) { b.dataKB = kb; changed = true; }
+        var la = Number(f.lastActive);
+        if (isFinite(la) && la > Number(b.lastActive || 0)) { b.lastActive = la; changed = true; }
+        return null;
+      }
+      /* Older business that has not saved since this update: count its own lists. */
+      return Promise.all([
+        r.ref('businesses/' + id + '/data/users').get().catch(function () { return null; }),
+        r.ref('businesses/' + id + '/accounts').get().catch(function () { return null; })
+      ]).then(function (res) {
+        var uv = res[0] && res[0].val(), av = res[1] && res[1].val();
+        var n = Math.max(ftStaffFromUsers(uv, b), ftStaffFromAccounts(av));
+        if (Number(b.staffCount || 0) !== n) { b.staffCount = n; changed = true; }
+      }).catch(function () {});
     }).catch(function () {});
   });
   Promise.all(jobs).then(function () {
@@ -9897,7 +10096,7 @@ function ftSyncStaffCounts() {
     if (!changed) return;
     try { savePlatformData(); } catch (e) {}
     try { renderPABusinesses(); } catch (e) {}
-  });
+  }).catch(function () { ftStaffSyncing = false; });
 }
 
 function renderPABusinesses() {
@@ -9912,6 +10111,15 @@ function renderPABusinesses() {
   if (search) bizArr = bizArr.filter(function(b) {
     return (b.name||'').toLowerCase().includes(search) || (b.id||'').toLowerCase().includes(search) || (b.adminName||'').toLowerCase().includes(search);
   });
+  /* The directory follows the Business ID sequence - FT-001, FT-002, FT-003 ...
+     never the order the records happen to arrive in. */
+  bizArr.sort(function(a, b) {
+    var na = parseInt(String(a.displayId || '').replace(/[^0-9]/g, ''), 10);
+    var nb = parseInt(String(b.displayId || '').replace(/[^0-9]/g, ''), 10);
+    if (!isFinite(na)) na = Number.MAX_SAFE_INTEGER;
+    if (!isFinite(nb)) nb = Number.MAX_SAFE_INTEGER;
+    return na - nb;
+  });
   if (bizArr.length === 0) {
     tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--text-muted)">No businesses registered yet. Use "Add Business" or "Register This Business" above.</td></tr>';
     return;
@@ -9921,7 +10129,7 @@ function renderPABusinesses() {
   bizArr.forEach(function(b) {
     var presence = (platformData.presence||{})[b.id] || {};
     var online = !!presence.online;
-    var lastAct = presence.lastActive || b.lastActivity || 0;
+    var lastAct = presence.lastActive || b.lastActive || b.lastActivity || 0;
     var isActive = lastAct > sevenDaysAgo;
     var subStatus = getBizSubscriptionStatus(b);
     /* The expiry always follows the trial length saved in Platform Settings today. */
@@ -9976,6 +10184,7 @@ function getBizSubscriptionStatus(b) {
 function calculateBizDataUsage(b) {
   var usage = (platformData.dataUsage || {})[b.id] || {};
   var currentKB = usage.currentKB || 0;
+  if (!currentKB && Number(b.dataKB) > 0) currentKB = Number(b.dataKB);
   var cumulativeKB = usage.cumulativeKB || 0;
   var todayKB = usage.todayKB || 0;
   /* If this is the current business, calculate from appData */
@@ -10005,6 +10214,7 @@ function formatTimeAgo(ts) {
 
 /* OPEN BUSINESS PROFILE */
 function openBusinessProfile(bizId) {
+  try { ftSyncStaffCounts(); } catch (e) {}
   paCurrentBizId = bizId;
   var b = (platformData.businesses||{})[bizId];
   if (!b) return;
@@ -10015,7 +10225,7 @@ function openBusinessProfile(bizId) {
   var notifs = Object.keys(platformData.notifications||{}).filter(function(k) { return platformData.notifications[k].businessId === bizId; }).map(function(k) { return Object.assign({id:k}, platformData.notifications[k]); });
   var now = Date.now();
   var sevenDaysAgo = now - 7*24*60*60*1000;
-  var isActive = (presence.lastActive || b.lastActivity || 0) > sevenDaysAgo;
+  var isActive = (presence.lastActive || b.lastActive || b.lastActivity || 0) > sevenDaysAgo;
   var html =
     '<div class="app-card"><button class="pa-link" onclick="switchPATab(\'paBusinessesTab\')" style="margin-bottom:12px"><i class="fa-solid fa-arrow-left"></i> Back to Directory</button>'+
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:16px">'+
@@ -10032,7 +10242,7 @@ function openBusinessProfile(bizId) {
     metricBox('Staff Count', b.staffCount||0,'fa-users','green')+
     metricBox('Online Status', '<span class="pa-dot '+(presence.online?'pa-online':'pa-offline')+'"></span>'+(presence.online?'Online':'Offline'),'fa-wifi',presence.online?'green':'rose')+
     metricBox('Activity', '<span class="pa-badge pa-badge-'+(isActive?'active':'dormant')+'">'+(isActive?'Active':'Dormant')+'</span>','fa-circle-check',isActive?'green':'amber')+
-    metricBox('Last Activity', presence.lastActive?formatTimeAgo(presence.lastActive):'Never','fa-clock','blue')+
+    metricBox('Last Activity', (presence.lastActive||b.lastActive||b.lastActivity)?formatTimeAgo(presence.lastActive||b.lastActive||b.lastActivity):'Never','fa-clock','blue')+
     metricBox('Subscription', '<span class="pa-badge pa-badge-'+subStatus+'">'+subStatus.charAt(0).toUpperCase()+subStatus.slice(1)+'</span>','fa-credit-card',subStatus==='active'?'green':subStatus==='trial'?'purple':'amber')+
     metricBox('Expiry Date', (window.ftExpiryCell ? window.ftExpiryCell(b, subStatus) : (b.subscriptionExpiry||'-')),'fa-calendar-xmark','blue')+
     '</div></div>';
@@ -10110,6 +10320,10 @@ function getCurrentPlatformBusinessId() {
   if (!platformData || !platformData.businesses) return null;
   var bids = platformData.businesses;
   var keys = Object.keys(bids);
+  /* 0. The business this signed-in session was verified against. */
+  var verifiedId = null;
+  try { verifiedId = window.ftAuthBusinessId || null; } catch (e) { verifiedId = null; }
+  if (verifiedId && bids[verifiedId]) return verifiedId;
   /* 1. The id this device registered with. */
   var localId = null;
   try { localId = localStorage.getItem(BIZ_ID_KEY); } catch (e) { localId = null; }
@@ -10127,6 +10341,14 @@ function getCurrentPlatformBusinessId() {
     var b = bids[keys[j]];
     if (!b) continue;
     if (uid && b.adminUid && String(b.adminUid) === String(uid)) {
+      b.isCurrentBusiness = true;
+      try { localStorage.setItem(BIZ_ID_KEY, keys[j]); } catch (e) {}
+      try { savePlatformData(); } catch (e) {}
+      return keys[j];
+    }
+    var fbUid = '';
+    try { fbUid = (firebase.auth().currentUser || {}).uid || ''; } catch (e) { fbUid = ''; }
+    if (fbUid && b.adminUid && String(b.adminUid) === String(fbUid)) {
       b.isCurrentBusiness = true;
       try { localStorage.setItem(BIZ_ID_KEY, keys[j]); } catch (e) {}
       try { savePlatformData(); } catch (e) {}
@@ -10184,6 +10406,9 @@ function upsertCurrentBusinessRecord() {
   if (!bizId) {
     bizId = 'BIZ-' + Date.now().toString(36).toUpperCase();
     platformData.businesses[bizId] = rec;
+    /* A brand-new business: its administrator gets the welcome message in the
+       notification bell once signed in. Staff never receive it. */
+    try { ftSendWelcomeNotification(bizId); rec.welcomeSentAt = Date.now(); } catch (e) {}
   }
   return bizId;
 }
@@ -10224,6 +10449,7 @@ function addNewBusiness() {
     staffCount: 0, blocked: false, subscriptionStatus: 'trial',
     trialEndDate: trialEnd, subscriptionExpiry: '', lastActivity: 0, isCurrentBusiness: false
   };
+  try { ftSendWelcomeNotification(bizId); platformData.businesses[bizId].welcomeSentAt = Date.now(); } catch (e) {}
   savePlatformData();
   alert('Business registered successfully!\nBusiness ID: ' + bizId + '\n' + trialActivatedMessage());
   closePaAddBizModal();
@@ -10558,7 +10784,7 @@ function renderPANotifications() {
         var totalTargets = n.totalTargets || 1;
         var statusLabel = n.expiryDate && new Date(n.expiryDate).getTime() < Date.now() ? 'Expired' : (n.publishDate && new Date(n.publishDate).getTime() > Date.now() ? 'Scheduled' : 'Active');
         var tr = document.createElement('tr');
-        tr.innerHTML = '<td><span class="pa-badge '+(n.type==='announcement'?'pa-badge-active':'pa-badge-pending')+'">'+n.type+'</span></td><td style="font-size:.78rem">'+targetLabel+'</td><td style="font-weight:700">'+(n.subject||'-')+'</td><td style="font-size:.78rem;max-width:200px;overflow:hidden;text-overflow:ellipsis">'+(n.message||'-')+'</td><td style="font-size:.78rem">'+new Date(n.sentAt||0).toLocaleDateString('en-IN')+'</td><td style="font-size:.78rem">'+readCount+'/'+totalTargets+' read</td><td><span class="pa-badge pa-badge-'+(statusLabel==='Active'?'active':statusLabel==='Expired'?'expired':'pending')+'">'+statusLabel+'</span></td>';
+        tr.innerHTML = '<td><span class="pa-badge '+(n.type==='announcement'?'pa-badge-active':'pa-badge-pending')+'">'+n.type+'</span></td><td style="font-size:.78rem">'+targetLabel+'</td><td style="font-weight:700">'+(n.subject||'-')+'</td><td style="font-size:.78rem;max-width:200px;overflow:hidden;text-overflow:ellipsis">'+ftBoldText(n.message||'-')+'</td><td style="font-size:.78rem">'+new Date(n.sentAt||0).toLocaleDateString('en-IN')+'</td><td style="font-size:.78rem">'+readCount+'/'+totalTargets+' read</td><td><span class="pa-badge pa-badge-'+(statusLabel==='Active'?'active':statusLabel==='Expired'?'expired':'pending')+'">'+statusLabel+'</span></td>';
         htbody.appendChild(tr);
       });
     }
@@ -10605,7 +10831,7 @@ function sendAnnouncement() {
     Object.keys(platformData.businesses || {}).forEach(function(k) {
       var b = platformData.businesses[k];
       var presence = (platformData.presence||{})[k] || {};
-      if ((presence.lastActive || b.lastActivity || 0) > sevenDaysAgo) targetBizIds.push(k);
+      if ((presence.lastActive || b.lastActive || b.lastActivity || 0) > sevenDaysAgo) targetBizIds.push(k);
     });
   } else if (target === 'selected') {
     var sel = document.getElementById('paAnnounceBizSelect');
@@ -10645,7 +10871,7 @@ function renderPAReports() {
   var sevenDaysAgo = now - 7*24*60*60*1000;
   bizArr.forEach(function(b) {
     var presence = (platformData.presence||{})[b.id] || {};
-    if ((presence.lastActive || b.lastActivity || 0) > sevenDaysAgo) activeBiz++; else dormantBiz++;
+    if ((presence.lastActive || b.lastActive || b.lastActivity || 0) > sevenDaysAgo) activeBiz++; else dormantBiz++;
     totalStorage += calculateBizDataUsage(b).currentKB;
   });
   var metricsHtml =
@@ -10669,7 +10895,7 @@ function renderPAReports() {
         var subStatus = getBizSubscriptionStatus(b);
         var presence = (platformData.presence||{})[b.id] || {};
         var tr = document.createElement('tr');
-        tr.innerHTML = '<td>'+(b.name||'-')+'</td><td>'+(b.staffCount||0)+1+'</td><td>'+(b.staffCount||0)+'</td><td>'+(usage.estimated?'~':'')+(b.servicesLogged||'-')+'</td><td>'+(usage.estimated?'~':'')+(b.expensesLogged||'-')+'</td><td>'+usage.currentKB.toFixed(1)+'</td><td><span class="pa-badge pa-badge-'+subStatus+'">'+subStatus+'</span></td><td style="font-size:.78rem">'+(presence.lastActive?formatTimeAgo(presence.lastActive):'Never')+'</td>';
+        tr.innerHTML = '<td>'+(b.name||'-')+'</td><td>'+((Number(b.staffCount)||0)+1)+'</td><td>'+(b.staffCount||0)+'</td><td>'+(usage.estimated?'~':'')+(b.servicesLogged||'-')+'</td><td>'+(usage.estimated?'~':'')+(b.expensesLogged||'-')+'</td><td>'+usage.currentKB.toFixed(1)+'</td><td><span class="pa-badge pa-badge-'+subStatus+'">'+subStatus+'</span></td><td style="font-size:.78rem">'+(presence.lastActive?formatTimeAgo(presence.lastActive):'Never')+'</td>';
         rtbody.appendChild(tr);
       });
     }
@@ -10720,7 +10946,7 @@ function exportPAReport() {
     var usage = calculateBizDataUsage(Object.assign({id:k}, b));
     var subStatus = getBizSubscriptionStatus(Object.assign({id:k}, b));
     var presence = (platformData.presence||{})[k] || {};
-    rows += '<tr><td style="padding:5px;border:1px solid #cbd5e1">'+(b.name||'-')+'</td><td style="padding:5px;border:1px solid #cbd5e1;text-align:center">'+((b.staffCount||0)+1)+'</td><td style="padding:5px;border:1px solid #cbd5e1;text-align:center">'+(b.staffCount||0)+'</td><td style="padding:5px;border:1px solid #cbd5e1;text-align:right">'+usage.currentKB.toFixed(1)+'</td><td style="padding:5px;border:1px solid #cbd5e1">'+subStatus+'</td><td style="padding:5px;border:1px solid #cbd5e1">'+(presence.lastActive?formatTimeAgo(presence.lastActive):'Never')+'</td></tr>';
+    rows += '<tr><td style="padding:5px;border:1px solid #cbd5e1">'+(b.name||'-')+'</td><td style="padding:5px;border:1px solid #cbd5e1;text-align:center">'+(((Number(b.staffCount)||0)+1))+'</td><td style="padding:5px;border:1px solid #cbd5e1;text-align:center">'+(b.staffCount||0)+'</td><td style="padding:5px;border:1px solid #cbd5e1;text-align:right">'+usage.currentKB.toFixed(1)+'</td><td style="padding:5px;border:1px solid #cbd5e1">'+subStatus+'</td><td style="padding:5px;border:1px solid #cbd5e1">'+(presence.lastActive?formatTimeAgo(presence.lastActive):'Never')+'</td></tr>';
   });
   rows += '</tbody></table></div>';
   var container = document.createElement('div');
@@ -11762,6 +11988,10 @@ window.addEventListener('DOMContentLoaded', function() {
       var beat = function () {
         acct.update({ online: true, role: rn.role, name: rn.name, at: Date.now(), lastActive: sv }).catch(function () {});
         root.update({ online: true, lastActive: sv }).catch(function () {});
+        try {
+          var kb = (typeof appData !== 'undefined' && appData) ? Math.round(JSON.stringify(appData).length / 1024) : 0;
+          firebase.database().ref('businesses/' + biz + '/meta/facts').update({ lastActive: Date.now(), usageKB: kb }).catch(function () {});
+        } catch (e) {}
       };
       beat();
       setInterval(beat, 120000);
@@ -12002,7 +12232,7 @@ window.addEventListener('DOMContentLoaded', function() {
       '<span style="width:8px;height:8px;border-radius:50%;margin-top:6px;flex:0 0 8px;background:' + (unread ? '#FACC15' : 'transparent') + '"></span>' +
       '<div style="flex:1;min-width:0">' +
       '<div style="font-size:.84rem;font-weight:800;color:var(--atmos-navy);line-height:1.35">' + escapeHtml(n.subject) + '</div>' +
-      '<div style="font-size:.79rem;color:var(--text);white-space:pre-wrap;line-height:1.5;margin-top:3px">' + escapeHtml(n.message) + '</div>' +
+      '<div style="font-size:.79rem;color:var(--text);white-space:pre-wrap;line-height:1.5;margin-top:3px">' + ftBoldText(n.message) + '</div>' +
       '<div style="font-size:.68rem;color:var(--text-muted);margin-top:5px">' + escapeHtml(n.sender) + ' &middot; ' + fmt(n.at) + (unread ? '' : ' &middot; read') + '</div>' +
       '</div>' +
       '<button type="button" title="Delete" onclick="ftDeleteNotif(\'' + n.id + '\')" style="border:none;background:transparent;color:var(--accent-rose);cursor:pointer;font-size:.9rem;align-self:flex-start"><i class="fa-solid fa-trash"></i></button>' +
