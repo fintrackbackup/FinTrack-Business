@@ -4274,6 +4274,7 @@ const FIREBASE_CONFIG = {
       localStorage.removeItem('ATMOS_FIREBASE_KEY');
       if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
       if (firebase.app().options.projectId !== FIREBASE_CONFIG.projectId) throw new Error('A different Firebase project is initialized. Reload this updated HTML.');
+      /* Each browser tab holds its own sign-in session, so signing in or out in one tab never signs out, unpairs or greys the cloud sync of any other tab. */ try { var ftTabP = (firebase.auth.Auth && firebase.auth.Auth.Persistence) ? firebase.auth.Auth.Persistence.SESSION : 'session'; var ftTabPset = firebaseAuth().setPersistence(ftTabP); if (ftTabPset && ftTabPset.catch) ftTabPset.catch(function () {}); } catch (e) {}
       ftFirebaseStarted = true;
       firebaseAuth().onAuthStateChanged(function (identity) {
         if (!identity) {
@@ -5200,7 +5201,6 @@ const FIREBASE_CONFIG = {
       var mvBannerEl2 = document.getElementById('mobileViewOnlyBanner');
       if (mvBannerEl2) mvBannerEl2.style.display = 'none';
     }
-
 
     try { applyPlatformBranding(); } catch (e) {}
     logAttendance(user);
@@ -11816,14 +11816,13 @@ function ftbShowWelcomeSplash() {
   var logo = 'https://media.base44.com/images/public/6ad20c8082d97b3bd37417ae/266afcba3_IMG_2552.jpg';
   var splash = document.createElement('div');
   splash.id = 'ftbWelcomeSplash';
-  splash.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#F6F3ED;opacity:0;transition:opacity .35s ease';
+  /* Opaque on its very first frame: the screen behind (dashboard, login page) must never show before the splash covers it. */ splash.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#F6F3ED;opacity:1;transition:opacity .35s ease';
   splash.innerHTML = '<div style="text-align:center;padding:24px;">' +
     '<img src="' + logo + '" alt="FinTrack Business" style="width:88px;height:88px;object-fit:contain;border-radius:20px;margin:0 auto 20px;display:block;background:#fff;padding:8px;box-shadow:0 10px 30px rgba(15,23,42,.10)">' +
     '<div style="font-size:22px;font-weight:800;letter-spacing:.3px;color:#0B1E2D;">Welcome to FinTrack Business</div>' +
     '<div style="margin:20px auto 0;width:120px;height:3px;background:#e2e8f0;border-radius:2px;overflow:hidden;"><div style="height:100%;width:40%;background:#2563eb;border-radius:2px;animation:ftbSplashLoad 1.1s linear infinite;"></div></div>' +
     '</div>';
   document.body.appendChild(splash);
-  requestAnimationFrame(function () { splash.style.opacity = '1'; });
   setTimeout(function () { splash.style.opacity = '0'; setTimeout(function () { if (splash.parentNode) splash.remove(); }, 400); }, 1100);
 }
 window.ftbShowWelcomeSplash = ftbShowWelcomeSplash;
